@@ -1,0 +1,422 @@
+/* Lexical part */
+
+_digit : '0'-'9' ;
+
+_integer : '1'-'9' {_digit} ;
+
+_float : _integer '.' _integer ;
+
+numeric : _float
+        | _integer ;
+
+_upcase : 'A'-'Z' ;
+
+_lowcase : 'a'-'z' ;
+
+_letter : _upcase | _lowcase | '_' ;
+
+_raw_string     : '\'' {.} '\'' ;
+
+_raw_string2    : '`' {.} '`' ;
+
+_any_char : . ;
+
+char_lit : _any_char ;
+
+_more_chars : _any_char {_any_char} ;
+
+any_chars : _any_char {_any_char} ;
+
+_regex_modifier : 'i'|'m'|'x'|'o'|'e'|'s'|'u'|'n' ;
+
+_literal_regexp  : '/' _more_chars '/' _regex_modifier ;
+
+_literal_regexp2 : '%''r' _any_char _more_chars _any_char ;
+
+_identifier : _letter ;
+
+addressable_identifier : ':'':' _identifier ;
+
+inheritance_identifier : '<' _identifier ;
+
+dot_identifier   : '.' _identifier ;
+
+id              : _identifier ;
+
+_identifier_list : _identifier { ',' _identifier };
+
+_whitespace     : ' ' | '\t' ;
+
+newline         : '\n' | '\r' ;
+
+arr_arg         : '*' _identifier ;
+
+block_arg       : '&'_identifier ;
+
+space           : _whitespace { _whitespace } ;
+
+/* Lexical analysis */
+
+OP_ASGN         : "+=" | "-=" | "*=" | "/=" | "%=" | "**="
+                | "&=" | "|=" | "^=" | "<<=" | ">>="
+                | "&&=" | "||=" ;
+
+SYMBOL          : ":"FNAME
+                | ":""@" id
+                | ":""@@" id
+                | ":"GLOBAL ;
+
+FNAME           : OPERATION
+                | "|" | "^" | "&" | "<=>" | "==" | "===" | "=~"
+                | ">" | ">=" | "<" | "<="
+                | "+" | "-" | "*" | "/" | "%" | "**"
+                | "<<" | ">>" | "~" | "`"
+                | "+@" | "-@" | "[]" | "[]="
+                | "__LINE__" | "__FILE__"  | "BEGIN" | "END"
+                | "alias" | "and" | "begin" | "break" | "case" | "class" | "def"
+                | "defined" | "do" | "else" | "elsif" | "end" | "ensure" | "false"
+                | "for" | "if" | "in" | "module" | "next" | "nil" | "not"
+                | "or" | "redo" | "rescue" | "retry" | "return" | "self" | "super"
+                | "then" | "true" | "undef" | "unless" | "until" | "when"
+                | "while" | "yield" ;
+
+OPERATION       : id
+                | id "!"
+                | id "?" ;
+
+VARNAME         : GLOBAL
+                | "@" id
+                | "@@" id
+                |  id ;
+
+GLOBAL          : "$" id
+                | "$" char_lit
+                | "$""-" char_lit ;
+
+LITERAL_STRING  : _raw_string
+                | _raw_string2
+                | _interpreted_string
+                | "%""Q" char_lit any_chars char_lit
+                | "%""q" char_lit any_chars char_lit
+                | "%""x" char_lit any_chars char_lit ;
+
+Heredoc_ident   : _identifier
+                | STRING ;
+
+HERE_DOC        : "<<"Heredoc_ident
+                  any_chars
+                  Heredoc_ident
+                | "<<-"Heredoc_ident
+                  any_chars
+                  space Heredoc_ident ;
+
+WORDS           : "%""w"char_lit any_chars char_lit ;
+
+REGEXP          : _literal_regexp
+                | _literal_regexp2 ;
+
+/* End of lexical part */
+/* Begin of grammar part */
+
+PROGRAM         : COMPSTMT ;
+
+COMPSTMT        : STMT
+                | COMPSTMT TERM
+                | COMPSTMT TERM EXPR
+                | COMPSTMT TERM EXPR TERM ;
+
+Stmt_undef_id   : FNAME
+                | SYMBOL ;
+
+Stmt_undef      : "undef" Stmt_undef_id
+                | Stmt_undef Stmt_undef_id ;
+
+STMT            : CALL "do" COMPSTMT "end"
+                | CALL "do" "|" "|" COMPSTMT "end"
+                | CALL "do" "|" BLOCK_VAR "|" COMPSTMT "end"
+                | LHS "=" COMMAND
+                | LHS "=" COMMAND "do" COMPSTMT "end"
+                | LHS "=" COMMAND "do" "|" "|" COMPSTMT "end"
+                | LHS "=" COMMAND "do" "|" BLOCK_VAR "|" COMPSTMT "end"
+                | "alias" FNAME FNAME
+                | Stmt_undef
+                | STMT "if" EXPR
+                | STMT "while" EXPR
+                | STMT "unless" EXPR
+                | STMT "until" EXPR
+                | STMT "rescue" STMT
+                | "BEGIN" "{" COMPSTMT "}"
+                | "END" "{" COMPSTMT "}"
+                | EXPR ;
+
+EXPR            : MLHS "=" MRHS
+                | "return" CALL_ARGS
+                | EXPR "and" EXPR
+                | EXPR "or" EXPR
+                | "not" EXPR
+                | COMMAND
+                | "!" COMMAND
+                | ARG ;
+
+CALL            : FUNCTION
+                | COMMAND ;
+
+COMMAND         : OPERATION CALL_ARGS
+                | PRIMARY "." FNAME CALL_ARGS
+                | PRIMARY "::" FNAME CALL_ARGS
+                | "super" CALL_ARGS
+                | "yield" CALL_ARGS ;
+
+FUNCTION        : OPERATION
+                | OPERATION "(" ")"
+                | OPERATION "(" CALL_ARGS ")"
+                | PRIMARY "." FNAME
+                | PRIMARY "::" FNAME
+                | PRIMARY "." FNAME "(" ")"
+                | PRIMARY "." FNAME "(" CALL_ARGS ")"
+                | PRIMARY "::" FNAME "(" ")"
+                | PRIMARY "::" FNAME "(" CALL_ARGS ")"
+                | "super"
+                | "super" "(" ")"
+                | "super" "(" CALL_ARGS ")" ;
+
+ARG             : LHS "=" ARG
+                | LHS OP_ASGN ARG
+                | ARG ".." ARG
+                | ARG "..." ARG
+                | ARG "+" ARG
+                | ARG "-" ARG
+                | ARG "*" ARG
+                | ARG "/" ARG
+                | ARG "%" ARG
+                | ARG "**" ARG
+                | "+" ARG
+                | "-" ARG
+                | ARG "|" ARG
+                | ARG "^" ARG
+                | ARG "&" ARG
+                | ARG "<=>" ARG
+                | ARG ">" ARG
+                | ARG ">=" ARG
+                | ARG "<" ARG
+                | ARG "<=" ARG
+                | ARG "==" ARG
+                | ARG "===" ARG
+                | ARG "!=" ARG
+                | ARG "=~" ARG
+                | ARG "!~" ARG
+                | "!" ARG
+                | "~" ARG
+                | ARG "<<" ARG
+                | ARG ">>" ARG
+                | ARG "&&" ARG
+                | ARG "||" ARG
+                | "defined?" ARG
+                | PRIMARY ;
+
+PrimaryCurlyBr  : ARGS
+                | ASSOCS ;
+
+PrimaryElsIf    : "elsif" EXPR THEN COMPSTMT ;
+
+PrimaryElsIfs   : PrimaryElsIf
+                | PrimaryElsIfs
+                | empty ;
+
+PrimaryElse     : "else" COMPSTMT
+                | empty ;
+
+PrimaryCase     : "case"
+                | PrimaryCase EXPR ;
+
+PrimaryWhen     : "when" WHEN_ARGS THEN COMPSTMT ;
+
+PrimaryWhens    : PrimaryWhen
+                | PrimaryWhens PrimaryWhen ;
+
+PrimaryRescue   : "rescue" THEN COMPSTMT
+                | "rescue" ARGS THEN COMPSTMT
+                | "rescue" ARGS "=>" LHS THEN COMPSTMT
+                | "rescue" "=>" LHS THEN COMPSTMT ;
+
+PrimaryRescues  : PrimaryRescue
+                | PrimaryRescues PrimaryRescue ;
+
+PrimaryEnsure   : "ensure" COMPSTMT
+                | empty ;
+
+Class_identifier : 'class' _identifier ;
+
+PrimaryClass    : Class_identifier
+                | PrimaryClass inheritance_identifier ;
+
+PrimaryModule   : 'module' _identifier ;
+
+PrimarySingelton : "def" SINGLETON "." FNAME ARGDECL
+                 | "def" SINGLETON "::" FNAME ARGDECL ;
+
+PRIMARY         : "(" COMPSTMT ")"
+                | LITERAL
+                | VARIABLE
+                | PRIMARY addressable_identifier
+                | addressable_identifier
+                | PRIMARY "[" "]"
+                | PRIMARY "[" ARGS "]"
+                | "[" "]"
+                | "[" ARGS "]"
+                | "[" ARGS "," "]"
+                | "{" "}"
+                | "{" PrimaryCurlyBr "}"
+                | "{" PrimaryCurlyBr "," "}"
+                | "return"
+                | "return" "(" ")"
+                | "return" "(" CALL_ARGS ")"
+                | "yield"
+                | "yield" "(" ")"
+                | "yield" "(" CALL_ARGS ")"
+                | "defined?" "(" ARG ")"
+                | FUNCTION
+                | FUNCTION "{" COMPSTMT "}"
+                | FUNCTION "{" "|" "|" COMPSTMT "}"
+                | FUNCTION "{" "|" BLOCK_VAR "|" COMPSTMT "}"
+                | "if" EXPR THEN
+                  COMPSTMT
+                  PrimaryElsIfs
+                  PrimaryElse
+                  "end"
+                | "unless" EXPR THEN
+                  COMPSTMT
+                  PrimaryElse
+                  "end"
+                | "while" EXPR DO COMPSTMT "end"
+                | "until" EXPR DO COMPSTMT "end"
+                | PrimaryCase
+                  PrimaryWhens
+                  PrimaryElse
+                  "end"
+                | "for" BLOCK_VAR "in" EXPR DO
+                  COMPSTMT
+                  "end"
+                | "begin"
+                  COMPSTMT
+                  PrimaryRescues
+                  PrimaryElse
+                  PrimaryEnsure
+                  "end"
+                | PrimaryClass
+                  COMPSTMT
+                  "end"
+                | PrimaryModule
+                  COMPSTMT
+                  "end"
+                | "def" FNAME ARGDECL
+                  COMPSTMT
+                  PrimaryRescues
+                  PrimaryElse
+                  PrimaryEnsure
+                  "end"
+                | PrimarySingelton
+                  COMPSTMT
+                  "end" ;
+
+WHEN_ARGS       : ARGS
+                | ARGS "," "*" ARG
+                | "*" ARG ;
+
+THEN            : TERM
+                | "then"
+                | TERM "then" ;
+
+DO              : TERM
+                | "do"
+                | TERM "do" ;
+
+BLOCK_VAR       : LHS
+                | MLHS ;
+
+MLHS            : MLHS_ITEMS
+                | MLHS_ITEMS "," "*"
+                | MLHS_ITEMS "," "*" LHS
+                | MLHS_ITEMS ","
+                | '*'
+                | '*' LHS
+                | "(" MLHS ")" ;
+
+MLHS_ITEMS      : MLHS_ITEM
+                | MLHS_ITEMS "," MLHS_ITEM ;
+
+MLHS_ITEM       : LHS
+                | "(" MLHS ")" ;
+
+LHS             : VARNAME
+                | PRIMARY "[" "]"
+                | PRIMARY "[" ARGS "]"
+                | PRIMARY dot_identifier ;
+
+MRHS            : ARGS
+                | ARGS "," "*" ARG
+                | "*" ARG ;
+
+CallArgsLastArgs : "," "*" ARG
+                 | "," "&" ARG
+                 | "," "*" ARG "," "&" ARG
+                 | empty ;
+
+CALL_ARGS       : ARGS
+                | ARGS "," ASSOCS CallArgsLastArgs
+                | ASSOCS
+                | ASSOCS CallArgsLastArgs
+                | "," "*" ARG
+                | "," "&" ARG
+                | "," "*" ARG "," "&" ARG
+                | COMMAND ;
+
+ARGS            : ARG
+                | ARGS "," ARG ;
+
+ARGDECL         : "(" ARGLIST ")"
+                | ARGLIST TERM ;
+
+ARGLIST         : _identifier_list
+                | _identifier_list ",""*"
+                | _identifier_list "," arr_arg
+                | _identifier_list ",""*" "," block_arg
+                | _identifier_list ","arr_arg "," block_arg
+                | arr_arg
+                | arr_arg ","block_arg
+                | block_arg
+                | empty ;
+
+SINGLETON       : VARNAME
+                | 'self'
+                | 'nil'
+                | 'true'
+                | 'false'
+                | "(" EXPR ")" ;
+
+ASSOCS          : ASSOC
+                | ASSOCS "," ASSOC ;
+
+ASSOC           : ARG "=>" ARG ;
+
+VARIABLE        : VARNAME
+                | 'self'
+                | 'nil'
+                | 'true'
+                | 'false'
+                | '__FILE__'
+                | '__LINE__' ;
+
+LITERAL         : numeric
+                | SYMBOL
+                | STRING
+                | HERE_DOC
+                | WORDS
+                | REGEXP ;
+
+STRING          : LITERAL_STRING
+                | STRING LITERAL_STRING ;
+
+TERM            : ";"
+                | "\n" ;
+
