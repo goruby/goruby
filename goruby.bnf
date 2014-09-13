@@ -15,9 +15,11 @@ _lowcase : 'a'-'z' ;
 
 _letter : _upcase | _lowcase | '_' ;
 
-_raw_string     : '\'' {.} '\'' ;
+raw_string     : '\'' {.} '\'' ;
 
-_raw_string2    : '`' {.} '`' ;
+raw_string2    : '`' {.} '`' ;
+
+interpreted_string : '"' {.} '"' ;
 
 _any_char : . ;
 
@@ -29,9 +31,9 @@ any_chars : _any_char {_any_char} ;
 
 _regex_modifier : 'i'|'m'|'x'|'o'|'e'|'s'|'u'|'n' ;
 
-_literal_regexp  : '/' _more_chars '/' _regex_modifier ;
+literal_regexp  : '/' _more_chars '/' _regex_modifier ;
 
-_literal_regexp2 : '%''r' _any_char _more_chars _any_char ;
+literal_regexp2 : '%''r' _any_char _more_chars _any_char ;
 
 _identifier : _letter ;
 
@@ -42,8 +44,6 @@ inheritance_identifier : '<' _identifier ;
 dot_identifier   : '.' _identifier ;
 
 id              : _identifier ;
-
-_identifier_list : _identifier { ',' _identifier };
 
 _whitespace     : ' ' | '\t' ;
 
@@ -93,14 +93,14 @@ GLOBAL          : "$" id
                 | "$" char_lit
                 | "$""-" char_lit ;
 
-LITERAL_STRING  : _raw_string
-                | _raw_string2
-                | _interpreted_string
+LITERAL_STRING  : raw_string
+                | raw_string2
+                | interpreted_string
                 | "%""Q" char_lit any_chars char_lit
                 | "%""q" char_lit any_chars char_lit
                 | "%""x" char_lit any_chars char_lit ;
 
-Heredoc_ident   : _identifier
+Heredoc_ident   : id
                 | STRING ;
 
 HERE_DOC        : "<<"Heredoc_ident
@@ -112,8 +112,8 @@ HERE_DOC        : "<<"Heredoc_ident
 
 WORDS           : "%""w"char_lit any_chars char_lit ;
 
-REGEXP          : _literal_regexp
-                | _literal_regexp2 ;
+REGEXP          : literal_regexp
+                | literal_regexp2 ;
 
 /* End of lexical part */
 /* Begin of grammar part */
@@ -245,12 +245,12 @@ PrimaryRescues  : PrimaryRescue
 PrimaryEnsure   : "ensure" COMPSTMT
                 | empty ;
 
-Class_identifier : 'class' _identifier ;
+Class_identifier : 'class' id ;
 
 PrimaryClass    : Class_identifier
                 | PrimaryClass inheritance_identifier ;
 
-PrimaryModule   : 'module' _identifier ;
+PrimaryModule   : 'module' id ;
 
 PrimarySingelton : "def" SINGLETON "." FNAME ARGDECL
                  | "def" SINGLETON "::" FNAME ARGDECL ;
@@ -338,8 +338,8 @@ MLHS            : MLHS_ITEMS
                 | MLHS_ITEMS "," "*"
                 | MLHS_ITEMS "," "*" LHS
                 | MLHS_ITEMS ","
-                | '*'
-                | '*' LHS
+                | "*"
+                | "*" LHS
                 | "(" MLHS ")" ;
 
 MLHS_ITEMS      : MLHS_ITEM
@@ -377,21 +377,24 @@ ARGS            : ARG
 ARGDECL         : "(" ARGLIST ")"
                 | ARGLIST TERM ;
 
-ARGLIST         : _identifier_list
-                | _identifier_list ",""*"
-                | _identifier_list "," arr_arg
-                | _identifier_list ",""*" "," block_arg
-                | _identifier_list ","arr_arg "," block_arg
+Identifier_list : id
+                | Identifier_list "," id ;
+
+ARGLIST         : Identifier_list
+                | Identifier_list ",""*"
+                | Identifier_list "," arr_arg
+                | Identifier_list ",""*" "," block_arg
+                | Identifier_list ","arr_arg "," block_arg
                 | arr_arg
                 | arr_arg ","block_arg
                 | block_arg
                 | empty ;
 
 SINGLETON       : VARNAME
-                | 'self'
-                | 'nil'
-                | 'true'
-                | 'false'
+                | "self"
+                | "nil"
+                | "true"
+                | "false"
                 | "(" EXPR ")" ;
 
 ASSOCS          : ASSOC
@@ -400,12 +403,12 @@ ASSOCS          : ASSOC
 ASSOC           : ARG "=>" ARG ;
 
 VARIABLE        : VARNAME
-                | 'self'
-                | 'nil'
-                | 'true'
-                | 'false'
-                | '__FILE__'
-                | '__LINE__' ;
+                | "self"
+                | "nil"
+                | "true"
+                | "false"
+                | "__FILE__"
+                | "__LINE__" ;
 
 LITERAL         : numeric
                 | SYMBOL
