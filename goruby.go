@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os/exec"
+	"github.com/goruby/goruby/lexer"
+	"github.com/goruby/goruby/parser"
 )
 
 func main() {
@@ -14,16 +15,22 @@ func main() {
 
 	flag.Parse()
 
-	verboseOpt := ""
 	if *verbose {
-		//verboseOpt = "-v"
+		fmt.Printf("Verbose: %t\n", *verbose)
 	}
-	cmd := exec.Command("ruby", "-e "+*eFlag, verboseOpt)
-	output, err := cmd.CombinedOutput()
-	if len(output) != 0 {
-		fmt.Print(string(output))
-	}
+	// cmd := exec.Command("ruby", "-e "+*eFlag, verboseOpt)
+	// output, err := cmd.CombinedOutput()
+	// if len(output) != 0 {
+	// 	fmt.Print(string(output))
+	// }
+	// if err != nil {
+	// 	fmt.Print(err.Error())
+	// }
+	l := lexer.NewLexer([]byte(*eFlag))
+	p := parser.NewParser()
+	rslt, err := p.Parse(l)
 	if err != nil {
-		fmt.Print(err.Error())
+		fmt.Println(err)
 	}
+	fmt.Printf("Result: %+#v", rslt)
 }

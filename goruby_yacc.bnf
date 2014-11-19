@@ -1,0 +1,1095 @@
+/* Regex */
+
+_digit : '0'-'9' ;
+
+_integer : '1'-'9' {_digit} ;
+
+_float : _integer '.' _integer ;
+
+numeric : _float
+        | _integer ;
+
+_upcase : 'A'-'Z' ;
+
+_lowcase : 'a'-'z' ;
+
+_letter : _upcase | _lowcase | '_' ;
+
+_letters : _letter | _letters _letter ;
+
+_char: . ;
+
+_chars: _char | _chars _char ;
+
+_upcase_letters : _upcase | _upcase_letters _upcase ;
+
+_q_literal : 'q' | 'Q' ;
+
+_x_literal : 'x' | 'X' ;
+
+_lit_beg : '"' | '\'' | '(' | '[' | '{' ;
+
+_lit_end : '"' | '\'' | ')' | ']' | '}' ;
+
+/* keywords */
+
+keyword_class  : 'c''l''a''s''s' ;
+keyword_module : 'm''o''d''u''l''e' ;
+keyword_def    : 'd''e''f' ;
+keyword_undef : 'u''n''d''e''f' ;
+keyword_begin : 'b''e''g''i''n' ;
+keyword_rescue : 'r''e''s''c''u''e' ;
+keyword_ensure : 'e''n''s''u''r''e' ;
+keyword_end : 'e''n''d' ;
+keyword_if : 'i''f' ;
+keyword_unless : 'u''n''l''e''s''s' ;
+keyword_then : 't''h''e''n' ;
+keyword_elsif : 'e''l''s''i''f' ;
+keyword_else : 'e''l''s''e' ;
+keyword_case : 'c''a''s''e' ;
+keyword_when : 'w''h''e''n' ;
+keyword_while : 'w''h''i''l''e' ;
+keyword_until : 'u''n''t''i''l' ;
+keyword_for : 'f''o''r' ;
+keyword_break : 'b''r''e''a''k' ;
+keyword_next : 'n''e''x''t' ;
+keyword_redo : 'r''e''d''o' ;
+keyword_retry : 'r''e''t''r''y' ;
+keyword_in : 'i''n' ;
+keyword_do : 'd''o' ;
+keyword_do_cond : 'd''o' ;
+keyword_do_block: 'd''o' ;
+keyword_do_LAMBDA: 'd''o' ;
+keyword_return : 'r''e''t''u''r''n' ;
+keyword_yield : 'y''i''e''l''d' ;
+keyword_super : 's''u''p''e''r' ;
+keyword_self : 's''e''l''f' ;
+keyword_nil : 'n''i''l' ;
+keyword_true : 't''r''u''e' ;
+keyword_false : 'f''a''l''s''e' ;
+keyword_and : 'a''n''d' ;
+keyword_or : 'o''r' ;
+keyword_not : 'n''o''t' ;
+modifier_while: 'w''h''i''l''e' ;
+modifier_if: 'i''f' ;
+modifier_unless: 'u''n''l''e''s''s' ;
+modifier_until: 'u''n''t''i''l' ;
+modifier_rescue: 'r''e''s''c''u''e' ;
+keyword_alias : 'a''l''i''a''s' ;
+keyword_defined : 'd''e''f''i''n''e''d' ;
+keyword_BEGIN : 'B''E''G''I''N' ;
+keyword_END : 'E''N''D' ;
+keyword__LINE__ : '_''_''L''I''N''E''_''_' ;
+keyword__FILE__ : '_''_''F''I''L''E''_''_' ;
+keyword__ENCODING__ : '_''_''E''N''C''O''D''I''N''G''_''_' ;
+
+/* Tokens */
+
+tPOW: '*''*' ;
+tCMP: '<''=''>' ;
+tEQ: '=''=' ;
+tEQQ: '=''=''=' ;
+tNEQ: '!''=' ;
+tGEQ: '>''=' ;
+tLEQ: '<''=' ;
+tANDOP: '&''&' ;
+tOROP: '|''|' ;
+tMATCH: '=''~' ;
+tNMATCH: '!''~' ;
+tDOT2: '.''.' ;
+tDOT3: '.''.''.' ;
+tAREF: '['']' ;
+tASET: '['']''=' ;
+tLSHFT: '<''<' ;
+tRSHFT: '>''>' ;
+tCOLON2: ':'':' ;
+tCOLON3: ':'':' /*":: at EXPR_BEG"*/ ;
+tOP_ASGN : '+''=' | '-''=' | '*''=' | '/''=' | '%''=' | '*''*''='
+        | '&''=' | '|''=' | '^''=' | '<''<''=' | '>''>''='
+        | '&''&''=' | '|''|''=' ;
+tASSOC: '=''>' ;
+tLPAREN: '(' ;
+tRPAREN: ')' ;
+tLBRACK: '[' ;
+tLBRACE: '{' ;
+tSTAR: '*' ;
+tAMPER: '&' ;
+tLAMBDA: '-''>' ;
+tSTRING_BEG: _lit_beg ;
+tSTRING_END: _lit_end ;
+tSYMBEG: ':' ;
+tIDENTIFIER: _letters ;
+tGVAR: '$' _letters ;
+tIVAR: '@' _letters ;
+tCVAR: '@''@' _letters ;
+tCONSTANT: _upcase_letters ;
+tCHAR: _chars ;
+tINTEGER: _integer ;
+tFLOAT: _float ;
+tSTRING_CONTENT: _chars ;
+tREGEXP_BEG: '/' ;
+tREGEXP_END: '/' ['i'] ['m'] ['x'] ['o'] ['u'] ['e'] ['s'] ['n'];
+tUPLUS: '+' ;
+tUMINUS: '-' ;
+tLAMBEG: '{' ;
+tUMINUS_NUM: '-' ;
+tFID: . ;
+tLABEL: _upcase_letters ;
+tLABEL_END: _upcase_letters ;
+tSTRING_DBEG: '<''<' ['-'] _upcase_letters ;
+tSTRING_DEND: _upcase_letters ;
+tIMAGINARY: _integer 'i' _integer ;
+tBACK_REF: '$' _digit ;
+tNTH_REF: '$''?' ;
+tXSTRING_BEG: '%' _x_literal _lit_beg ;
+tQWORDS_BEG: '%' _q_literal _lit_beg ;
+tRATIONAL: _integer '/' _integer ;
+tSTRING_DVAR: _letters ;
+tWORDS_BEG: _letter ;
+tSYMBOLS_BEG: _lit_beg ;
+tQSYMBOLS_BEG: _lit_beg ;
+/*
+*/
+
+/* Synatx part */
+
+TLPAREN_ARG: tLPAREN Arg ;
+TLBRACE_ARG: tLBRACE Arg ;
+TDSTAR: "**" Arg ;
+
+Program		: Top_compstmt
+		;
+
+Top_compstmt	: Top_stmts Opt_terms
+		;
+
+Top_stmts	: None
+		| Top_stmt
+		| Top_stmts Terms Top_stmt
+		| error Top_stmt
+		;
+
+Top_stmt	: Stmt
+		| keyword_BEGIN
+		  "{" Top_compstmt "}"
+		;
+
+Bodystmt	: Compstmt
+		  Opt_rescue
+		  Opt_else
+		  Opt_ensure
+		;
+
+Compstmt	: Stmts Opt_terms
+		;
+
+Stmts		: None
+		| Stmt_or_begin
+		| Stmts Terms Stmt_or_begin
+		| error Stmt
+		;
+
+Stmt_or_begin	: Stmt
+                | keyword_BEGIN
+		  "{" Top_compstmt "}"
+    ;
+
+Stmt		: keyword_alias Fitem  Fitem
+		| keyword_alias tGVAR tGVAR
+		| keyword_alias tGVAR tBACK_REF
+		| keyword_alias tGVAR tNTH_REF
+		| keyword_undef Undef_list
+		| Stmt modifier_if Expr_value
+		| Stmt modifier_unless Expr_value
+		| Stmt modifier_while Expr_value
+		| Stmt modifier_until Expr_value
+		| Stmt modifier_rescue Stmt
+		| keyword_END "{" Compstmt "}"
+		| Command_asgn
+		| Mlhs "=" Command_call
+		| Var_lhs tOP_ASGN Command_call
+		| Primary_value "[" Opt_call_args Rbracket tOP_ASGN Command_call
+		| Primary_value "." tIDENTIFIER tOP_ASGN Command_call
+		| Primary_value "." tCONSTANT tOP_ASGN Command_call
+		| Primary_value tCOLON2 tCONSTANT tOP_ASGN Command_call
+		| Primary_value tCOLON2 tIDENTIFIER tOP_ASGN Command_call
+		| Backref tOP_ASGN Command_call
+		| Lhs "=" Mrhs
+		| Mlhs "=" Mrhs_arg
+		| Expr
+		;
+
+Command_asgn	: Lhs "=" Command_call
+		| Lhs "=" Command_asgn
+		;
+
+Expr		: Command_call
+		| Expr keyword_and Expr
+		| Expr keyword_or Expr
+		| keyword_not Opt_nl Expr
+		| "!" Command_call
+		| Arg
+		;
+
+Expr_value	: Expr
+		;
+
+Command_call	: Command
+		| Block_command
+		;
+
+Block_command	: Block_call
+		| Block_call Dot_or_colon Operation2 Command_args
+		;
+
+Cmd_brace_block	: TLBRACE_ARG
+		  Opt_block_param
+		  Compstmt
+		  "}"
+		;
+
+Fcall		: Operation
+		;
+
+Command		: Fcall Command_args       /*%prec tLOWEST*/
+		| Fcall Command_args Cmd_brace_block
+		| Primary_value "." Operation2 Command_args	/*%prec tLOWEST*/
+		| Primary_value "." Operation2 Command_args Cmd_brace_block
+		| Primary_value tCOLON2 Operation2 Command_args	/*%prec tLOWEST*/
+		| Primary_value tCOLON2 Operation2 Command_args Cmd_brace_block
+		| keyword_super Command_args
+		| keyword_yield Command_args
+		| keyword_return Call_args
+		| keyword_break Call_args
+		| keyword_next Call_args
+		;
+
+Mlhs		: Mlhs_basic
+		| tLPAREN Mlhs_inner Rparen
+		;
+
+Mlhs_inner	: Mlhs_basic
+		| tLPAREN Mlhs_inner Rparen
+		;
+
+Mlhs_basic	: Mlhs_head
+		| Mlhs_head Mlhs_item
+		| Mlhs_head tSTAR Mlhs_node
+		| Mlhs_head tSTAR Mlhs_node "," Mlhs_post
+		| Mlhs_head tSTAR
+		| Mlhs_head tSTAR "," Mlhs_post
+		| tSTAR Mlhs_node
+		| tSTAR Mlhs_node "," Mlhs_post
+		| tSTAR
+		| tSTAR "," Mlhs_post
+		;
+
+Mlhs_item	: Mlhs_node
+		| tLPAREN Mlhs_inner Rparen
+		;
+
+Mlhs_head	: Mlhs_item ","
+		| Mlhs_head Mlhs_item ","
+		;
+
+Mlhs_post	: Mlhs_item
+		| Mlhs_post "," Mlhs_item
+		;
+
+Mlhs_node	: User_variable
+		| Keyword_variable
+		| Primary_value "[" Opt_call_args Rbracket
+		| Primary_value "." tIDENTIFIER
+		| Primary_value tCOLON2 tIDENTIFIER
+		| Primary_value "." tCONSTANT
+		| Primary_value tCOLON2 tCONSTANT
+		| tCOLON3 tCONSTANT
+		| Backref
+		;
+
+Lhs		: User_variable
+		| Keyword_variable
+		| Primary_value "[" Opt_call_args Rbracket
+		| Primary_value "." tIDENTIFIER
+		| Primary_value tCOLON2 tIDENTIFIER
+		| Primary_value "." tCONSTANT
+		| Primary_value tCOLON2 tCONSTANT
+		| tCOLON3 tCONSTANT
+		| Backref
+		;
+
+Cname		: tIDENTIFIER
+		| tCONSTANT
+		;
+
+Cpath		: tCOLON3 Cname
+		| Cname
+		| Primary_value tCOLON2 Cname
+		;
+
+Fname		: tIDENTIFIER
+		| tCONSTANT
+		| tFID
+		| Op
+		| Reswords
+		;
+
+Fsym		: Fname
+		| Symbol
+		;
+
+Fitem		: Fsym
+		| Dsym
+		;
+
+Undef_list	: Fitem
+		| Undef_list ","  Fitem
+		;
+
+Op	: "|"
+		| "^"
+		| "&"
+		| tCMP
+		| tEQ
+		| tEQQ
+		| tMATCH
+		| tNMATCH
+		| ">"
+		| tGEQ
+		| "<"
+		| tLEQ
+		| tNEQ
+		| tLSHFT
+		| tRSHFT
+		| "+"
+		| "-"
+		| "*"
+		| tSTAR
+		| "/"
+		| "%"
+		| tPOW
+		| TDSTAR
+		| "!"
+		| "~"
+		| tUPLUS
+		| tUMINUS
+		| tAREF
+		| tASET
+		| "`"
+		;
+
+Reswords	: keyword__LINE__ | keyword__FILE__ | keyword__ENCODING__
+		| keyword_BEGIN | keyword_END
+		| keyword_alias | keyword_and | keyword_begin
+		| keyword_break | keyword_case | keyword_class | keyword_def
+		| keyword_defined | keyword_do | keyword_else | keyword_elsif
+		| keyword_end | keyword_ensure | keyword_false
+		| keyword_for | keyword_in | keyword_module | keyword_next
+		| keyword_nil | keyword_not | keyword_or | keyword_redo
+		| keyword_rescue | keyword_retry | keyword_return | keyword_self
+		| keyword_super | keyword_then | keyword_true | keyword_undef
+		| keyword_when | keyword_yield | keyword_if | keyword_unless
+		| keyword_while | keyword_until
+		;
+
+Arg		: Lhs "=" Arg
+		| Lhs "=" Arg modifier_rescue Arg
+		| Var_lhs tOP_ASGN Arg
+		| Var_lhs tOP_ASGN Arg modifier_rescue Arg
+		| Primary_value "[" Opt_call_args Rbracket tOP_ASGN Arg
+		| Primary_value "." tIDENTIFIER tOP_ASGN Arg
+		| Primary_value "." tCONSTANT tOP_ASGN Arg
+		| Primary_value tCOLON2 tIDENTIFIER tOP_ASGN Arg
+		| Primary_value tCOLON2 tCONSTANT tOP_ASGN Arg
+		| tCOLON3 tCONSTANT tOP_ASGN Arg
+		| Backref tOP_ASGN Arg
+		| Arg tDOT2 Arg
+		| Arg tDOT3 Arg
+		| Arg "+" Arg
+		| Arg "-" Arg
+		| Arg "*" Arg
+		| Arg "/" Arg
+		| Arg "%" Arg
+		| Arg tPOW Arg
+		| tUMINUS_NUM Simple_numeric tPOW Arg
+		| tUPLUS Arg
+		| tUMINUS Arg
+		| Arg "|" Arg
+		| Arg "^" Arg
+		| Arg "&" Arg
+		| Arg tCMP Arg
+		| Arg ">" Arg
+		| Arg tGEQ Arg
+		| Arg "<" Arg
+		| Arg tLEQ Arg
+		| Arg tEQ Arg
+		| Arg tEQQ Arg
+		| Arg tNEQ Arg
+		| Arg tMATCH Arg
+		| Arg tNMATCH Arg
+		| "!" Arg
+		| "~" Arg
+		| Arg tLSHFT Arg
+		| Arg tRSHFT Arg
+		| Arg tANDOP Arg
+		| Arg tOROP Arg
+		| keyword_defined Opt_nl  Arg
+		| Arg "?"
+		  Arg Opt_nl ":"
+		  Arg
+		| Primary
+		;
+
+Arg_value	: Arg
+		;
+
+Aref_args	: None
+		| Args Trailer
+		| Args "," Assocs Trailer
+		| Assocs Trailer
+		;
+
+Paren_args	: "(" Opt_call_args Rparen
+		;
+
+Opt_paren_args	: None
+		| Paren_args
+		;
+
+Opt_call_args	: None
+		| Call_args
+		| Args ","
+		| Args "," Assocs ","
+		| Assocs ","
+		;
+
+Call_args	: Command
+		| Args Opt_block_arg
+		| Assocs Opt_block_arg
+		| Args "," Assocs Opt_block_arg
+		| Block_arg
+		;
+
+Command_args	: Call_args
+		;
+
+Block_arg	: tAMPER Arg_value
+		;
+
+Opt_block_arg	: "," Block_arg
+		| None
+		;
+
+Args		: Arg_value
+		| tSTAR Arg_value
+		| Args "," Arg_value
+		| Args "," tSTAR Arg_value
+		;
+
+Mrhs_arg	: Mrhs
+		| Arg_value
+		;
+
+Mrhs		: Args "," Arg_value
+		| Args "," tSTAR Arg_value
+		| tSTAR Arg_value
+		;
+
+Primary		: Literal
+		| Strings
+		| Xstring
+		| Regexp
+		| Words
+		| Qwords
+		| Symbols
+		| Qsymbols
+		| Var_ref
+		| Backref
+		| tFID
+		| K_begin
+		  Bodystmt
+		  K_end
+		| TLPAREN_ARG  Rparen
+		| TLPAREN_ARG
+		  Expr  Rparen
+		| tLPAREN Compstmt ")"
+		| Primary_value tCOLON2 tCONSTANT
+		| tCOLON3 tCONSTANT
+		| tLBRACK Aref_args "]"
+		| tLBRACE Assoc_list "}"
+		| keyword_return
+		| keyword_yield "(" Call_args Rparen
+		| keyword_yield "(" Rparen
+		| keyword_yield
+		| keyword_defined Opt_nl "("  Expr Rparen
+		| keyword_not "(" Expr Rparen
+		| keyword_not "(" Rparen
+		| Fcall Brace_block
+		| Method_call
+		| Method_call Brace_block
+		| tLAMBDA Lambda
+		| K_if Expr_value Then
+		  Compstmt
+		  If_tail
+		  K_end
+		| K_unless Expr_value Then
+		  Compstmt
+		  Opt_else
+		  K_end
+		| K_while  Expr_value Do
+		  Compstmt
+		  K_end
+		| K_until  Expr_value Do
+		  Compstmt
+		  K_end
+		| K_case Expr_value Opt_terms
+		  Case_body
+		  K_end
+		| K_case Opt_terms Case_body K_end
+		| K_for For_var keyword_in
+		  Expr_value Do
+		  Compstmt
+		  K_end
+		| K_class Cpath Superclass
+		  Bodystmt
+		  K_end
+		| K_class tLSHFT Expr
+		  Term
+		  Bodystmt
+		  K_end
+		| K_module Cpath
+		  Bodystmt
+		  K_end
+		| K_def Fname
+		  F_arglist
+		  Bodystmt
+		  K_end
+		| K_def Singleton Dot_or_colon  Fname
+		  F_arglist
+		  Bodystmt
+		  K_end
+		| keyword_break
+		| keyword_next
+		| keyword_redo
+		| keyword_retry
+		;
+
+Primary_value	: Primary
+		;
+
+K_begin		: keyword_begin
+		;
+
+K_if		: keyword_if
+		;
+
+K_unless	: keyword_unless
+		;
+
+K_while		: keyword_while
+		;
+
+K_until		: keyword_until
+		;
+
+K_case		: keyword_case
+		;
+
+K_for		: keyword_for
+		;
+
+K_class		: keyword_class
+		;
+
+K_module	: keyword_module
+		;
+
+K_def		: keyword_def
+		;
+
+K_end		: keyword_end
+		;
+
+Then		: Term
+		| keyword_then
+		| Term keyword_then
+		;
+
+Do		: Term
+		| keyword_do_cond
+		;
+
+If_tail		: Opt_else
+		| keyword_elsif Expr_value Then
+		  Compstmt
+		  If_tail
+		;
+
+Opt_else	: None
+		| keyword_else Compstmt
+		;
+
+For_var		: Lhs
+		| Mlhs
+		;
+
+F_marg		: F_norm_arg
+		| tLPAREN F_margs Rparen
+		;
+
+F_marg_list	: F_marg
+		| F_marg_list "," F_marg
+		;
+
+F_margs		: F_marg_list
+		| F_marg_list "," tSTAR F_norm_arg
+		| F_marg_list "," tSTAR F_norm_arg "," F_marg_list
+		| F_marg_list "," tSTAR
+		| F_marg_list "," tSTAR "," F_marg_list
+		| tSTAR F_norm_arg
+		| tSTAR F_norm_arg "," F_marg_list
+		| tSTAR
+		| tSTAR "," F_marg_list
+		;
+
+Block_args_tail	: F_block_kwarg "," F_kwrest Opt_f_block_arg
+		| F_block_kwarg Opt_f_block_arg
+		| F_kwrest Opt_f_block_arg
+		| F_block_arg
+		;
+
+Opt_block_args_tail : "," Block_args_tail
+		|
+		;
+
+Block_param	: F_arg "," F_block_optarg "," F_rest_arg Opt_block_args_tail
+		| F_arg "," F_block_optarg "," F_rest_arg "," F_arg Opt_block_args_tail
+		| F_arg "," F_block_optarg Opt_block_args_tail
+		| F_arg "," F_block_optarg "," F_arg Opt_block_args_tail
+                | F_arg "," F_rest_arg Opt_block_args_tail
+		| F_arg ","
+		| F_arg "," F_rest_arg "," F_arg Opt_block_args_tail
+		| F_arg Opt_block_args_tail
+		| F_block_optarg "," F_rest_arg Opt_block_args_tail
+		| F_block_optarg "," F_rest_arg "," F_arg Opt_block_args_tail
+		| F_block_optarg Opt_block_args_tail
+		| F_block_optarg "," F_arg Opt_block_args_tail
+		| F_rest_arg Opt_block_args_tail
+		| F_rest_arg "," F_arg Opt_block_args_tail
+		| Block_args_tail
+		;
+
+Opt_block_param	: None
+		| Block_param_def
+		;
+
+Block_param_def	: "|" Opt_bv_decl "|"
+		| tOROP
+		| "|" Block_param Opt_bv_decl "|"
+		;
+
+Opt_bv_decl	: Opt_nl
+		| Opt_nl ";" Bv_decls Opt_nl
+		;
+
+Bv_decls	: Bvar
+		| Bv_decls "," Bvar
+		;
+
+Bvar		: tIDENTIFIER
+		| F_bad_arg
+		;
+
+Lambda		: F_larglist
+		  Lambda_body
+		;
+
+F_larglist	: "(" F_args Opt_bv_decl ")"
+		| F_args
+		;
+
+Lambda_body	: tLAMBEG Compstmt "}"
+		| keyword_do_LAMBDA Compstmt keyword_end
+		;
+
+Do_block	: keyword_do_block
+		  Opt_block_param
+		  Compstmt
+		  keyword_end
+		;
+
+Block_call	: Command Do_block
+		| Block_call Dot_or_colon Operation2 Opt_paren_args
+		| Block_call Dot_or_colon Operation2 Opt_paren_args Brace_block
+		| Block_call Dot_or_colon Operation2 Command_args Do_block
+		;
+
+Method_call	: Fcall Paren_args
+		| Primary_value "." Operation2
+		  Opt_paren_args
+		| Primary_value tCOLON2 Operation2
+		  Paren_args
+		| Primary_value tCOLON2 Operation3
+		| Primary_value "."
+		  Paren_args
+		| Primary_value tCOLON2
+		  Paren_args
+		| keyword_super Paren_args
+		| keyword_super
+		| Primary_value "[" Opt_call_args Rbracket
+		;
+
+Brace_block	: "{"
+		  Opt_block_param
+		  Compstmt "}"
+		| keyword_do
+		  Opt_block_param
+		  Compstmt keyword_end
+		;
+
+Case_body	: keyword_when Args Then
+		  Compstmt
+		  Cases
+		;
+
+Cases		: Opt_else
+		| Case_body
+		;
+
+Opt_rescue	: keyword_rescue Exc_list Exc_var Then
+		  Compstmt
+		  Opt_rescue
+		| None
+		;
+
+Exc_list	: Arg_value
+		| Mrhs
+		| None
+		;
+
+Exc_var		: tASSOC Lhs
+		| None
+		;
+
+Opt_ensure	: keyword_ensure Compstmt
+		| None
+		;
+
+Literal		: Numeric
+		| Symbol
+		| Dsym
+		;
+
+Strings		: String
+		;
+
+String		: tCHAR
+		| String1
+		| String String1
+		;
+
+String1		: tSTRING_BEG String_contents tSTRING_END
+		;
+
+Xstring		: tXSTRING_BEG Xstring_contents tSTRING_END
+		;
+
+Regexp		: tREGEXP_BEG Regexp_contents tREGEXP_END
+		;
+
+Words		: tWORDS_BEG " " tSTRING_END
+		| tWORDS_BEG Word_list tSTRING_END
+		;
+
+Word_list	:
+		| Word_list Word " "
+		;
+
+Word		: String_content
+		| Word String_content
+		;
+
+Symbols	        : tSYMBOLS_BEG " " tSTRING_END
+		| tSYMBOLS_BEG Symbol_list tSTRING_END
+		;
+
+Symbol_list	:
+		| Symbol_list Word " "
+		;
+
+Qwords		: tQWORDS_BEG " " tSTRING_END
+		| tQWORDS_BEG Qword_list tSTRING_END
+		;
+
+Qsymbols	: tQSYMBOLS_BEG " " tSTRING_END
+		| tQSYMBOLS_BEG Qsym_list tSTRING_END
+		;
+
+Qword_list	:
+		| Qword_list tSTRING_CONTENT " "
+		;
+
+Qsym_list	:
+		| Qsym_list tSTRING_CONTENT " "
+		;
+
+String_contents :
+		| String_contents String_content
+		;
+
+Xstring_contents:
+		| Xstring_contents String_content
+		;
+
+Regexp_contents:
+		| Regexp_contents String_content
+		;
+
+String_content	: tSTRING_CONTENT
+		| tSTRING_DVAR
+		  String_dvar
+		| tSTRING_DBEG
+		  Compstmt tSTRING_DEND
+		;
+
+String_dvar	: tGVAR
+		| tIVAR
+		| tCVAR
+		| Backref
+		;
+
+Symbol		: tSYMBEG Sym
+		;
+
+Sym		: Fname
+		| tIVAR
+		| tGVAR
+		| tCVAR
+		;
+
+Dsym		: tSYMBEG Xstring_contents tSTRING_END
+		;
+
+Numeric 	: Simple_numeric
+		| tUMINUS_NUM Simple_numeric   /*%prec tLOWEST*/
+		;
+
+Simple_numeric	: tINTEGER
+		| tFLOAT
+		| tRATIONAL
+		| tIMAGINARY
+		;
+
+User_variable	: tIDENTIFIER
+		| tIVAR
+		| tGVAR
+		| tCONSTANT
+		| tCVAR
+		;
+
+Keyword_variable: keyword_nil
+		| keyword_self
+		| keyword_true
+		| keyword_false
+		| keyword__FILE__
+		| keyword__LINE__
+		| keyword__ENCODING__
+		;
+
+Var_ref		: User_variable
+		| Keyword_variable
+		;
+
+Var_lhs		: User_variable
+		| Keyword_variable
+		;
+
+Backref		: tNTH_REF
+		| tBACK_REF
+		;
+
+Superclass	: Term
+		| "<"
+		  Expr_value Term
+		| error Term
+		;
+
+F_arglist	: "(" F_args Rparen
+		| F_args Term
+		;
+
+Args_tail	: F_kwarg "," F_kwrest Opt_f_block_arg
+		| F_kwarg Opt_f_block_arg
+		| F_kwrest Opt_f_block_arg
+		| F_block_arg
+		;
+
+Opt_args_tail	: "," Args_tail
+		|
+		;
+
+F_args		: F_arg "," F_optarg "," F_rest_arg Opt_args_tail
+		| F_arg "," F_optarg "," F_rest_arg "," F_arg Opt_args_tail
+		| F_arg "," F_optarg Opt_args_tail
+		| F_arg "," F_optarg "," F_arg Opt_args_tail
+		| F_arg "," F_rest_arg Opt_args_tail
+		| F_arg "," F_rest_arg "," F_arg Opt_args_tail
+		| F_arg Opt_args_tail
+		| F_optarg "," F_rest_arg Opt_args_tail
+		| F_optarg "," F_rest_arg "," F_arg Opt_args_tail
+		| F_optarg Opt_args_tail
+		| F_optarg "," F_arg Opt_args_tail
+		| F_rest_arg Opt_args_tail
+		| F_rest_arg "," F_arg Opt_args_tail
+		| Args_tail
+		|
+		;
+
+F_bad_arg	: tCONSTANT
+		| tIVAR
+		| tGVAR
+		| tCVAR
+		;
+
+F_norm_arg	: F_bad_arg
+		| tIDENTIFIER
+		;
+
+F_arg_asgn	: F_norm_arg
+		;
+
+F_arg_item	: F_arg_asgn
+		| tLPAREN F_margs Rparen
+		;
+
+F_arg		: F_arg_item
+		| F_arg "," F_arg_item
+		;
+
+F_label 	: tLABEL
+		;
+
+F_kw		: F_label Arg_value
+		| F_label
+		;
+
+F_block_kw	: F_label Primary_value
+		| F_label
+		;
+
+F_block_kwarg	: F_block_kw
+		| F_block_kwarg "," F_block_kw
+		;
+
+F_kwarg		: F_kw
+		| F_kwarg "," F_kw
+		;
+
+Kwrest_mark	: tPOW
+		| TDSTAR
+		;
+
+F_kwrest	: Kwrest_mark tIDENTIFIER
+		| Kwrest_mark
+		;
+
+F_opt		: F_arg_asgn "=" Arg_value
+		;
+
+F_block_opt	: F_arg_asgn "=" Primary_value
+		;
+
+F_block_optarg	: F_block_opt
+		| F_block_optarg "," F_block_opt
+		;
+
+F_optarg	: F_opt
+		| F_optarg "," F_opt
+		;
+
+Restarg_mark	: "*"
+		| tSTAR
+		;
+
+F_rest_arg	: Restarg_mark tIDENTIFIER
+		| Restarg_mark
+		;
+
+Blkarg_mark	: "&"
+		| tAMPER
+		;
+
+F_block_arg	: Blkarg_mark tIDENTIFIER
+		;
+
+Opt_f_block_arg	: "," F_block_arg
+		| None
+		;
+
+Singleton	: Var_ref
+		| "("  Expr Rparen
+		;
+
+Assoc_list	: None
+		| Assocs Trailer
+		;
+
+Assocs		: Assoc
+		| Assocs "," Assoc
+		;
+
+Assoc		: Arg_value tASSOC Arg_value
+		| tLABEL Arg_value
+		| tSTRING_BEG String_contents tLABEL_END Arg_value
+		| TDSTAR Arg_value
+		;
+
+Operation	: tIDENTIFIER
+		| tCONSTANT
+		| tFID
+		;
+
+Operation2	: tIDENTIFIER
+		| tCONSTANT
+		| tFID
+		| Op
+		;
+
+Operation3	: tIDENTIFIER
+		| tFID
+		| Op
+		;
+
+Dot_or_colon	: "."
+		| tCOLON2
+		;
+
+Opt_terms	:
+		| Terms
+		;
+
+Opt_nl		:
+		| "\n"
+		;
+
+Rparen		: Opt_nl ")"
+		;
+
+Rbracket	: Opt_nl "]"
+		;
+
+Trailer		:
+		| "\n"
+		| ","
+		;
+
+Term		: ";"
+		| "\n"
+		;
+
+Terms		: Term
+		| Terms ";"
+		;
+
+None		:
+		;
