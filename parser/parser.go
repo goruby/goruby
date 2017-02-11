@@ -132,16 +132,18 @@ func (p *Parser) parseStatement() ast.Statement {
 }
 
 func (p *Parser) parseVariableStatement() *ast.VariableStatement {
-	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	variable := &ast.VariableStatement{
+		Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal},
+	}
 	if !p.accept(token.ASSIGN) {
 		return nil
 	}
-	// TODO: We're skipping the expressions until we
-	// encounter a newline
+	p.nextToken()
+	variable.Value = p.parseExpression(LOWEST)
 	for !p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE) {
 		p.nextToken()
 	}
-	return &ast.VariableStatement{Name: ident}
+	return variable
 }
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
