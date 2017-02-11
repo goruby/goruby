@@ -136,7 +136,7 @@ func (p *Parser) parseVariableStatement() *ast.VariableStatement {
 	}
 	// TODO: We're skipping the expressions until we
 	// encounter a newline
-	for !p.currentTokenIs(token.NEWLINE) {
+	for !p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE) {
 		p.nextToken()
 	}
 	return &ast.VariableStatement{Name: ident}
@@ -147,7 +147,7 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	p.nextToken()
 	// TODO: We're skipping the expressions until we
 	// encounter a newline
-	for !p.currentTokenIs(token.NEWLINE) {
+	for !p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE) {
 		p.nextToken()
 	}
 	return stmt
@@ -156,7 +156,7 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
-	if p.peekTokenIs(token.NEWLINE) {
+	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE) {
 		p.nextToken()
 	}
 	return stmt
@@ -174,7 +174,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		return nil
 	}
 	leftExp := prefix()
-	for !p.peekTokenIs(token.NEWLINE) && precedence < p.peekPrecedence() {
+	for !p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
@@ -237,8 +237,26 @@ func (p *Parser) curPrecedence() int {
 	return LOWEST
 }
 
+func (p *Parser) currentTokenOneOf(types ...token.TokenType) bool {
+	for _, typ := range types {
+		if p.curToken.Type == typ {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *Parser) currentTokenIs(t token.TokenType) bool {
 	return p.curToken.Type == t
+}
+
+func (p *Parser) peekTokenOneOf(types ...token.TokenType) bool {
+	for _, typ := range types {
+		if p.peekToken.Type == typ {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Parser) peekTokenIs(t token.TokenType) bool {

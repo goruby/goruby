@@ -10,9 +10,9 @@ import (
 
 func TestVariableStatements(t *testing.T) {
 	input := `
-x = 5
-y = 10
-foobar = 838383
+x = 5;
+y = 10;
+foobar = 838383;
 `
 	l := lexer.New(input)
 	p := New(l)
@@ -41,9 +41,9 @@ foobar = 838383
 
 func TestReturnStatement(t *testing.T) {
 	input := `
-return 5
-return 10
-return 993322
+return 5;
+return 10;
+return 993322;
 `
 	l := lexer.New(input)
 	p := New(l)
@@ -70,7 +70,7 @@ return 993322
 }
 
 func TestIdentifierExpression(t *testing.T) {
-	input := "foobar"
+	input := "foobar;"
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
@@ -104,7 +104,7 @@ func TestIdentifierExpression(t *testing.T) {
 }
 
 func TestIntegerLiteralExpression(t *testing.T) {
-	input := "5"
+	input := "5;"
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
@@ -142,8 +142,8 @@ func TestParsingPrefixExpressions(t *testing.T) {
 		operator     string
 		integerValue int64
 	}{
-		{"!5", "!", 5},
-		{"-15", "-", 15},
+		{"!5;", "!", 5},
+		{"-15;", "-", 15},
 	}
 	for _, tt := range prefixTests {
 		l := lexer.New(tt.input)
@@ -187,14 +187,14 @@ func TestParsingInfixExpressions(t *testing.T) {
 		operator   string
 		rightValue int64
 	}{
-		{"5 + 5", 5, "+", 5},
-		{"5 - 5", 5, "-", 5},
-		{"5 * 5", 5, "*", 5},
-		{"5 / 5", 5, "/", 5},
-		{"5 > 5", 5, ">", 5},
-		{"5 < 5", 5, "<", 5},
-		{"5 == 5", 5, "==", 5},
-		{"5 != 5", 5, "!=", 5},
+		{"5 + 5;", 5, "+", 5},
+		{"5 - 5;", 5, "-", 5},
+		{"5 * 5;", 5, "*", 5},
+		{"5 / 5;", 5, "/", 5},
+		{"5 > 5;", 5, ">", 5},
+		{"5 < 5;", 5, "<", 5},
+		{"5 == 5;", 5, "==", 5},
+		{"5 != 5;", 5, "!=", 5},
 	}
 	for _, tt := range infixTests {
 		l := lexer.New(tt.input)
@@ -271,11 +271,10 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"a + b * c + d / e - f",
 			"(((a + (b * c)) + (d / e)) - f)",
 		},
-		// TODO: Skipped until we allow expression separation via semicolon
-		// {
-		// 	"3 + 4; -5 * 5",
-		// 	"(3 + 4)((-5) * 5)",
-		// },
+		{
+			"3 + 4; -5 * 5",
+			"(3 + 4)((-5) * 5)",
+		},
 		{
 			"5 > 4 == 3 < 4",
 			"((5 > 4) == (3 < 4))",
