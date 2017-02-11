@@ -1,13 +1,18 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/lexer"
 	"github.com/goruby/goruby/token"
 )
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l}
+	p := &Parser{
+		l:      l,
+		errors: []string{},
+	}
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
 	p.nextToken()
@@ -18,11 +23,25 @@ type Parser struct {
 	l         *lexer.Lexer
 	curToken  token.Token
 	peekToken token.Token
+	errors    []string
 }
 
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
 	p.peekToken = p.l.NextToken()
+}
+
+func (p *Parser) Errors() []string {
+	return p.errors
+}
+
+func (p *Parser) peekError(t token.TokenType) {
+	msg := fmt.Sprintf(
+		"expected next token to be of type %s, got %s instead",
+		t,
+		p.peekToken.Type,
+	)
+	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
@@ -41,11 +60,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.IDENT:
-		if p.peekToken.Type == token.ASSIGN {
-			return p.parseVariableStatement()
-		} else {
-			return nil
-		}
+		return p.parseVariableStatement()
 	default:
 		return nil
 	}
@@ -79,6 +94,7 @@ func (p *Parser) accept(t token.TokenType) bool {
 		p.nextToken()
 		return true
 	} else {
+		p.peekError(t)
 		return false
 	}
 }
