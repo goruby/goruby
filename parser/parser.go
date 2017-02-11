@@ -61,6 +61,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.IDENT:
 		return p.parseVariableStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
 	default:
 		return nil
 	}
@@ -77,6 +79,17 @@ func (p *Parser) parseVariableStatement() *ast.VariableStatement {
 		p.nextToken()
 	}
 	return &ast.VariableStatement{Name: ident}
+}
+
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	stmt := &ast.ReturnStatement{Token: p.curToken}
+	p.nextToken()
+	// TODO: We're skipping the expressions until we
+	// encounter a newline
+	for !p.currentTokenIs(token.NEWLINE) {
+		p.nextToken()
+	}
+	return stmt
 }
 
 func (p *Parser) currentTokenIs(t token.TokenType) bool {
