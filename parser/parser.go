@@ -8,6 +8,22 @@ import (
 	"github.com/goruby/goruby/token"
 )
 
+const (
+	_ int = iota
+	LOWEST
+	EQUALS      // ==
+	LESSGREATER // > or <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -X or !X
+	CALL        // myFunction(X)
+)
+
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
+)
+
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:      l,
@@ -16,14 +32,28 @@ func New(l *lexer.Lexer) *Parser {
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
 	p.nextToken()
+	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	return p
 }
 
 type Parser struct {
-	l         *lexer.Lexer
+	l      *lexer.Lexer
+	errors []string
+
 	curToken  token.Token
 	peekToken token.Token
-	errors    []string
+
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
+}
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
 }
 
 func (p *Parser) nextToken() {
@@ -59,12 +89,17 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
+	case token.NEWLINE:
+		return nil
 	case token.IDENT:
-		return p.parseVariableStatement()
+		if p.peekTokenIs(token.ASSIGN) {
+			return p.parseVariableStatement()
+		}
+		return p.parseExpressionStatement()
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -90,6 +125,28 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 		p.nextToken()
 	}
 	return stmt
+}
+
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{Token: p.curToken}
+	stmt.Expression = p.parseExpression(LOWEST)
+	if p.peekTokenIs(token.NEWLINE) {
+		p.nextToken()
+	}
+	return stmt
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParseFns[p.curToken.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExp := prefix()
+	return leftExp
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) currentTokenIs(t token.TokenType) bool {
