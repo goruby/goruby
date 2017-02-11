@@ -6,6 +6,7 @@ const (
 	ILLEGAL TokenType = iota
 	EOF
 
+	NEWLINE // \n
 	// Identifier + literals
 	IDENT
 	INT

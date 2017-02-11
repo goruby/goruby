@@ -102,11 +102,14 @@ func (l *Lexer) errorf(format string, args ...interface{}) LexerStateFn {
 
 func startLexer(l *Lexer) LexerStateFn {
 	r := l.next()
-	if unicode.IsSpace(r) {
+	if isWhitespace(r) {
 		l.ignore()
 		return startLexer
 	}
 	switch r {
+	case '\n':
+		l.emit(token.NEWLINE)
+		return startLexer
 	case '=':
 		if l.peek() == '=' {
 			l.next()
@@ -192,6 +195,10 @@ func lexDigit(l *Lexer) LexerStateFn {
 	l.backup()
 	l.emit(token.INT)
 	return startLexer
+}
+
+func isWhitespace(r rune) bool {
+	return unicode.IsSpace(r) && r != '\n'
 }
 
 func isLetter(r rune) bool {
