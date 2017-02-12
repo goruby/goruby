@@ -246,7 +246,14 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	expression := &ast.IfExpression{Token: p.curToken}
 	p.nextToken()
 	expression.Condition = p.parseExpression(LOWEST)
-	p.consume(token.NEWLINE)
+	if p.peekTokenIs(token.THEN) {
+		p.accept(token.THEN)
+	}
+	if !p.consume(token.NEWLINE) {
+		msg := fmt.Sprintf("could not parse if expression: unexpected token '%s'", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	consequence := &ast.BlockStatement{}
 	for !p.peekTokenOneOf(token.ELSE, token.END, token.EOF) {
 		stmt := p.parseStatement()

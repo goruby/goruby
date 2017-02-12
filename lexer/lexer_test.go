@@ -18,7 +18,7 @@ result = add(five, ten)
 !-/*5;
 5 < 10 > 5
 return
-if 5 < 10
+if 5 < 10 then
 	true
 else
 	false
@@ -84,6 +84,7 @@ end
 		{token.INT, "5"},
 		{token.LT, "<"},
 		{token.INT, "10"},
+		{token.THEN, "then"},
 		{token.NEWLINE, "\n"},
 		{token.TRUE, "true"},
 		{token.NEWLINE, "\n"},
