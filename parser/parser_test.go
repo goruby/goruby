@@ -550,6 +550,141 @@ end`
 	}
 }
 
+func TestFunctionLiteralParsing(t *testing.T) {
+	tests := []struct {
+		input         string
+		name          string
+		parameters    []string
+		bodyStatement string
+	}{
+		{
+			`def foo(x, y)
+				x + y
+			end`,
+			"foo",
+			[]string{"x", "y"},
+			"(x + y)",
+		},
+		{
+			`def bar x, y
+				x + y
+			end`,
+			"bar",
+			[]string{"x", "y"},
+			"(x + y)",
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Body does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		function, ok := stmt.Expression.(*ast.FunctionLiteral)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not ast.FunctionLiteral. got=%T",
+				stmt.Expression,
+			)
+		}
+
+		functionName := function.Name.Token.Literal
+		if functionName != tt.name {
+			t.Logf("function name wrong, want %q, got %q", tt.name, functionName)
+			t.Fail()
+		}
+
+		if len(function.Parameters) != 2 {
+			t.Fatalf(
+				"function literal parameters wrong. want 2, got=%d\n",
+				len(function.Parameters),
+			)
+		}
+
+		for i, param := range function.Parameters {
+			testLiteralExpression(t, param, tt.parameters[i])
+		}
+
+		if len(function.Body.Statements) != 1 {
+			t.Fatalf(
+				"function.Body.Statements has not 1 statements. got=%d\n",
+				len(function.Body.Statements),
+			)
+		}
+
+		bodyStmt, ok := function.Body.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"function body stmt is not ast.ExpressionStatement. got=%T",
+				function.Body.Statements[0],
+			)
+		}
+
+		statement := bodyStmt.String()
+		if statement != tt.bodyStatement {
+			t.Logf(
+				"Expected body statement to equal\n%q\n\tgot\n%q\n",
+				tt.bodyStatement,
+				statement,
+			)
+			t.Fail()
+		}
+	}
+}
+
+func TestFunctionParameterParsing(t *testing.T) {
+	tests := []struct {
+		input          string
+		expectedParams []string
+	}{
+		{input: `def fn()
+				end`, expectedParams: []string{}},
+		{input: `def fn(x)
+				end`, expectedParams: []string{"x"}},
+		{input: `def fn(x, y, z)
+				end`, expectedParams: []string{"x", "y", "z"}},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		function := stmt.Expression.(*ast.FunctionLiteral)
+
+		if len(function.Parameters) != len(tt.expectedParams) {
+			t.Errorf(
+				"length parameters wrong. want %d, got=%d\n",
+				len(tt.expectedParams),
+				len(function.Parameters),
+			)
+		}
+
+		for i, ident := range tt.expectedParams {
+			testLiteralExpression(t, function.Parameters[i], ident)
+		}
+	}
+}
+
 func testVariableStatement(t *testing.T, s ast.Statement, name string) bool {
 	variableStmt, ok := s.(*ast.VariableStatement)
 	if !ok {

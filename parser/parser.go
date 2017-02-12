@@ -54,6 +54,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
+	p.registerPrefix(token.DEF, p.parseFunctionLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -262,16 +263,74 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	expression.Consequence = consequence
 	p.nextToken()
 	if p.currentTokenIs(token.ELSE) {
-		p.consume(token.NEWLINE)
-		alternative := &ast.BlockStatement{}
-		for !p.peekTokenOneOf(token.END, token.EOF) {
-			stmt := p.parseStatement()
-			alternative.Statements = append(alternative.Statements, stmt)
-		}
-		expression.Alternative = alternative
+		p.accept(token.NEWLINE)
+		expression.Alternative = p.parseBlockStatement()
 		p.nextToken()
 	}
 	return expression
+}
+
+func (p *Parser) parseFunctionLiteral() ast.Expression {
+	lit := &ast.FunctionLiteral{Token: p.curToken}
+
+	if !p.accept(token.IDENT) {
+		return nil
+	}
+	lit.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if p.peekTokenIs(token.LPAREN) {
+		p.nextToken()
+	}
+
+	lit.Parameters = p.parseFunctionParameters()
+
+	if !p.accept(token.NEWLINE) {
+		return nil
+	}
+	lit.Body = p.parseBlockStatement()
+	return lit
+}
+
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	identifiers := []*ast.Identifier{}
+
+	if p.peekTokenOneOf(token.RPAREN, token.NEWLINE) {
+		p.nextToken()
+		return identifiers
+	}
+	p.nextToken()
+
+	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	identifiers = append(identifiers, ident)
+
+	for p.peekTokenIs(token.COMMA) {
+		p.consume(token.COMMA)
+		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		identifiers = append(identifiers, ident)
+	}
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+	}
+
+	return identifiers
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{Token: p.curToken}
+	block.Statements = []ast.Statement{}
+
+	p.nextToken()
+
+	for !p.currentTokenOneOf(token.END, token.EOF) {
+		stmt := p.parseStatement()
+		if stmt != nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+		p.nextToken()
+	}
+
+	return block
 }
 
 func (p *Parser) peekPrecedence() int {
