@@ -53,6 +53,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.TRUE, p.parseBoolean)
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
+	p.registerPrefix(token.IF, p.parseIfExpression)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -241,6 +242,31 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	return exp
 }
 
+func (p *Parser) parseIfExpression() ast.Expression {
+	expression := &ast.IfExpression{Token: p.curToken}
+	p.nextToken()
+	expression.Condition = p.parseExpression(LOWEST)
+	p.consume(token.NEWLINE)
+	consequence := &ast.BlockStatement{}
+	for !p.peekTokenOneOf(token.ELSE, token.END, token.EOF) {
+		stmt := p.parseStatement()
+		consequence.Statements = append(consequence.Statements, stmt)
+	}
+	expression.Consequence = consequence
+	p.nextToken()
+	if p.currentTokenIs(token.ELSE) {
+		p.consume(token.NEWLINE)
+		alternative := &ast.BlockStatement{}
+		for !p.peekTokenOneOf(token.END, token.EOF) {
+			stmt := p.parseStatement()
+			alternative.Statements = append(alternative.Statements, stmt)
+		}
+		expression.Alternative = alternative
+		p.nextToken()
+	}
+	return expression
+}
+
 func (p *Parser) peekPrecedence() int {
 	if p, ok := precedences[p.peekToken.Type]; ok {
 		return p
@@ -281,7 +307,7 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
 
-// accept consumes the next Token
+// accept moves to the next Token
 // if it's from the valid set.
 func (p *Parser) accept(t token.TokenType) bool {
 	if p.peekTokenIs(t) {
@@ -291,4 +317,14 @@ func (p *Parser) accept(t token.TokenType) bool {
 		p.peekError(t)
 		return false
 	}
+}
+
+// consume consumes the next token
+// if it's from the valid set.
+func (p *Parser) consume(t token.TokenType) bool {
+	isRightToken := p.accept(t)
+	if isRightToken {
+		p.nextToken()
+	}
+	return isRightToken
 }
