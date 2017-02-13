@@ -5,16 +5,19 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/goruby/goruby/evaluator"
 	"github.com/goruby/goruby/lexer"
 	"github.com/goruby/goruby/parser"
 )
 
-const PROMPT = ">> "
+const PROMPT = "girb:%03d> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	counter := 1
 	for {
-		fmt.Printf(PROMPT)
+		fmt.Printf(PROMPT, counter)
+		counter++
 		scanned := scanner.Scan()
 		if !scanned {
 			fmt.Println()
@@ -30,13 +33,16 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			fmt.Fprintf(out, "=> %s\n", evaluated.Inspect())
+		}
 	}
 }
+
 func printParserErrors(out io.Writer, errors []string) {
 	fmt.Println("Parser errors: ")
 	for _, msg := range errors {
-		io.WriteString(out, "\t"+msg+"\n")
+		fmt.Fprintf(out, "\t%s\n", msg)
 	}
 }
