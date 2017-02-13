@@ -192,7 +192,7 @@ func (p *Parser) parseVariableAssignExpression(variable ast.Expression) ast.Expr
 	}
 	p.nextToken()
 	variableExp.Value = p.parseExpression(LOWEST)
-	for !p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE) {
+	for !p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE, token.EOF) {
 		p.nextToken()
 	}
 	return variableExp
