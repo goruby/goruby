@@ -147,6 +147,7 @@ func (ie *IfExpression) String() string {
 		out.WriteString("else ")
 		out.WriteString(ie.Alternative.String())
 	}
+	out.WriteString(" end")
 	return out.String()
 }
 
@@ -172,6 +173,7 @@ func (fl *FunctionLiteral) String() string {
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")
 	out.WriteString(fl.Body.String())
+	out.WriteString(" end")
 	return out.String()
 }
 
