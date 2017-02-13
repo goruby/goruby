@@ -101,7 +101,7 @@ func (p *Parser) Errors() []string {
 	return p.errors
 }
 
-func (p *Parser) peekError(t token.TokenType) {
+func (p *Parser) peekError(t ...token.TokenType) {
 	msg := fmt.Sprintf(
 		"expected next token to be of type %s, got %s instead",
 		t,
@@ -290,7 +290,7 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 
 	lit.Parameters = p.parseFunctionParameters()
 
-	if !p.accept(token.NEWLINE) {
+	if !p.acceptOneOf(token.NEWLINE, token.SEMICOLON) {
 		return nil
 	}
 	lit.Body = p.parseBlockStatement()
@@ -300,7 +300,7 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	identifiers := []*ast.Identifier{}
 
-	if p.peekTokenOneOf(token.RPAREN, token.NEWLINE) {
+	if p.peekTokenOneOf(token.RPAREN, token.NEWLINE, token.SEMICOLON) {
 		p.nextToken()
 		return identifiers
 	}
@@ -422,6 +422,18 @@ func (p *Parser) accept(t token.TokenType) bool {
 		return true
 	} else {
 		p.peekError(t)
+		return false
+	}
+}
+
+// acceptOneOf moves to the next Token
+// if it's from the valid set.
+func (p *Parser) acceptOneOf(t ...token.TokenType) bool {
+	if p.peekTokenOneOf(t...) {
+		p.nextToken()
+		return true
+	} else {
+		p.peekError(t...)
 		return false
 	}
 }
