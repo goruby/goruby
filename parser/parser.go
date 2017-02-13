@@ -154,9 +154,12 @@ func (p *Parser) parseVariableStatement() *ast.VariableStatement {
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	stmt := &ast.ReturnStatement{Token: p.curToken}
 	p.nextToken()
-	// TODO: We're skipping the expressions until we
-	// encounter a newline
+	if p.currentTokenIs(token.NEWLINE) {
+		p.nextToken()
+		return stmt
+	}
 	for !p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE) {
+		stmt.ReturnValue = p.parseExpression(LOWEST)
 		p.nextToken()
 	}
 	return stmt
