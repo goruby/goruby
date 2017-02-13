@@ -17,6 +17,7 @@ const (
 	SUM         // +
 	PRODUCT     // *
 	PREFIX      // -X or !X
+	ASSIGNMENT  // x = 5
 	CALL        // myFunction(X)
 )
 
@@ -29,6 +30,7 @@ var precedences = map[token.TokenType]int{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.ASSIGN:   ASSIGNMENT,
 	token.LPAREN:   CALL,
 }
 
@@ -67,6 +69,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
+	p.registerInfix(token.ASSIGN, p.parseVariableAssignExpression)
 	return p
 }
 
@@ -124,31 +127,11 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.NEWLINE:
 		return nil
-	case token.IDENT:
-		if p.peekTokenIs(token.ASSIGN) {
-			return p.parseVariableStatement()
-		}
-		return p.parseExpressionStatement()
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
-}
-
-func (p *Parser) parseVariableStatement() *ast.VariableStatement {
-	variable := &ast.VariableStatement{
-		Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal},
-	}
-	if !p.accept(token.ASSIGN) {
-		return nil
-	}
-	p.nextToken()
-	variable.Value = p.parseExpression(LOWEST)
-	for !p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE) {
-		p.nextToken()
-	}
-	return variable
 }
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
@@ -195,6 +178,24 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		leftExp = infix(leftExp)
 	}
 	return leftExp
+}
+
+func (p *Parser) parseVariableAssignExpression(variable ast.Expression) ast.Expression {
+	ident, ok := variable.(*ast.Identifier)
+	if !ok {
+		msg := fmt.Sprintf("could not parse variable assignment: expected identifier, got token '%T'", variable)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	variableExp := &ast.Variable{
+		Name: ident,
+	}
+	p.nextToken()
+	variableExp.Value = p.parseExpression(LOWEST)
+	for !p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE) {
+		p.nextToken()
+	}
+	return variableExp
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {

@@ -39,28 +39,6 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
-type VariableStatement struct {
-	Name  *Identifier
-	Value Expression
-}
-
-func (v *VariableStatement) String() string {
-	var out bytes.Buffer
-	out.WriteString(v.Name.String())
-	out.WriteString(" = ")
-	if v.Value != nil {
-		out.WriteString(v.Value.String())
-	}
-	return out.String()
-}
-func (v *VariableStatement) statementNode()       {}
-func (v *VariableStatement) TokenLiteral() string { return v.Name.Token.Literal }
-
-type Identifier struct {
-	Token token.Token // the token.IDENT token
-	Value string
-}
-
 type ReturnStatement struct {
 	Token       token.Token // the 'return' token
 	ReturnValue Expression
@@ -104,6 +82,28 @@ func (bs *BlockStatement) String() string {
 		out.WriteString(s.String())
 	}
 	return out.String()
+}
+
+type Variable struct {
+	Name  *Identifier
+	Value Expression
+}
+
+func (v *Variable) String() string {
+	var out bytes.Buffer
+	out.WriteString(v.Name.String())
+	out.WriteString(" = ")
+	if v.Value != nil {
+		out.WriteString(v.Value.String())
+	}
+	return out.String()
+}
+func (v *Variable) expressionNode()      {}
+func (v *Variable) TokenLiteral() string { return v.Name.Token.Literal }
+
+type Identifier struct {
+	Token token.Token // the token.IDENT token
+	Value string
 }
 
 func (i *Identifier) String() string       { return i.Value }

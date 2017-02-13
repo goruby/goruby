@@ -8,15 +8,16 @@ import (
 	"github.com/goruby/goruby/lexer"
 )
 
-func TestVariableStatements(t *testing.T) {
+func TestVariableExpression(t *testing.T) {
 	tests := []struct {
 		input              string
 		expectedIdentifier string
-		expectedValue      interface{}
+		expectedValue      string
 	}{
-		{"x = 5;", "x", 5},
-		{"y = true;", "y", true},
+		{"x = 5;", "x", "5"},
+		{"y = true;", "y", "true"},
 		{"foobar = y;", "foobar", "y"},
+		{"foobar = (12 + 2 * bar) - x;", "foobar", "((12 + (2 * bar)) - x)"},
 	}
 
 	for _, tt := range tests {
@@ -31,15 +32,29 @@ func TestVariableStatements(t *testing.T) {
 				len(program.Statements),
 			)
 		}
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
 
-		stmt := program.Statements[0]
-		if !testVariableStatement(t, stmt, tt.expectedIdentifier) {
+		variable, ok := stmt.Expression.(*ast.Variable)
+
+		if !testIdentifier(t, variable.Name, tt.expectedIdentifier) {
 			return
 		}
 
-		val := stmt.(*ast.VariableStatement).Value
-		if !testLiteralExpression(t, val, tt.expectedValue) {
-			return
+		val := variable.Value.String()
+
+		if val != tt.expectedValue {
+			t.Logf(
+				"Expected variable value to equal %s, got %s\n",
+				tt.expectedValue,
+				val,
+			)
+			t.Fail()
 		}
 	}
 }
@@ -374,6 +389,22 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{
 			"add(a + b + c * d / f + g)",
 			"add((((a + b) + ((c * d) / f)) + g))",
+		},
+		{
+			"add(a + b + c * d / f + g)",
+			"add((((a + b) + ((c * d) / f)) + g))",
+		},
+		{
+			"x = 12 * 3;",
+			"x = (12 * 3)",
+		},
+		{
+			"x = 3 + 4 * 3;",
+			"x = (3 + (4 * 3))",
+		},
+		{
+			"x = add(4) * 3;",
+			"x = (add(4) * 3)",
 		},
 	}
 
@@ -805,18 +836,18 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 	}
 }
 
-func testVariableStatement(t *testing.T, s ast.Statement, name string) bool {
-	variableStmt, ok := s.(*ast.VariableStatement)
+func testVariableExpression(t *testing.T, e ast.Expression, name string) bool {
+	variable, ok := e.(*ast.Variable)
 	if !ok {
-		t.Errorf("statement not *ast.VariableStatement. got=%T", s)
+		t.Errorf("expression not *ast.Variable. got=%T", e)
 		return false
 	}
-	if variableStmt.Name.Value != name {
-		t.Errorf("statement.Name.Value not '%s'. got=%s", name, variableStmt.Name.Value)
+	if variable.Name.Value != name {
+		t.Errorf("variable.Name.Value not '%s'. got=%s", name, variable.Name.Value)
 		return false
 	}
-	if variableStmt.Name.TokenLiteral() != name {
-		t.Errorf("statement.Name not '%s'. got=%s", name, variableStmt.Name)
+	if variable.Name.TokenLiteral() != name {
+		t.Errorf("variable.Name not '%s'. got=%s", name, variable.Name)
 		return false
 	}
 

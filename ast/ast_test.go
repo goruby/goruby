@@ -9,14 +9,16 @@ import (
 func TestString(t *testing.T) {
 	program := &Program{
 		Statements: []Statement{
-			&VariableStatement{
-				Name: &Identifier{
-					Token: token.Token{Type: token.IDENT, Literal: "myVar"},
-					Value: "myVar",
-				},
-				Value: &Identifier{
-					Token: token.Token{Type: token.IDENT, Literal: "anotherVar"},
-					Value: "anotherVar",
+			&ExpressionStatement{
+				Expression: &Variable{
+					Name: &Identifier{
+						Token: token.Token{Type: token.IDENT, Literal: "myVar"},
+						Value: "myVar",
+					},
+					Value: &Identifier{
+						Token: token.Token{Type: token.IDENT, Literal: "anotherVar"},
+						Value: "anotherVar",
+					},
 				},
 			},
 		},
