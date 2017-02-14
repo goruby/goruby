@@ -478,6 +478,8 @@ func TestIfExpression(t *testing.T) {
 		{`if x < y then
 			x
 		end`, "x", "<", "y", "x"},
+		{`if x < y; x
+		end`, "x", "<", "y", "x"},
 	}
 
 	for _, tt := range tests {

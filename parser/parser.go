@@ -256,15 +256,18 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	if p.peekTokenIs(token.THEN) {
 		p.accept(token.THEN)
 	}
-	if !p.consume(token.NEWLINE) {
+	if !p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
 		msg := fmt.Sprintf("could not parse if expression: unexpected token '%s'", p.peekToken.Literal)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
+	p.consume(p.peekToken.Type)
 	consequence := &ast.BlockStatement{}
 	for !p.peekTokenOneOf(token.ELSE, token.END, token.EOF) {
 		stmt := p.parseStatement()
-		consequence.Statements = append(consequence.Statements, stmt)
+		if stmt != nil {
+			consequence.Statements = append(consequence.Statements, stmt)
+		}
 	}
 	expression.Consequence = consequence
 	p.nextToken()
