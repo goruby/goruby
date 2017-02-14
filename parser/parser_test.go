@@ -470,7 +470,7 @@ func TestIfExpression(t *testing.T) {
 		expectedConditionLeft         string
 		expectedConditionOperator     string
 		expectedConditionRight        string
-		expectedConsequenceIdentifier string
+		expectedConsequenceExpression string
 	}{
 		{`if x < y
 			x
@@ -480,6 +480,12 @@ func TestIfExpression(t *testing.T) {
 		end`, "x", "<", "y", "x"},
 		{`if x < y; x
 		end`, "x", "<", "y", "x"},
+		{`if x < y
+			if x == 3
+				y
+			end
+			x
+		end`, "x", "<", "y", "if(x == 3) y endx"},
 	}
 
 	for _, tt := range tests {
@@ -522,23 +528,25 @@ func TestIfExpression(t *testing.T) {
 			return
 		}
 
-		if len(exp.Consequence.Statements) != 1 {
-			t.Errorf(
-				"consequence is not 1 statements. got=%d\n",
-				len(exp.Consequence.Statements),
-			)
+		consequenceBody := ""
+		for _, stmt := range exp.Consequence.Statements {
+			consequence, ok := stmt.(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"Statements[0] is not ast.ExpressionStatement. got=%T",
+					exp.Consequence.Statements[0],
+				)
+			}
+
+			consequenceBody += consequence.Expression.String()
 		}
 
-		consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf(
-				"Statements[0] is not ast.ExpressionStatement. got=%T",
-				exp.Consequence.Statements[0],
+		if consequenceBody != tt.expectedConsequenceExpression {
+			t.Logf(
+				"Expected consequence to equal %q, got %q\n",
+				tt.expectedConsequenceExpression,
+				consequenceBody,
 			)
-		}
-
-		if !testIdentifier(t, consequence.Expression, tt.expectedConsequenceIdentifier) {
-			return
 		}
 
 		if exp.Alternative != nil {

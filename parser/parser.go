@@ -137,7 +137,7 @@ func (p *Parser) parseStatement() ast.Statement {
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	stmt := &ast.ReturnStatement{Token: p.curToken}
 	p.nextToken()
-	if p.currentTokenIs(token.NEWLINE) {
+	if p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE) {
 		p.nextToken()
 		return stmt
 	}
@@ -267,6 +267,8 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		stmt := p.parseStatement()
 		if stmt != nil {
 			consequence.Statements = append(consequence.Statements, stmt)
+		} else {
+			p.nextToken()
 		}
 	}
 	expression.Consequence = consequence
