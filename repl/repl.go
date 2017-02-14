@@ -7,6 +7,7 @@ import (
 
 	"github.com/goruby/goruby/evaluator"
 	"github.com/goruby/goruby/lexer"
+	"github.com/goruby/goruby/object"
 	"github.com/goruby/goruby/parser"
 )
 
@@ -15,6 +16,7 @@ const PROMPT = "girb:%03d> "
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	counter := 1
+	env := object.NewEnvironment()
 	for {
 		fmt.Printf(PROMPT, counter)
 		counter++
@@ -33,7 +35,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, env)
 		if evaluated != nil {
 			fmt.Fprintf(out, "=> %s\n", evaluated.Inspect())
 		}
