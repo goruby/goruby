@@ -42,9 +42,9 @@ func Start(in io.Reader, out io.Writer) {
 	}
 }
 
-func printParserErrors(out io.Writer, errors []string) {
+func printParserErrors(out io.Writer, errors []error) {
 	fmt.Println("Parser errors: ")
-	for _, msg := range errors {
-		fmt.Fprintf(out, "\t%s\n", msg)
+	for _, err := range errors {
+		fmt.Fprintf(out, "\t%s\n", err.Error())
 	}
 }

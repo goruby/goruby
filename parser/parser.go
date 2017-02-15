@@ -47,7 +47,7 @@ var defaultExpressionTerminators = []token.TokenType{
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:      l,
-		errors: []string{},
+		errors: []error{},
 	}
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
@@ -80,7 +80,7 @@ func New(l *lexer.Lexer) *Parser {
 
 type Parser struct {
 	l      *lexer.Lexer
-	errors []string
+	errors []error
 
 	curToken  token.Token
 	peekToken token.Token
@@ -102,17 +102,16 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.l.NextToken()
 }
 
-func (p *Parser) Errors() []string {
+func (p *Parser) Errors() []error {
 	return p.errors
 }
 
 func (p *Parser) peekError(t ...token.TokenType) {
-	msg := fmt.Sprintf(
-		"expected next token to be of type %s, got %s instead",
-		t,
-		p.peekToken.Type,
-	)
-	p.errors = append(p.errors, msg)
+	err := &unexpectedTokenError{
+		expectedTokens: t,
+		actualToken:    p.peekToken.Type,
+	}
+	p.errors = append(p.errors, err)
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
@@ -163,7 +162,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("no prefix parse function for type %s found", t)
+	msg := fmt.Errorf("no prefix parse function for type %s found", t)
 	p.errors = append(p.errors, msg)
 }
 
@@ -192,7 +191,7 @@ func (p *Parser) parseExpression(precedence int, expressionTerminators ...token.
 func (p *Parser) parseVariableAssignExpression(variable ast.Expression) ast.Expression {
 	ident, ok := variable.(*ast.Identifier)
 	if !ok {
-		msg := fmt.Sprintf("could not parse variable assignment: expected identifier, got token '%T'", variable)
+		msg := fmt.Errorf("could not parse variable assignment: expected identifier, got token '%T'", variable)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -212,7 +211,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
 	if err != nil {
-		msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
+		msg := fmt.Errorf("could not parse %q as integer", p.curToken.Literal)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -263,7 +262,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		p.accept(token.THEN)
 	}
 	if !p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
-		msg := fmt.Sprintf(
+		msg := fmt.Errorf(
 			"could not parse if expression: unexpected token %s: '%s'",
 			p.peekToken.Type,
 			p.peekToken.Literal,
@@ -361,7 +360,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	ident, ok := function.(*ast.Identifier)
 	if !ok {
-		msg := fmt.Sprintf("could not parse call expression: expected identifier, got token '%T'", function)
+		msg := fmt.Errorf("could not parse call expression: expected identifier, got token '%T'", function)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
