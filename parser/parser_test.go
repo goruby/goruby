@@ -406,6 +406,10 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"x = add(4) * 3;",
 			"x = (add(4) * 3)",
 		},
+		{
+			"add(x = add(4) * 3);",
+			"add(x = (add(4) * 3))",
+		},
 	}
 
 	for _, tt := range tests {

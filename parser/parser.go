@@ -39,6 +39,11 @@ type (
 	infixParseFn  func(ast.Expression) ast.Expression
 )
 
+var defaultExpressionTerminators = []token.TokenType{
+	token.SEMICOLON,
+	token.NEWLINE,
+}
+
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:      l,
@@ -162,14 +167,18 @@ func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 	p.errors = append(p.errors, msg)
 }
 
-func (p *Parser) parseExpression(precedence int) ast.Expression {
+func (p *Parser) parseExpression(precedence int, expressionTerminators ...token.TokenType) ast.Expression {
+	terminators := defaultExpressionTerminators
+	if expressionTerminators != nil {
+		terminators = append(terminators, expressionTerminators...)
+	}
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
 		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
 	}
 	leftExp := prefix()
-	for !p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE) && precedence < p.peekPrecedence() {
+	for !p.peekTokenOneOf(terminators...) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
@@ -192,9 +201,6 @@ func (p *Parser) parseVariableAssignExpression(variable ast.Expression) ast.Expr
 	}
 	p.nextToken()
 	variableExp.Value = p.parseExpression(LOWEST)
-	for !p.currentTokenOneOf(token.SEMICOLON, token.NEWLINE, token.EOF) {
-		p.nextToken()
-	}
 	return variableExp
 }
 
@@ -257,7 +263,11 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		p.accept(token.THEN)
 	}
 	if !p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
-		msg := fmt.Sprintf("could not parse if expression: unexpected token '%s'", p.peekToken.Literal)
+		msg := fmt.Sprintf(
+			"could not parse if expression: unexpected token %s: '%s'",
+			p.peekToken.Type,
+			p.peekToken.Literal,
+		)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -365,7 +375,7 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 	}
 
 	p.nextToken()
-	args = append(args, p.parseExpression(LOWEST))
+	args = append(args, p.parseExpression(LOWEST, token.RPAREN))
 
 	for p.peekTokenIs(token.COMMA) {
 		p.consume(token.COMMA)
