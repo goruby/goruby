@@ -318,3 +318,20 @@ func TestFunctionObject(t *testing.T) {
 		}
 	}
 }
+
+func TestFunctionApplication(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"def identity x; x; end; identity(5);", 5},
+		{"def identity x; return x; end; identity(5);", 5},
+		{"def double x; x * 2; end; double(5);", 10},
+		{"def add x, y; x + y; end; add(5, 5);", 10},
+		{"def add x, y; x + y; end; add(5 + 5, add(5, 5));", 20},
+	}
+
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
+}
