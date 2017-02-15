@@ -14,9 +14,28 @@ func IsEOFError(err error) bool {
 	if !ok {
 		return false
 	}
-	if tokenErr.actualToken == token.EOF {
-		return true
+	if tokenErr.actualToken != token.EOF {
+		return false
 	}
+
+	return true
+}
+
+func IsEOFInsteadOfNewlineError(err error) bool {
+	tokenErr, ok := err.(*unexpectedTokenError)
+	if !ok {
+		return false
+	}
+	if tokenErr.actualToken != token.EOF {
+		return false
+	}
+
+	for _, expectedToken := range tokenErr.expectedTokens {
+		if expectedToken == token.NEWLINE {
+			return true
+		}
+	}
+
 	return false
 }
 

@@ -2,9 +2,11 @@ package repl
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 
+	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/evaluator"
 	"github.com/goruby/goruby/lexer"
 	"github.com/goruby/goruby/object"
@@ -18,28 +20,42 @@ func Start(in io.Reader, out io.Writer) {
 	counter := 1
 	env := object.NewEnvironment()
 	for {
-		fmt.Printf(PROMPT, counter)
+		fmt.Fprintf(out, PROMPT, counter)
 		counter++
 		scanned := scanner.Scan()
 		if !scanned {
-			fmt.Println()
+			fmt.Fprintln(out)
 			return
 		}
 
 		line := scanner.Text()
-		l := lexer.New(line)
-		p := parser.New(l)
-		program := p.ParseProgram()
-		if len(p.Errors()) != 0 {
-			printParserErrors(out, p.Errors())
-			continue
+		node, err := parseLine(line)
+		if err != nil {
+			fmt.Fprintf(out, "%s", err.Error())
 		}
 
-		evaluated := evaluator.Eval(program, env)
+		evaluated := evaluator.Eval(node, env)
 		if evaluated != nil {
 			fmt.Fprintf(out, "=> %s\n", evaluated.Inspect())
 		}
 	}
+}
+
+func parseLine(line string) (ast.Node, error) {
+	l := lexer.New(line)
+	p := parser.New(l)
+	var err error
+	program := p.ParseProgram()
+	if len(p.Errors()) != 0 {
+		err = mergeParserErrors(p.Errors())
+	}
+	return program, err
+}
+
+func mergeParserErrors(errors []error) error {
+	var buf bytes.Buffer
+	printParserErrors(&buf, errors)
+	return fmt.Errorf(buf.String())
 }
 
 func printParserErrors(out io.Writer, errors []error) {
