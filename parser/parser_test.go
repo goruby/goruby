@@ -672,6 +672,15 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			[]string{"x", "y"},
 			"(x + y)",
 		},
+		{
+			`def qux
+				x + y
+			end
+			`,
+			"qux",
+			[]string{},
+			"(x + y)",
+		},
 	}
 
 	for _, tt := range tests {

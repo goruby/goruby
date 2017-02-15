@@ -17,6 +17,8 @@ import (
 
 const PROMPT = "girb:%03d> "
 
+var moreInputNeededError error = fmt.Errorf("More input needed")
+
 func Start(in io.Reader, out io.Writer) {
 	printChan := make(chan string)
 	sigChan := make(chan os.Signal, 4)
@@ -37,6 +39,7 @@ func loop(in io.Reader, out chan<- string) {
 	scanner := bufio.NewScanner(in)
 	counter := 1
 	env := object.NewEnvironment()
+	var buffer string
 	for {
 		out <- fmt.Sprintf(PROMPT, counter)
 		counter++
@@ -46,9 +49,13 @@ func loop(in io.Reader, out chan<- string) {
 			return
 		}
 
-		line := scanner.Text()
-		node, err := parseLine(line)
+		buffer += scanner.Text()
+		node, err := parseLine(buffer)
 		if err != nil {
+			if err == moreInputNeededError {
+				buffer += "\n"
+				continue
+			}
 			out <- fmt.Sprintf("%s", err.Error())
 			continue
 		}
@@ -57,6 +64,7 @@ func loop(in io.Reader, out chan<- string) {
 		if evaluated != nil {
 			out <- fmt.Sprintf("=> %s\n", evaluated.Inspect())
 		}
+		buffer = ""
 	}
 }
 
@@ -66,6 +74,11 @@ func parseLine(line string) (ast.Node, error) {
 	var err error
 	program := p.ParseProgram()
 	if len(p.Errors()) != 0 {
+		for _, err := range p.Errors() {
+			if parser.IsEOFError(err) {
+				return program, moreInputNeededError
+			}
+		}
 		err = mergeParserErrors(p.Errors())
 	}
 	return program, err
