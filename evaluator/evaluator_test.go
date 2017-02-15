@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/goruby/goruby/lexer"
@@ -268,25 +269,52 @@ func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 }
 
 func TestFunctionObject(t *testing.T) {
-	input := ` def foo x; x + 2; end`
-
-	evaluated := testEval(input)
-	fn, ok := evaluated.(*object.Function)
-	if !ok {
-		t.Fatalf("object is not Function. got=%T (%+v)", evaluated, evaluated)
+	tests := []struct {
+		input              string
+		expectedParameters []string
+		expectedBody       string
+	}{
+		{
+			"def foo x; x + 2; end",
+			[]string{"x"},
+			"(x + 2)",
+		},
+		{
+			`def foo
+				2
+			end`,
+			[]string{},
+			"2",
+		},
+		{
+			"def foo; 2; end",
+			[]string{},
+			"2",
+		},
 	}
 
-	if len(fn.Parameters) != 1 {
-		t.Fatalf("function has wrong parameters. Parameters=%+v", fn.Parameters)
-	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		fn, ok := evaluated.(*object.Function)
+		if !ok {
+			t.Fatalf("object is not Function. got=%T (%+v)", evaluated, evaluated)
+		}
 
-	if fn.Parameters[0].String() != "x" {
-		t.Fatalf("parameter is not 'x'. got=%q", fn.Parameters[0])
-	}
+		if len(fn.Parameters) != len(tt.expectedParameters) {
+			t.Fatalf("function has wrong parameters. Parameters=%+v", fn.Parameters)
+		}
 
-	expectedBody := "(x + 2)"
+		parameters := make([]string, len(fn.Parameters))
+		for i, param := range fn.Parameters {
+			parameters[i] = param.String()
+		}
 
-	if fn.Body.String() != expectedBody {
-		t.Fatalf("body is not %q. got=%q", expectedBody, fn.Body.String())
+		if !reflect.DeepEqual(tt.expectedParameters, parameters) {
+			t.Fatalf("parameters are not %v. got=%v", tt.expectedParameters, parameters)
+		}
+
+		if fn.Body.String() != tt.expectedBody {
+			t.Fatalf("body is not %q. got=%q", tt.expectedBody, fn.Body.String())
+		}
 	}
 }

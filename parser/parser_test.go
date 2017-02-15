@@ -646,6 +646,32 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			[]string{"x", "y"},
 			"(x + y)",
 		},
+		{
+			`def qux
+				x + y
+			end`,
+			"qux",
+			[]string{},
+			"(x + y)",
+		},
+		{
+			"def qux; x + y; end",
+			"qux",
+			[]string{},
+			"(x + y)",
+		},
+		{
+			"def foo x, y; x + y; end",
+			"foo",
+			[]string{"x", "y"},
+			"(x + y)",
+		},
+		{
+			"def foo(x, y); x + y; end",
+			"foo",
+			[]string{"x", "y"},
+			"(x + y)",
+		},
 	}
 
 	for _, tt := range tests {
@@ -684,9 +710,10 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			t.Fail()
 		}
 
-		if len(function.Parameters) != 2 {
+		if len(function.Parameters) != len(tt.parameters) {
 			t.Fatalf(
-				"function literal parameters wrong. want 2, got=%d\n",
+				"function literal parameters wrong. want %d, got=%d\n",
+				len(tt.parameters),
 				len(function.Parameters),
 			)
 		}

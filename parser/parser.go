@@ -315,8 +315,12 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	identifiers := []*ast.Identifier{}
 
-	if p.peekTokenOneOf(token.RPAREN, token.NEWLINE, token.SEMICOLON) {
+	if p.peekTokenIs(token.RPAREN) {
 		p.nextToken()
+		return identifiers
+	}
+
+	if p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
 		return identifiers
 	}
 	p.nextToken()
