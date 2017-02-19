@@ -7,6 +7,7 @@ import (
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/lexer"
 	"github.com/goruby/goruby/token"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -129,6 +130,14 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
+	case token.EOF:
+		err := &unexpectedTokenError{
+			expectedTokens: []token.TokenType{token.NEWLINE},
+			actualToken:    token.EOF,
+		}
+		p.errors = append(p.errors, err)
+
+		return nil
 	case token.NEWLINE:
 		return nil
 	case token.RETURN:
@@ -263,31 +272,30 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		p.accept(token.THEN)
 	}
 	if !p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
-		msg := fmt.Errorf(
+		msg := fmt.Sprintf(
 			"could not parse if expression: unexpected token %s: '%s'",
 			p.peekToken.Type,
 			p.peekToken.Literal,
 		)
-		p.errors = append(p.errors, msg)
+		err := errors.Wrap(
+			&unexpectedTokenError{
+				expectedTokens: []token.TokenType{token.NEWLINE, token.SEMICOLON},
+				actualToken:    p.peekToken.Type,
+			},
+			msg,
+		)
+		p.errors = append(p.errors, err)
 		return nil
 	}
-	p.consume(p.peekToken.Type)
-	consequence := &ast.BlockStatement{}
-	for !p.peekTokenOneOf(token.ELSE, token.END, token.EOF) {
-		stmt := p.parseStatement()
-		if stmt != nil {
-			consequence.Statements = append(consequence.Statements, stmt)
-		} else {
-			p.nextToken()
-		}
-	}
+	p.acceptOneOf(token.NEWLINE, token.SEMICOLON)
+	consequence := p.parseBlockStatement(token.ELSE)
 	expression.Consequence = consequence
-	p.nextToken()
-	if p.currentTokenIs(token.ELSE) {
+	if p.peekTokenIs(token.ELSE) {
+		p.accept(token.ELSE)
 		p.accept(token.NEWLINE)
 		expression.Alternative = p.parseBlockStatement()
-		p.nextToken()
 	}
+	p.accept(token.END)
 	return expression
 }
 
@@ -299,60 +307,70 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	}
 	lit.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
-	if p.peekTokenIs(token.LPAREN) {
-		p.nextToken()
-	}
-
 	lit.Parameters = p.parseFunctionParameters()
 
 	if !p.acceptOneOf(token.NEWLINE, token.SEMICOLON) {
 		return nil
 	}
 	lit.Body = p.parseBlockStatement()
+	if !p.accept(token.END) {
+		return nil
+	}
 	return lit
 }
 
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	if p.peekTokenIs(token.LPAREN) {
+		p.accept(token.LPAREN)
+	}
+
 	identifiers := []*ast.Identifier{}
 
 	if p.peekTokenIs(token.RPAREN) {
-		p.nextToken()
+		p.accept(token.RPAREN)
 		return identifiers
 	}
 
 	if p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
 		return identifiers
 	}
-	p.nextToken()
+
+	p.accept(token.IDENT)
 
 	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 	identifiers = append(identifiers, ident)
 
 	for p.peekTokenIs(token.COMMA) {
-		p.consume(token.COMMA)
+		p.accept(token.COMMA)
+		p.accept(token.IDENT)
 		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 		identifiers = append(identifiers, ident)
 	}
 
 	if p.peekTokenIs(token.RPAREN) {
-		p.nextToken()
+		p.accept(token.RPAREN)
 	}
 
 	return identifiers
 }
 
-func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+func (p *Parser) parseBlockStatement(t ...token.TokenType) *ast.BlockStatement {
+	terminatorTokens := append(
+		[]token.TokenType{
+			token.END,
+			token.EOF,
+		},
+		t...,
+	)
 	block := &ast.BlockStatement{Token: p.curToken}
 	block.Statements = []ast.Statement{}
 
-	p.nextToken()
-
-	for !p.currentTokenOneOf(token.END, token.EOF) {
+	for !p.peekTokenOneOf(terminatorTokens...) {
+		p.nextToken()
 		stmt := p.parseStatement()
 		if stmt != nil {
 			block.Statements = append(block.Statements, stmt)
 		}
-		p.nextToken()
 	}
 
 	return block
@@ -374,7 +392,7 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 	args := []ast.Expression{}
 
 	if p.peekTokenIs(token.RPAREN) {
-		p.nextToken()
+		p.accept(token.RPAREN)
 		return args
 	}
 

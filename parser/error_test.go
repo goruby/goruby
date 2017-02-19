@@ -14,12 +14,12 @@ func TestIsEOF(t *testing.T) {
 
 	errors := p.Errors()
 
-	if len(errors) != 1 {
-		t.Logf("Expected 1 error, got %d\n", len(errors))
+	if len(errors) != 2 {
+		t.Logf("Expected 2 errors, got %d\n", len(errors))
 		t.FailNow()
 	}
 
-	err := errors[0]
+	err := errors[1]
 
 	isEOFErr := IsEOFError(err)
 
@@ -37,12 +37,12 @@ func TestIsEOFInsteadOfNewline(t *testing.T) {
 
 	errors := p.Errors()
 
-	if len(errors) != 1 {
-		t.Logf("Expected 1 error, got %d\n", len(errors))
+	if len(errors) != 2 {
+		t.Logf("Expected 2 errors, got %d\n", len(errors))
 		t.FailNow()
 	}
 
-	err := errors[0]
+	err := errors[1]
 
 	needsMore := IsEOFInsteadOfNewlineError(err)
 
