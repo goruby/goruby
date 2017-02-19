@@ -4,13 +4,15 @@ import (
 	"fmt"
 
 	"github.com/goruby/goruby/token"
+	"github.com/pkg/errors"
 )
 
 // Make sure unexpectedTokenError implements error interface
 var _ error = &unexpectedTokenError{}
 
 func IsEOFError(err error) bool {
-	tokenErr, ok := err.(*unexpectedTokenError)
+	cause := errors.Cause(err)
+	tokenErr, ok := cause.(*unexpectedTokenError)
 	if !ok {
 		return false
 	}
@@ -22,13 +24,11 @@ func IsEOFError(err error) bool {
 }
 
 func IsEOFInsteadOfNewlineError(err error) bool {
-	tokenErr, ok := err.(*unexpectedTokenError)
-	if !ok {
+	if !IsEOFError(err) {
 		return false
 	}
-	if tokenErr.actualToken != token.EOF {
-		return false
-	}
+
+	tokenErr := errors.Cause(err).(*unexpectedTokenError)
 
 	for _, expectedToken := range tokenErr.expectedTokens {
 		if expectedToken == token.NEWLINE {
