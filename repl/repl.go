@@ -5,8 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
-	"os/signal"
 
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/evaluator"
@@ -19,23 +17,7 @@ const PROMPT = "girb:%03d> "
 
 var moreInputNeededError error = fmt.Errorf("More input needed")
 
-func Start(in io.Reader, out io.Writer) {
-	printChan := make(chan string)
-	sigChan := make(chan os.Signal, 4)
-	signal.Notify(sigChan, os.Interrupt, os.Kill)
-	go loop(in, printChan)
-	for {
-		select {
-		case evaluated := <-printChan:
-			fmt.Fprintf(out, "%s", evaluated)
-		case <-sigChan:
-			fmt.Fprintln(out)
-			return
-		}
-	}
-}
-
-func loop(in io.Reader, out chan<- string) {
+func Start(in io.Reader, out chan<- string) {
 	scanner := bufio.NewScanner(in)
 	counter := 1
 	env := object.NewEnvironment()
@@ -46,6 +28,7 @@ func loop(in io.Reader, out chan<- string) {
 		scanned := scanner.Scan()
 		if !scanned {
 			out <- fmt.Sprintln()
+			close(out)
 			return
 		}
 
