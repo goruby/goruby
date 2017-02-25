@@ -333,7 +333,7 @@ func TestStringConcatenation(t *testing.T) {
 }
 
 func testNullObject(t *testing.T, obj object.Object) bool {
-	if obj != NIL {
+	if obj != object.NIL {
 		t.Errorf("object is not NIL. got=%T (%+v)", obj, obj)
 		return false
 	}

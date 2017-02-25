@@ -20,6 +20,12 @@ const (
 	ERROR_OBJ        = "ERROR"
 )
 
+var (
+	NIL   = &Nil{}
+	TRUE  = &Boolean{Value: true}
+	FALSE = &Boolean{Value: false}
+)
+
 type Object interface {
 	Type() ObjectType
 	Inspect() string
@@ -48,7 +54,7 @@ func (i *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
 
 type Nil struct{}
 
-func (n *Nil) Inspect() string  { return "<nil>" }
+func (n *Nil) Inspect() string  { return "nil" }
 func (n *Nil) Type() ObjectType { return NIL_OBJ }
 
 type ReturnValue struct {
