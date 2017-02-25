@@ -10,6 +10,7 @@ const (
 	// Identifier + literals
 	IDENT
 	INT
+	STRING
 
 	// Operators
 	ASSIGN   // =

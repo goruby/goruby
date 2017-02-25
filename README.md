@@ -56,7 +56,7 @@ To run it ad hoc run `go run cmd/girb/main.go` and exit the REPL with CTRL-D.
 	- [x] integer arithmetics
 - [x] booleans
 - [ ] strings
-	- [ ] double quoted
+	- [x] double quoted
 	- [ ] single quoted
 	- [ ] `%q{}`
 	- [ ] `%Q{}`

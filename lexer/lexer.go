@@ -110,6 +110,8 @@ func startLexer(l *Lexer) LexerStateFn {
 	case '\n':
 		l.emit(token.NEWLINE)
 		return startLexer
+	case '"':
+		return lexString
 	case '=':
 		if l.peek() == '=' {
 			l.next()
@@ -194,6 +196,20 @@ func lexDigit(l *Lexer) LexerStateFn {
 	}
 	l.backup()
 	l.emit(token.INT)
+	return startLexer
+}
+
+func lexString(l *Lexer) LexerStateFn {
+	l.ignore()
+	r := l.next()
+
+	for r != '"' {
+		r = l.next()
+	}
+	l.backup()
+	l.emit(token.STRING)
+	l.next()
+	l.ignore()
 	return startLexer
 }
 

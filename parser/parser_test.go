@@ -477,19 +477,19 @@ func TestIfExpression(t *testing.T) {
 		expectedConsequenceExpression string
 	}{
 		{`if x < y
-			x
-			end`, "x", "<", "y", "x"},
+        x
+        end`, "x", "<", "y", "x"},
 		{`if x < y then
-			x
-		end`, "x", "<", "y", "x"},
+        x
+        end`, "x", "<", "y", "x"},
 		{`if x < y; x
-		end`, "x", "<", "y", "x"},
+        end`, "x", "<", "y", "x"},
 		{`if x < y
-			if x == 3
-				y
-			end
-			x
-		end`, "x", "<", "y", "if(x == 3) y endx"},
+        if x == 3
+        y
+        end
+        x
+        end`, "x", "<", "y", "if(x == 3) y endx"},
 	}
 
 	for _, tt := range tests {
@@ -561,11 +561,11 @@ func TestIfExpression(t *testing.T) {
 
 func TestIfElseExpression(t *testing.T) {
 	input := `
-if x < y
-	x
-else
-	y
-end`
+      if x < y
+      x
+      else
+      y
+      end`
 
 	l := lexer.New(input)
 	p := New(l)
@@ -632,24 +632,24 @@ func TestFunctionLiteralParsing(t *testing.T) {
 	}{
 		{
 			`def foo(x, y)
-				x + y
-			end`,
+          x + y
+          end`,
 			"foo",
 			[]string{"x", "y"},
 			"(x + y)",
 		},
 		{
 			`def bar x, y
-				x + y
-			end`,
+          x + y
+          end`,
 			"bar",
 			[]string{"x", "y"},
 			"(x + y)",
 		},
 		{
 			`def qux
-				x + y
-			end`,
+          x + y
+          end`,
 			"qux",
 			[]string{},
 			"(x + y)",
@@ -674,9 +674,9 @@ func TestFunctionLiteralParsing(t *testing.T) {
 		},
 		{
 			`def qux
-				x + y
-			end
-			`,
+          x + y
+          end
+          `,
 			"qux",
 			[]string{},
 			"(x + y)",
@@ -764,11 +764,11 @@ func TestFunctionParameterParsing(t *testing.T) {
 		expectedParams []string
 	}{
 		{input: `def fn()
-				end`, expectedParams: []string{}},
+        end`, expectedParams: []string{}},
 		{input: `def fn(x)
-				end`, expectedParams: []string{"x"}},
+        end`, expectedParams: []string{"x"}},
 		{input: `def fn(x, y, z)
-				end`, expectedParams: []string{"x", "y", "z"}},
+        end`, expectedParams: []string{"x", "y", "z"}},
 	}
 
 	for _, tt := range tests {
@@ -892,6 +892,21 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 			expectedIdent: "add",
 			expectedArgs:  []string{"1", "(2 * 3)", "(4 + 5)"},
 		},
+		{
+			input:         "add 1;",
+			expectedIdent: "add",
+			expectedArgs:  []string{"1"},
+		},
+		{
+			input:         `add foo;`,
+			expectedIdent: "add",
+			expectedArgs:  []string{"foo"},
+		},
+		{
+			input:         `add "foo";`,
+			expectedIdent: "add",
+			expectedArgs:  []string{"foo"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -922,6 +937,25 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 					arg, exp.Arguments[i].String())
 			}
 		}
+	}
+}
+
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"hello world";`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	literal, ok := stmt.Expression.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("exp not *ast.StringLiteral. got=%T", stmt.Expression)
+	}
+
+	if literal.Value != "hello world" {
+		t.Errorf("literal.Value not %q. got=%q", "hello world", literal.Value)
 	}
 }
 
