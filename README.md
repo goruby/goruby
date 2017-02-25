@@ -3,12 +3,170 @@ goruby
 
 GoRuby, an implementation of Ruby written in Go
 
-## Disclaimer
-
-This project is not a working one. I didn't have the time to pull out a running release for it. The current implementation is far away from being useful, as it just calls the Ruby interpreter on the system. This was by intention for getting started with mspec and rubyspec. It was not changed until then. The idea was to migrate slowly from this fake implementation to the real one. 
-
-This has not yet begun!
-
 ## Contribution
 
 If anyone wants to help to get the project to the real implementation please ping me or fork it and send a pull request.
+
+## REPL
+There is a basic REPL within `cmd/girb`. It supports multiline expressions and all syntax elements the language supports yet.
+
+To run it ad hoc run `go run cmd/girb/main.go` and exit the REPL with CTRL-D.
+
+## Supported language feature
+- [x] functions
+	- [x] with parens
+	- [x] without parens
+	- [x] return keyword
+	- [ ] default values for parameters
+	- [ ] keyword arguments
+	- [ ] block arguments
+- [x] function calls
+	- [x] with parens
+	- [x] without parens
+- [ ] conditionals
+	- [x] if
+	- [x] if/else
+	- [ ] if/elif/else
+	- [ ] tenary `? : `
+	- [ ] unless
+	- [ ] case
+	- [ ] `||`
+	- [ ] `&&`
+- [ ] control flow
+	- [ ] for loop
+	- [ ] while loop
+	- [ ] until loop
+	- [ ] break
+	- [ ] next
+	- [ ] redo
+	- [ ] flip flop
+- [ ] numbers
+	- [ ] integers
+		- [ ] integers `1234`
+		- [ ] integers with underscores `1_234`
+		- [ ] decimal numbers `0d170`, `0D170`
+		- [ ] octal numbers `0252`, `0o252`, `0O252`
+		- [ ] hexadecimal numbers `0xaa`, `0xAa`, `0xAA`, `0Xaa`, `0XAa`, `0XaA`
+		- [ ] binary numbers `0b10101010`, `0B10101010`
+	- [ ] floats
+		- [ ] `12.34`
+		- [ ] `1234e-2`
+		- [ ] `1.234E1`
+- [x] integers
+	- [x] integer arithmetics
+- [x] booleans
+- [ ] strings
+	- [ ] double quoted
+	- [ ] single quoted
+	- [ ] `%q{}`
+	- [ ] `%Q{}`
+	- [ ] heredoc
+		- [ ] without indentation (`<<EOF`)
+		- [ ] indented (`<<-EOF`)
+		- [ ] “squiggly” heredoc `<<~`
+		- [ ] quoted heredoc
+			- [ ] single quotes `<<-'HEREDOC'`
+ 			- [ ] double quotes `<<-"HEREDOC"`
+ 			- [ ] backticks <<-\`HEREDOC\`"
+	- [ ] escaped characters
+		- [ ] `\a` bell, ASCII 07h (BEL)
+		- [ ] 	`\b` backspace, ASCII 08h (BS)
+		- [ ] 	`\t` horizontal tab, ASCII 09h (TAB)
+		- [ ] 	`\n` newline (line feed), ASCII 0Ah (LF)
+		- [ ] 	`\v` vertical tab, ASCII 0Bh (VT)
+		- [ ] 	`\f` form feed, ASCII 0Ch (FF)
+		- [ ] 	`\r` carriage return, ASCII 0Dh (CR)
+		- [ ] 	`\e` escape, ASCII 1Bh (ESC)
+		- [ ] 	`\s` space, ASCII 20h (SPC)
+		- [ ] 	`\\` backslash, \
+		- [ ] 	`\nnn` octal bit pattern, where nnn is 1-3 octal digits ([0-7])
+		- [ ] 	`\xnn` hexadecimal bit pattern, where nn is 1-2 hexadecimal digits ([0-9a-fA-F])
+		- [ ] `\unnnn` Unicode character, where nnnn is exactly 4 hexadecimal digits ([0-9a-fA-F])
+		- [ ] `\u{nnnn ...}` Unicode character(s), where each nnnn is 1-6 hexadecimal digits ([0-9a-fA-F])
+		- [ ] `\cx` or `\C-x` control character, where x is an ASCII printable character
+		- [ ] `\M-x` meta character, where x is an ASCII printable character
+		- [ ] `\M-\C-x` meta control character, where x is an ASCII printable character
+		- [ ] `\M-\cx` same as above
+		- [ ] `\c\M-x` same as above
+		- [ ] `\c?` or `\C-?` delete, ASCII 7Fh (DEL)
+	- [ ] interpolation `#{}`
+	- [ ] automatic concatenation
+- [ ] arrays
+	- [ ] splat
+	- [ ] array decomposition
+	- [ ] implicit array assignment
+	- [ ] array of strings `%w{}`
+	- [ ] array of symbols `%i{}`
+- [ ] nil
+- [ ] hashes
+- [ ] symbols
+	- [ ] `:symbol`
+	- [ ] `:"symbol"`
+	- [ ] `%s{symbol}`
+- [ ] regexp
+	- [ ] `/regex/`
+	- [ ] `%r{regex}`
+- [ ] ranges
+	- [ ] `..` inclusive
+	- [ ] `...` exclusive
+- [ ] procs `->`
+- [ ] variables
+	- [x] variable assignments
+	- [ ] globals
+- [ ] operators
+	- [x] `+`
+	- [x] `-`
+	- [x] `/`
+	- [x] `*`
+	- [x] `!`
+	- [x] `<`
+	- [x] `>`
+	- [ ] `**` (pow)
+	- [ ] `%` (modulus)
+	- [ ] `&` (AND)
+	- [ ] `^` (XOR)
+	- [ ] `>>` (right shift)
+	- [ ] `<<` (left shift, append)
+	- [x] `==` (equal)
+	- [x] `!=` (not equal)
+	- [ ] `===` (case equality)
+	- [ ] `=~` (pattern match)
+	- [ ] `!~` (does not match)
+	- [ ] `<=>` (comparison or spaceship operator)
+	- [ ] `<=` (less or equal)
+	- [ ] `>=` (greater or equal)
+	- [ ] assignment operators
+		- [ ] `+=`
+		- [ ] `-=`
+		- [ ] `/=`
+		- [ ] `*=`
+		- [ ] `%=`
+		- [ ] `**=`
+		- [ ] `&=`
+		- [ ] `|=`
+		- [ ] `^=`
+		- [ ] `<<=`
+		- [ ] `>>=`
+		- [ ] `||=`
+		- [ ] `&&=`
+- [ ] function blocks (procs)
+- [ ] constants
+- [ ] scope operator `::`
+- [ ] classes
+	- [ ] instance variables
+	- [ ] class variables
+	- [ ] class methods
+	- [ ] instance methods
+	- [ ] method overrides
+	- [ ] private
+	- [ ] protected
+	- [ ] public
+	- [ ] inheritance
+	- [ ] constructors
+	- [ ] new
+	- [ ] `self`
+	- [ ] singleton classes (also known as the metaclass or eigenclass) `class << self`
+	- [ ] assigment methods
+- [ ] modules
+- [ ] object main
+
