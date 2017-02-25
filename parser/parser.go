@@ -33,6 +33,8 @@ var precedences = map[token.TokenType]int{
 	token.ASTERISK: PRODUCT,
 	token.ASSIGN:   ASSIGNMENT,
 	token.LPAREN:   CALL,
+	token.IDENT:    CALL,
+	token.INT:      CALL,
 }
 
 type (
@@ -74,7 +76,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
-	p.registerInfix(token.LPAREN, p.parseCallExpression)
+	p.registerInfix(token.LPAREN, p.parseCallExpressionWithParens)
+	p.registerInfix(token.IDENT, p.parseCallExpression)
+	p.registerInfix(token.INT, p.parseCallExpression)
 	p.registerInfix(token.ASSIGN, p.parseVariableAssignExpression)
 	return p
 }
@@ -385,12 +389,31 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 		p.errors = append(p.errors, msg)
 		return nil
 	}
-	exp := &ast.CallExpression{Token: p.curToken, Function: ident}
-	exp.Arguments = p.parseCallArguments()
+	exp := &ast.CallExpression{Token: ident.Token, Function: ident}
+	args := []ast.Expression{}
+	args = append(args, p.parseExpression(LOWEST, token.RPAREN))
+
+	for p.peekTokenIs(token.COMMA) {
+		p.consume(token.COMMA)
+		args = append(args, p.parseExpression(LOWEST))
+	}
+	exp.Arguments = args
 	return exp
 }
 
-func (p *Parser) parseCallArguments() []ast.Expression {
+func (p *Parser) parseCallExpressionWithParens(function ast.Expression) ast.Expression {
+	ident, ok := function.(*ast.Identifier)
+	if !ok {
+		msg := fmt.Errorf("could not parse call expression: expected identifier, got token '%T'", function)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	exp := &ast.CallExpression{Token: p.curToken, Function: ident}
+	exp.Arguments = p.parseCallArgumentsWithParens()
+	return exp
+}
+
+func (p *Parser) parseCallArgumentsWithParens() []ast.Expression {
 	args := []ast.Expression{}
 
 	if p.peekTokenIs(token.RPAREN) {

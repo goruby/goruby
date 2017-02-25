@@ -222,6 +222,12 @@ func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object
 	if !ok {
 		return newError("identifier not found: " + node.Value)
 	}
+	if fn, ok := val.(*object.Function); ok {
+		if len(fn.Parameters) != 0 {
+			return val
+		}
+		return applyFunction(fn, []object.Object{})
+	}
 	return val
 }
 

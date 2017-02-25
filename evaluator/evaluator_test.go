@@ -210,64 +210,6 @@ func TestVariableAssignmentExpression(t *testing.T) {
 	}
 }
 
-func testNullObject(t *testing.T, obj object.Object) bool {
-	if obj != NIL {
-		t.Errorf("object is not NIL. got=%T (%+v)", obj, obj)
-		return false
-	}
-	return true
-}
-
-func testEval(input string) object.Object {
-	l := lexer.New(input)
-	p := parser.New(l)
-	program := p.ParseProgram()
-	env := object.NewEnvironment()
-	return Eval(program, env)
-}
-
-func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
-	result, ok := obj.(*object.Boolean)
-	if !ok {
-		t.Errorf(
-			"object is not Boolean. got=%T (%+v)",
-			obj,
-			obj,
-		)
-		return false
-	}
-	if result.Value != expected {
-		t.Errorf(
-			"object has wrong value. got=%d, want=%d",
-			result.Value,
-			expected,
-		)
-		return false
-	}
-	return true
-}
-
-func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
-	result, ok := obj.(*object.Integer)
-	if !ok {
-		t.Errorf(
-			"object is not Integer. got=%T (%+v)",
-			obj,
-			obj,
-		)
-		return false
-	}
-	if result.Value != expected {
-		t.Errorf(
-			"object has wrong value. got=%d, want=%d",
-			result.Value,
-			expected,
-		)
-		return false
-	}
-	return true
-}
-
 func TestFunctionObject(t *testing.T) {
 	tests := []struct {
 		input              string
@@ -329,9 +271,70 @@ func TestFunctionApplication(t *testing.T) {
 		{"def double x; x * 2; end; double(5);", 10},
 		{"def add x, y; x + y; end; add(5, 5);", 10},
 		{"def add x, y; x + y; end; add(5 + 5, add(5, 5));", 20},
+		{"def double x; x * 2; end; double 5;", 10},
+		{"def identity x; x; end; identity 5;", 5},
+		{"def foo; 3; end; foo;", 3},
 	}
 
 	for _, tt := range tests {
 		testIntegerObject(t, testEval(tt.input), tt.expected)
 	}
+}
+
+func testNullObject(t *testing.T, obj object.Object) bool {
+	if obj != NIL {
+		t.Errorf("object is not NIL. got=%T (%+v)", obj, obj)
+		return false
+	}
+	return true
+}
+
+func testEval(input string) object.Object {
+	l := lexer.New(input)
+	p := parser.New(l)
+	program := p.ParseProgram()
+	env := object.NewEnvironment()
+	return Eval(program, env)
+}
+
+func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
+	result, ok := obj.(*object.Boolean)
+	if !ok {
+		t.Errorf(
+			"object is not Boolean. got=%T (%+v)",
+			obj,
+			obj,
+		)
+		return false
+	}
+	if result.Value != expected {
+		t.Errorf(
+			"object has wrong value. got=%d, want=%d",
+			result.Value,
+			expected,
+		)
+		return false
+	}
+	return true
+}
+
+func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
+	result, ok := obj.(*object.Integer)
+	if !ok {
+		t.Errorf(
+			"object is not Integer. got=%T (%+v)",
+			obj,
+			obj,
+		)
+		return false
+	}
+	if result.Value != expected {
+		t.Errorf(
+			"object has wrong value. got=%d, want=%d",
+			result.Value,
+			expected,
+		)
+		return false
+	}
+	return true
 }
