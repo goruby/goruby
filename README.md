@@ -13,6 +13,8 @@ There is a basic REPL within `cmd/girb`. It supports multiline expressions and a
 To run it ad hoc run `go run cmd/girb/main.go` and exit the REPL with CTRL-D.
 
 ## Supported language feature
+- [ ] everything is an object
+	- [ ] allow method calls on everything
 - [x] functions
 	- [x] with parens
 	- [x] without parens
