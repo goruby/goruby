@@ -108,7 +108,7 @@ func TestIfElseExpressions(t *testing.T) {
 		if ok {
 			testIntegerObject(t, evaluated, int64(integer))
 		} else {
-			testNullObject(t, evaluated)
+			testNilObject(t, evaluated)
 		}
 	}
 }
@@ -332,7 +332,39 @@ func TestStringConcatenation(t *testing.T) {
 	}
 }
 
-func testNullObject(t *testing.T, obj object.Object) bool {
+func TestBuiltinFunctions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{`puts;`, nil},
+		{`puts "foo";`, nil},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input, object.NewMainEnvironment())
+
+		switch expected := tt.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expected))
+		case nil:
+			testNilObject(t, evaluated)
+		case string:
+			errObj, ok := evaluated.(*object.Error)
+			if !ok {
+				t.Errorf("object is not Error. got=%T (%+v)",
+					evaluated, evaluated)
+				continue
+			}
+			if errObj.Message != expected {
+				t.Errorf("wrong error message. expected=%q, got=%q",
+					expected, errObj.Message)
+			}
+		}
+	}
+}
+
+func testNilObject(t *testing.T, obj object.Object) bool {
 	if obj != object.NIL {
 		t.Errorf("object is not NIL. got=%T (%+v)", obj, obj)
 		return false
@@ -340,11 +372,14 @@ func testNullObject(t *testing.T, obj object.Object) bool {
 	return true
 }
 
-func testEval(input string) object.Object {
+func testEval(input string, context ...*object.Environment) object.Object {
+	env := object.NewEnvironment()
+	for _, e := range context {
+		env = object.NewEnclosedEnvironment(e)
+	}
 	l := lexer.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
-	env := object.NewEnvironment()
 	return Eval(program, env)
 }
 

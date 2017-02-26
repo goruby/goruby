@@ -20,7 +20,7 @@ var moreInputNeededError error = fmt.Errorf("More input needed")
 func Start(in io.Reader, out chan<- string) {
 	scanner := bufio.NewScanner(in)
 	counter := 1
-	env := object.NewEnvironment()
+	env := object.NewMainEnvironment()
 	var buffer string
 	for {
 		out <- fmt.Sprintf(PROMPT, counter)

@@ -1,5 +1,9 @@
 package object
 
+func NewMainEnvironment() *Environment {
+	return NewEnclosedEnvironment(kernelFunctions)
+}
+
 func NewEnclosedEnvironment(outer *Environment) *Environment {
 	env := NewEnvironment()
 	env.outer = outer
