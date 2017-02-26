@@ -29,6 +29,7 @@ end
 ""
 "foobar"
 "foo bar"
+:sym
 `
 
 	tests := []struct {
@@ -111,6 +112,8 @@ end
 		{token.STRING, "foobar"},
 		{token.NEWLINE, "\n"},
 		{token.STRING, "foo bar"},
+		{token.NEWLINE, "\n"},
+		{token.SYMBOL, "sym"},
 		{token.NEWLINE, "\n"},
 		{token.EOF, ""},
 	}

@@ -11,6 +11,7 @@ const (
 	IDENT
 	INT
 	STRING
+	SYMBOL // :symbol
 
 	// Operators
 	ASSIGN   // =
@@ -29,6 +30,7 @@ const (
 	COMMA
 	SEMICOLON
 
+	COLON  // :
 	LPAREN // (
 	RPAREN // )
 	LBRACE // {

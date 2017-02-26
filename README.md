@@ -15,6 +15,9 @@ To run it ad hoc run `go run cmd/girb/main.go` and exit the REPL with CTRL-D.
 ## Supported language feature
 - [ ] everything is an object
 	- [ ] allow method calls on everything
+- [ ] full UTF8 support
+	- [ ] Unicode identifier
+	- [ ] Unicode symbols
 - [x] functions
 	- [x] with parens
 	- [x] without parens
@@ -102,9 +105,12 @@ To run it ad hoc run `go run cmd/girb/main.go` and exit the REPL with CTRL-D.
 - [ ] nil
 - [ ] hashes
 - [ ] symbols
-	- [ ] `:symbol`
+	- [x] `:symbol`
 	- [ ] `:"symbol"`
+	- [ ] `:"symbol"` with interpolation
+	- [ ] `:'symbol'`
 	- [ ] `%s{symbol}`
+	- [ ] singleton symbols
 - [ ] regexp
 	- [ ] `/regex/`
 	- [ ] `%r{regex}`

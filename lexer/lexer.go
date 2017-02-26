@@ -112,6 +112,8 @@ func startLexer(l *Lexer) LexerStateFn {
 		return startLexer
 	case '"':
 		return lexString
+	case ':':
+		return lexSymbol
 	case '=':
 		if l.peek() == '=' {
 			l.next()
@@ -210,6 +212,18 @@ func lexString(l *Lexer) LexerStateFn {
 	l.emit(token.STRING)
 	l.next()
 	l.ignore()
+	return startLexer
+}
+
+func lexSymbol(l *Lexer) LexerStateFn {
+	l.ignore()
+	r := l.next()
+
+	for isLetter(r) || isDigit(r) {
+		r = l.next()
+	}
+	l.backup()
+	l.emit(token.SYMBOL)
 	return startLexer
 }
 

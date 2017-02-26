@@ -332,6 +332,20 @@ func TestStringConcatenation(t *testing.T) {
 	}
 }
 
+func TestSymbolLiteral(t *testing.T) {
+	input := `:foobar;`
+
+	evaluated := testEval(input)
+	sym, ok := evaluated.(*object.Symbol)
+	if !ok {
+		t.Fatalf("object is not Symbol. got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if sym.Value != "foobar" {
+		t.Errorf("Symbol has wrong value. got=%q", sym.Value)
+	}
+}
+
 func TestBuiltinFunctions(t *testing.T) {
 	tests := []struct {
 		input    string

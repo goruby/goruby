@@ -15,6 +15,7 @@ const (
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 	INTEGER_OBJ      = "INTEGER"
 	STRING_OBJ       = "STRING"
+	SYMBOL_OBJ       = "SYMBOL"
 	BOOLEAN_OBJ      = "BOOLEAN"
 	NIL_OBJ          = "NIL"
 	ERROR_OBJ        = "ERROR"
@@ -54,6 +55,13 @@ type String struct {
 
 func (s *String) Inspect() string  { return s.Value }
 func (s *String) Type() ObjectType { return STRING_OBJ }
+
+type Symbol struct {
+	Value string
+}
+
+func (s *Symbol) Inspect() string  { return ":" + s.Value }
+func (s *Symbol) Type() ObjectType { return SYMBOL_OBJ }
 
 type Boolean struct {
 	Value bool

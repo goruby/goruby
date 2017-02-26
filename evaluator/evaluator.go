@@ -40,6 +40,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalIdentifier(node, env)
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
+	case *ast.SymbolLiteral:
+		return &object.Symbol{Value: node.Value}
 	case *ast.FunctionLiteral:
 		params := node.Parameters
 		body := node.Body

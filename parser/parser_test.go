@@ -907,6 +907,11 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 			expectedIdent: "add",
 			expectedArgs:  []string{"foo"},
 		},
+		{
+			input:         `add :foo;`,
+			expectedIdent: "add",
+			expectedArgs:  []string{":foo"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -956,6 +961,24 @@ func TestStringLiteralExpression(t *testing.T) {
 
 	if literal.Value != "hello world" {
 		t.Errorf("literal.Value not %q. got=%q", "hello world", literal.Value)
+	}
+}
+
+func TestSymbolExpression(t *testing.T) {
+	input := `:symbol;`
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	literal, ok := stmt.Expression.(*ast.SymbolLiteral)
+	if !ok {
+		t.Fatalf("exp not *ast.SymbolLiteral. got=%T", stmt.Expression)
+	}
+
+	if literal.Value != "symbol" {
+		t.Errorf("literal.Value not %q. got=%q", "symbol", literal.Value)
 	}
 }
 
