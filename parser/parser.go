@@ -20,6 +20,7 @@ const (
 	PREFIX      // -X or !X
 	ASSIGNMENT  // x = 5
 	CALL        // myFunction(X)
+	CONTEXT     // foo.myFunction(X)
 )
 
 var precedences = map[token.TokenType]int{
@@ -37,6 +38,7 @@ var precedences = map[token.TokenType]int{
 	token.INT:      CALL,
 	token.STRING:   CALL,
 	token.SYMBOL:   CALL,
+	token.DOT:      CONTEXT,
 }
 
 type (
@@ -84,6 +86,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.IDENT, p.parseCallExpression)
 	p.registerInfix(token.INT, p.parseCallExpression)
 	p.registerInfix(token.STRING, p.parseCallExpression)
+	p.registerInfix(token.DOT, p.parseContextCallExpression)
 	p.registerInfix(token.SYMBOL, p.parseCallExpression)
 	p.registerInfix(token.ASSIGN, p.parseVariableAssignExpression)
 	return p
@@ -413,6 +416,20 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	}
 	exp.Arguments = args
 	return exp
+}
+
+func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expression {
+	contextCallExpression := &ast.ContextCallExpression{Token: p.curToken, Context: context}
+	p.nextToken()
+	expr := p.parseExpression(LOWEST)
+	callExp, ok := expr.(*ast.CallExpression)
+	if !ok {
+		msg := fmt.Errorf("could not parse call expression: expected CallExpression, got token '%T'", expr)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	contextCallExpression.Call = callExp
+	return contextCallExpression
 }
 
 func (p *Parser) parseCallExpressionWithParens(function ast.Expression) ast.Expression {

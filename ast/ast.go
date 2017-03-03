@@ -195,6 +195,22 @@ func (fl *FunctionLiteral) String() string {
 	return out.String()
 }
 
+type ContextCallExpression struct {
+	Token   token.Token     // The '.' token
+	Context Expression      // The lefthandside expression
+	Call    *CallExpression // The righthandside call expression
+}
+
+func (ce *ContextCallExpression) expressionNode()      {}
+func (ce *ContextCallExpression) TokenLiteral() string { return ce.Token.Literal }
+func (ce *ContextCallExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(ce.Context.String())
+	out.WriteString(".")
+	out.WriteString(ce.Call.String())
+	return out.String()
+}
+
 type CallExpression struct {
 	Token     token.Token // The '(' token
 	Function  *Identifier // Identifier or FunctionLiteral
