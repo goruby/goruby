@@ -17,7 +17,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return Eval(node.Expression, env)
 	case *ast.ReturnStatement:
 		val := Eval(node.ReturnValue, env)
-		if isError(val) {
+		if IsError(val) {
 			return val
 		}
 		return &object.ReturnValue{Value: val}
@@ -31,7 +31,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.Variable:
 		val := Eval(node.Value, env)
-		if isError(val) {
+		if IsError(val) {
 			return val
 		}
 		env.Set(node.Name.Value, val)
@@ -50,28 +50,28 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return function
 	case *ast.CallExpression:
 		function := Eval(node.Function, env)
-		if isError(function) {
+		if IsError(function) {
 			return function
 		}
 		args := evalExpressions(node.Arguments, env)
-		if len(args) == 1 && isError(args[0]) {
+		if len(args) == 1 && IsError(args[0]) {
 			return args[0]
 		}
 		return applyFunction(function, args)
 	case *ast.PrefixExpression:
 		right := Eval(node.Right, env)
-		if isError(right) {
+		if IsError(right) {
 			return right
 		}
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
 		left := Eval(node.Left, env)
-		if isError(left) {
+		if IsError(left) {
 			return left
 		}
 
 		right := Eval(node.Right, env)
-		if isError(right) {
+		if IsError(right) {
 			return right
 		}
 		return evalInfixExpression(node.Operator, left, right)
@@ -107,7 +107,7 @@ func evalExpressions(exps []ast.Expression, env *object.Environment) []object.Ob
 
 	for _, e := range exps {
 		evaluated := Eval(e, env)
-		if isError(evaluated) {
+		if IsError(evaluated) {
 			return []object.Object{evaluated}
 		}
 		result = append(result, evaluated)
@@ -204,7 +204,7 @@ func evalStringInfixExpression(
 
 func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Object {
 	condition := Eval(ie.Condition, env)
-	if isError(condition) {
+	if IsError(condition) {
 		return condition
 	}
 	if isTruthy(condition) {
@@ -290,7 +290,7 @@ func newError(format string, a ...interface{}) *object.Error {
 	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }
 
-func isError(obj object.Object) bool {
+func IsError(obj object.Object) bool {
 	if obj != nil {
 		return obj.Type() == object.ERROR_OBJ
 	}
