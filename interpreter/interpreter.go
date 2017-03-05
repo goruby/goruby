@@ -10,15 +10,20 @@ import (
 	"github.com/goruby/goruby/parser"
 )
 
-func New() *Interpreter {
-	return &Interpreter{environment: object.NewMainEnvironment()}
+type Interpreter interface {
+	Interpret(string) (object.Object, error)
+	SetEnvironment(*object.Environment)
 }
 
-type Interpreter struct {
+func New() Interpreter {
+	return &interpreter{environment: object.NewMainEnvironment()}
+}
+
+type interpreter struct {
 	environment *object.Environment
 }
 
-func (i *Interpreter) Interpret(input string) (object.Object, error) {
+func (i *interpreter) Interpret(input string) (object.Object, error) {
 	node, err := i.parse(input)
 	if err != nil {
 		return nil, err
@@ -30,11 +35,11 @@ func (i *Interpreter) Interpret(input string) (object.Object, error) {
 	return evaluated, nil
 }
 
-func (i *Interpreter) SetEnvironment(env *object.Environment) {
+func (i *interpreter) SetEnvironment(env *object.Environment) {
 	i.environment = env
 }
 
-func (i *Interpreter) parse(input string) (ast.Node, error) {
+func (i *interpreter) parse(input string) (ast.Node, error) {
 	l := lexer.New(input)
 	p := parser.New(l)
 	return p.ParseProgram()

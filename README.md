@@ -12,7 +12,81 @@ There is a basic REPL within `cmd/girb`. It supports multiline expressions and a
 
 To run it ad hoc run `go run cmd/girb/main.go` and exit the REPL with CTRL-D.
 
-## Supported language feature
+## Command
+To run the command as one off run `go run main.go`.
+
+## Supported features
+
+### `goruby` Command
+- [x] parse program files
+- [ ] program file arguments
+- [ ] Flags
+  - [ ] `-0[octal]`       specify record separator (\0, if no argument)
+  - [ ] `-a`              autosplit mode with -n or -p (splits $_ into $F)
+  - [ ] `-c`              check syntax only
+  - [ ] `-Cdirectory`     cd to directory before executing your script
+  - [ ] `-d`              set debugging flags (set $DEBUG to true)
+  - [x] `-e 'command'`    one line of script. Several -e's allowed. Omit [programfile]
+  - [ ] `-Eex[:in]`       specify the default external and internal character encodings
+  - [ ] `-Fpattern`       split() pattern for autosplit (-a)
+  - [ ] `-i[extension]`   edit ARGV files in place (make backup if extension supplied)
+  - [ ] `-Idirectory`     specify $LOAD_PATH directory (may be used more than once)
+  - [ ] `-l`              enable line ending processing
+  - [ ] `-n`              assume 'while gets(); ... end' loop around your script
+  - [ ] `-p`              assume loop like -n but print line also like sed
+  - [ ] `-rlibrary`       require the library before executing your script
+  - [ ] `-s`              enable some switch parsing for switches after script name
+  - [ ] `-S`              look for the script using PATH environment variable
+  - [ ] `-T[level=1]`     turn on tainting checks
+  - [ ] `-v`              print version number, then turn on verbose mode
+  - [ ] `-w`              turn warnings on for your script
+  - [ ] `-W[level=2]`     set warning level; 0=silence, 1=medium, 2=verbose
+  - [ ] `-x[directory]`   strip off text before #!ruby line and perhaps cd to directory
+  - [ ] `-h`              show this message, --help for more info
+
+### `girb` Command
+- [ ] parse program files
+- [ ] program file arguments
+- [ ] Flags
+  - [ ] `-f`		    Suppress read of ~/.irbrc
+  - [ ] `-m`		    Bc mode (load mathn, fraction or matrix are available)
+  - [ ] `-d`                Set $DEBUG to true (same as `ruby -d')
+  - [ ] `-r load-module`    Same as `ruby -r'
+  - [ ] `-I path`           Specify $LOAD_PATH directory
+  - [ ] `-U`                Same as `ruby -U`
+  - [ ] `-E enc`            Same as `ruby -E`
+  - [ ] `-w`                Same as `ruby -w`
+  - [ ] `-W[level=2]`       Same as `ruby -W`
+  - [ ] `--context-mode n`  Set n[0-3] to method to create Binding Object,
+                    when new workspace was created
+  - [ ] `--echo`            Show result(default)
+  - [ ] `--noecho`          Don't show result
+  - [ ] `--inspect`	    Use `inspect' for output (default except for bc mode)
+  - [ ] `--noinspect`	    Don't use inspect for output
+  - [ ] `--readline`        Use Readline extension module
+  - [ ] `--noreadline`	    Don't use Readline extension module
+  - [ ] `--prompt prompt-mode`/`--prompt-mode prompt-mode`
+		    Switch prompt mode. Pre-defined prompt modes are
+		    `default', `simple', `xmp' and `inf-ruby'
+  - [ ] `--inf-ruby-mode`   Use prompt appropriate for inf-ruby-mode on emacs.
+		    Suppresses --readline.
+  - [ ] `--sample-book-mode`/`--simple-prompt`
+                    Simple prompt mode
+  - [ ] `--noprompt`        No prompt mode
+  - [ ] `--single-irb`      Share self with sub-irb.
+  - [ ] `--tracer`          Display trace for each execution of commands.
+  - [ ] `--back-trace-limit n`
+		    Display backtrace top n and tail n. The default
+		    value is 16.
+  - [ ] `--irb_debug n`	    Set internal debug level to n (not for popular use)
+  - [ ] `--verbose`         Show details
+  - [ ] `--noverbose`       Don't show details
+  - [ ] `-v`, `--version`	  Print the version of irb
+  - [ ] `-h`, `--help`      Print help
+  - [ ] `--`                Separate options of irb from the list of command-line args
+
+
+### Supported language feature
 - [ ] everything is an object
 	- [ ] allow method calls on everything
 - [ ] full UTF8 support
