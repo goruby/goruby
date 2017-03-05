@@ -393,7 +393,10 @@ func testEval(input string, context ...*object.Environment) object.Object {
 	}
 	l := lexer.New(input)
 	p := parser.New(l)
-	program := p.ParseProgram()
+	program, err := p.ParseProgram()
+	if err != nil {
+		newError(err.Error())
+	}
 	return Eval(program, env)
 }
 

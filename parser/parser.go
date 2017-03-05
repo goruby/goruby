@@ -128,7 +128,7 @@ func (p *Parser) peekError(t ...token.TokenType) {
 	p.errors = append(p.errors, err)
 }
 
-func (p *Parser) ParseProgram() *ast.Program {
+func (p *Parser) ParseProgram() (*ast.Program, error) {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 	for !p.currentTokenIs(token.EOF) {
@@ -138,7 +138,10 @@ func (p *Parser) ParseProgram() *ast.Program {
 		}
 		p.nextToken()
 	}
-	return program
+	if len(p.errors) != 0 {
+		return program, NewErrors("Parsing errors", p.Errors()...)
+	}
+	return program, nil
 }
 
 func (p *Parser) parseStatement() ast.Statement {

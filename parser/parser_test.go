@@ -23,8 +23,8 @@ func TestVariableExpression(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf(
@@ -72,8 +72,8 @@ func TestReturnStatements(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf(
@@ -104,8 +104,8 @@ func TestIdentifierExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
 
 	if len(program.Statements) != 1 {
 		t.Fatalf(
@@ -141,8 +141,8 @@ func TestIntegerLiteralExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
 
 	if len(program.Statements) != 1 {
 		t.Fatalf(
@@ -189,8 +189,8 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	for _, tt := range prefixTests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf(
@@ -255,8 +255,8 @@ func TestParsingInfixExpressions(t *testing.T) {
 	for _, tt := range infixTests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf(
@@ -415,8 +415,8 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		actual := program.String()
 		if actual != tt.expected {
@@ -437,8 +437,8 @@ func TestBooleanExpression(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf(
@@ -495,8 +495,8 @@ func TestIfExpression(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf(
@@ -569,8 +569,8 @@ func TestIfElseExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
 
 	if len(program.Statements) != 1 {
 		t.Fatalf("program.Body does not contain %d statements. got=%d\n",
@@ -686,8 +686,8 @@ func TestFunctionLiteralParsing(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf(
@@ -774,8 +774,8 @@ func TestFunctionParameterParsing(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		stmt := program.Statements[0].(*ast.ExpressionStatement)
 		function := stmt.Expression.(*ast.FunctionLiteral)
@@ -800,8 +800,8 @@ func TestCallExpressionParsing(t *testing.T) {
 
 		l := lexer.New(input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
@@ -837,8 +837,8 @@ func TestCallExpressionParsing(t *testing.T) {
 
 		l := lexer.New(input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
@@ -917,8 +917,8 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
 		stmt := program.Statements[0].(*ast.ExpressionStatement)
 		exp, ok := stmt.Expression.(*ast.CallExpression)
@@ -950,8 +950,8 @@ func TestContextCallExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
 
 	if len(program.Statements) != 1 {
 		t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
@@ -994,8 +994,8 @@ func TestStringLiteralExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
 	literal, ok := stmt.Expression.(*ast.StringLiteral)
@@ -1012,8 +1012,8 @@ func TestSymbolExpression(t *testing.T) {
 	input := `:symbol;`
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
 
 	stmt := program.Statements[0].(*ast.ExpressionStatement)
 	literal, ok := stmt.Expression.(*ast.SymbolLiteral)
@@ -1157,15 +1157,13 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 	return true
 }
 
-func checkParserErrors(t *testing.T, p *Parser) {
-	errors := p.Errors()
-	if len(errors) == 0 {
+func checkParserErrors(t *testing.T, err error) {
+	if err == nil {
 		return
 	}
+	errors := err.(*Errors)
 
-	t.Errorf("parser has %d errors", len(errors))
-	for _, err := range errors {
-		t.Errorf("parser error: %q", err.Error())
-	}
+	t.Errorf("parser has %d errors", len(errors.errors))
+	t.Errorf("parser error: %q", err.Error())
 	t.FailNow()
 }
