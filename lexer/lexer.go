@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"bytes"
 	"fmt"
 	"unicode"
 	"unicode/utf8"
@@ -184,8 +185,9 @@ func startLexer(l *Lexer) LexerStateFn {
 }
 
 func lexIdentifier(l *Lexer) LexerStateFn {
+	legalIdentifierCharacters := []byte{'?', '!'}
 	r := l.next()
-	for isLetter(r) {
+	for isLetter(r) || isDigit(r) || bytes.ContainsRune(legalIdentifierCharacters, r) {
 		r = l.next()
 	}
 	l.backup()
