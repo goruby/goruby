@@ -170,11 +170,11 @@ func TestErrorHandling(t *testing.T) {
 			"unknown operator: STRING - STRING",
 		},
 		{
-			"if (10 > 1) { true + false; }",
+			"if (10 > 1); true + false; end",
 			"unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
-			"if (10 > 1) { true + false; }",
+			"if (10 > 1); true + false; end",
 			"unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
@@ -404,7 +404,7 @@ func testEval(input string, context ...*object.Environment) object.Object {
 	p := parser.New(l)
 	program, err := p.ParseProgram()
 	if err != nil {
-		newError(err.Error())
+		return newError(err.Error())
 	}
 	return Eval(program, env)
 }
