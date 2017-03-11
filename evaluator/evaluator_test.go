@@ -192,6 +192,15 @@ end
 			"foobar",
 			"identifier not found: foobar",
 		},
+		{
+			`
+			def foo x, y
+			end
+
+			foo 1
+			`,
+			"ArgumentError: wrong number of arguments (given 1, expected 2)",
+		},
 	}
 
 	for _, tt := range tests {

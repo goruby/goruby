@@ -248,6 +248,13 @@ func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 	switch fn := fn.(type) {
 	case *object.Function:
+		if len(args) != len(fn.Parameters) {
+			return newError(
+				"ArgumentError: wrong number of arguments (given %d, expected %d)",
+				len(args),
+				len(fn.Parameters),
+			)
+		}
 		extendedEnv := extendFunctionEnv(fn, args)
 		evaluated := Eval(fn.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
