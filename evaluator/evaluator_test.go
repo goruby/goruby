@@ -387,7 +387,15 @@ func TestBuiltinFunctions(t *testing.T) {
 	}
 }
 
-func testNilObject(t *testing.T, obj object.Object) bool {
+func TestMethodCalls(t *testing.T) {
+	input := "x = 2; x.nil?"
+
+	evaluated := testEval(input)
+
+	testBooleanObject(t, evaluated, false)
+}
+
+func testNilObject(t *testing.T, obj object.RubyObject) bool {
 	if obj != object.NIL {
 		t.Errorf("object is not NIL. got=%T (%+v)", obj, obj)
 		return false
@@ -395,7 +403,7 @@ func testNilObject(t *testing.T, obj object.Object) bool {
 	return true
 }
 
-func testEval(input string, context ...*object.Environment) object.Object {
+func testEval(input string, context ...*object.Environment) object.RubyObject {
 	env := object.NewEnvironment()
 	for _, e := range context {
 		env = object.NewEnclosedEnvironment(e)
@@ -409,7 +417,7 @@ func testEval(input string, context ...*object.Environment) object.Object {
 	return Eval(program, env)
 }
 
-func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
+func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool {
 	result, ok := obj.(*object.Boolean)
 	if !ok {
 		t.Errorf(
@@ -430,7 +438,7 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 	return true
 }
 
-func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
+func testIntegerObject(t *testing.T, obj object.RubyObject, expected int64) bool {
 	result, ok := obj.(*object.Integer)
 	if !ok {
 		t.Errorf(
