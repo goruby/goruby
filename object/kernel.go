@@ -3,9 +3,9 @@ package object
 import "fmt"
 
 var kernelFunctions = &Environment{
-	store: map[string]Object{
+	store: map[string]RubyObject{
 		"puts": &Builtin{
-			Fn: func(args ...Object) Object {
+			Fn: func(args ...RubyObject) RubyObject {
 				out := ""
 				for _, arg := range args {
 					out += arg.Inspect()
