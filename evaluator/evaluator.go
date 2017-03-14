@@ -26,7 +26,7 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 
 	// Expressions
 	case (*ast.IntegerLiteral):
-		return &object.Integer{Value: node.Value}
+		return object.NewInteger(node.Value)
 	case (*ast.Boolean):
 		return nativeBoolToBooleanObject(node.Value)
 	case *ast.Variable:
@@ -48,6 +48,16 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 		function := &object.Function{Parameters: params, Env: env, Body: body}
 		env.Set(node.Name.Value, function)
 		return function
+	case *ast.ContextCallExpression:
+		context := Eval(node.Context, env)
+		if IsError(context) {
+			return context
+		}
+		args := evalExpressions(node.Call.Arguments, env)
+		if len(args) == 1 && IsError(args[0]) {
+			return args[0]
+		}
+		return context.Send(node.Call.Function.Value, args...)
 	case *ast.CallExpression:
 		function := Eval(node.Function, env)
 		if IsError(function) {
@@ -298,7 +308,7 @@ func newError(format string, a ...interface{}) *object.Error {
 
 func IsError(obj object.RubyObject) bool {
 	if obj != nil {
-		return obj.Type() == object.ERROR_OBJ
+		return obj.Type() == object.ERROR_OBJ || obj.Type() == object.EXCEPTION_OBJ
 	}
 	return false
 }

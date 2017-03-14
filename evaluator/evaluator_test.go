@@ -388,11 +388,14 @@ func TestBuiltinFunctions(t *testing.T) {
 }
 
 func TestMethodCalls(t *testing.T) {
-	input := "x = 2; x.nil?"
+	input := "x = 2; x.foo :bar"
 
 	evaluated := testEval(input)
 
-	testBooleanObject(t, evaluated, false)
+	if !IsError(evaluated) {
+		t.Logf("Expected error, got %T:%s\n", evaluated, evaluated)
+		t.Fail()
+	}
 }
 
 func testNilObject(t *testing.T, obj object.RubyObject) bool {

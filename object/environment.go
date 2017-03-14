@@ -1,6 +1,13 @@
 package object
 
+var classes = &Environment{
+	store: map[string]RubyObject{
+		"Integer": INTEGER,
+	},
+}
+
 func NewMainEnvironment() *Environment {
+	kernelFunctions.outer = classes
 	return NewEnclosedEnvironment(kernelFunctions)
 }
 
