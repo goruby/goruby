@@ -57,7 +57,7 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 		if len(args) == 1 && IsError(args[0]) {
 			return args[0]
 		}
-		return context.Send(node.Call.Function.Value, args...)
+		return object.Send(context, node.Call.Function.Value, args...)
 	case *ast.CallExpression:
 		function := Eval(node.Function, env)
 		if IsError(function) {

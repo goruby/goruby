@@ -2,7 +2,15 @@ package object
 
 var classes = &Environment{
 	store: map[string]RubyObject{
-		"Integer": INTEGER,
+		"BasicObject": BASIC_OBJECT_CLASS,
+		"Object":      OBJECT_CLASS,
+		"String":      STRING_CLASS,
+		"Symbol":      SYMBOL_CLASS,
+		"Integer":     INTEGER_CLASS,
+		"NilClass":    NIL_CLASS,
+		"TrueClass":   TRUE_CLASS,
+		"FalseClass":  FALSE_CLASS,
+		"Exception":   EXCEPTION_CLASS,
 	},
 }
 
