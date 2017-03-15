@@ -30,12 +30,14 @@ const (
 	COMMA
 	SEMICOLON
 
-	DOT    // .
-	COLON  // :
-	LPAREN // (
-	RPAREN // )
-	LBRACE // {
-	RBRACE // }
+	DOT      // .
+	COLON    // :
+	LPAREN   // (
+	RPAREN   // )
+	LBRACE   // {
+	RBRACE   // }
+	LBRACKET // [
+	RBRACKET // ]
 
 	// Keywords
 	DEF

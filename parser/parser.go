@@ -72,6 +72,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.DEF, p.parseFunctionLiteral)
 	p.registerPrefix(token.SYMBOL, p.parseSymbolLiteral)
+	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -255,6 +256,14 @@ func (p *Parser) parseSymbolLiteral() ast.Expression {
 	return &ast.SymbolLiteral{Token: p.curToken, Value: p.curToken.Literal}
 }
 
+func (p *Parser) parseArrayLiteral() ast.Expression {
+	array := &ast.ArrayLiteral{Token: p.curToken}
+
+	array.Elements = p.parseExpressionList(token.RBRACKET)
+
+	return array
+}
+
 func (p *Parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: p.curToken, Value: p.currentTokenIs(token.TRUE)}
 }
@@ -411,7 +420,7 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	}
 	exp := &ast.CallExpression{Token: ident.Token, Function: ident}
 	args := []ast.Expression{}
-	args = append(args, p.parseExpression(LOWEST, token.RPAREN))
+	args = append(args, p.parseExpression(LOWEST))
 
 	for p.peekTokenIs(token.COMMA) {
 		p.consume(token.COMMA)
@@ -448,31 +457,30 @@ func (p *Parser) parseCallExpressionWithParens(function ast.Expression) ast.Expr
 		return nil
 	}
 	exp := &ast.CallExpression{Token: p.curToken, Function: ident}
-	exp.Arguments = p.parseCallArgumentsWithParens()
+	exp.Arguments = p.parseExpressionList(token.RPAREN)
 	return exp
 }
 
-func (p *Parser) parseCallArgumentsWithParens() []ast.Expression {
-	args := []ast.Expression{}
-
-	if p.peekTokenIs(token.RPAREN) {
-		p.accept(token.RPAREN)
-		return args
+func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
+	list := []ast.Expression{}
+	if p.peekTokenIs(end) {
+		p.nextToken()
+		return list
 	}
 
 	p.nextToken()
-	args = append(args, p.parseExpression(LOWEST, token.RPAREN))
+	list = append(list, p.parseExpression(LOWEST))
 
 	for p.peekTokenIs(token.COMMA) {
 		p.consume(token.COMMA)
-		args = append(args, p.parseExpression(LOWEST))
+		list = append(list, p.parseExpression(LOWEST))
 	}
 
-	if !p.accept(token.RPAREN) {
+	if !p.accept(end) {
 		return nil
 	}
 
-	return args
+	return list
 }
 
 func (p *Parser) peekPrecedence() int {

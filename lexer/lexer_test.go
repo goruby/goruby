@@ -37,6 +37,7 @@ end
 
 def run!
 end
+[1, 2]
 `
 
 	tests := []struct {
@@ -135,6 +136,12 @@ end
 		{token.IDENT, "run!"},
 		{token.NEWLINE, "\n"},
 		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.LBRACKET, "["},
+		{token.INT, "1"},
+		{token.COMMA, ","},
+		{token.INT, "2"},
+		{token.RBRACKET, "]"},
 		{token.NEWLINE, "\n"},
 		{token.EOF, ""},
 	}
