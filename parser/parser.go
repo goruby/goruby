@@ -21,6 +21,7 @@ const (
 	ASSIGNMENT  // x = 5
 	CALL        // myFunction(X)
 	CONTEXT     // foo.myFunction(X)
+	INDEX       // array[index]
 )
 
 var precedences = map[token.TokenType]int{
@@ -39,6 +40,7 @@ var precedences = map[token.TokenType]int{
 	token.STRING:   CALL,
 	token.SYMBOL:   CALL,
 	token.DOT:      CONTEXT,
+	token.LBRACKET: INDEX,
 }
 
 type (
@@ -90,6 +92,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.DOT, p.parseContextCallExpression)
 	p.registerInfix(token.SYMBOL, p.parseCallExpression)
 	p.registerInfix(token.ASSIGN, p.parseVariableAssignExpression)
+	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	return p
 }
 
@@ -288,6 +291,18 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	p.nextToken()
 	expression.Right = p.parseExpression(precedence)
 	return expression
+}
+
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	exp := &ast.IndexExpression{Token: p.curToken, Left: left}
+
+	p.nextToken()
+	exp.Index = p.parseExpression(LOWEST)
+
+	if !p.accept(token.RBRACKET) {
+		return nil
+	}
+	return exp
 }
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
