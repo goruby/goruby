@@ -5,6 +5,29 @@ import (
 	"reflect"
 )
 
+var EXCEPTION_EIGENCLASS RubyClass = &ExceptionEigenclass{}
+var EXCEPTION_CLASS RubyClass = &ExceptionClass{}
+
+type ExceptionEigenclass struct{}
+
+func (e *ExceptionEigenclass) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *ExceptionEigenclass) Inspect() string  { return "" }
+func (e *ExceptionEigenclass) Methods() map[string]method {
+	return nil
+}
+func (e *ExceptionEigenclass) Class() RubyClass      { return OBJECT_CLASS }
+func (e *ExceptionEigenclass) SuperClass() RubyClass { return BASIC_OBJECT_CLASS }
+
+type ExceptionClass struct{}
+
+func (e *ExceptionClass) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *ExceptionClass) Inspect() string  { return "Exception" }
+func (e *ExceptionClass) Methods() map[string]method {
+	return nil
+}
+func (e *ExceptionClass) Class() RubyClass      { return EXCEPTION_EIGENCLASS }
+func (e *ExceptionClass) SuperClass() RubyClass { return OBJECT_CLASS }
+
 type Exception struct {
 	exception interface{}
 	Message   string
@@ -14,9 +37,10 @@ func (e *Exception) Type() ObjectType { return EXCEPTION_OBJ }
 func (e *Exception) Inspect() string {
 	return fmt.Sprintf("%s: %s", reflect.TypeOf(e.exception).Elem().Name(), e.Message)
 }
-func (e *Exception) Send(name string, args ...RubyObject) RubyObject {
-	return NIL
+func (e *Exception) Methods() map[string]method {
+	return nil
 }
+func (e *Exception) Class() RubyClass { return nil }
 
 func NewStandardError(message string) *StandardError {
 	e := &StandardError{Exception{Message: message}}
@@ -97,6 +121,22 @@ func NewCoercionTypeError(expected, actual RubyObject) *TypeError {
 			Exception{
 				Message: fmt.Sprintf(
 					"%s can't be coerced into %s",
+					reflect.TypeOf(actual).Elem().Name(),
+					reflect.TypeOf(expected).Elem().Name(),
+				),
+			},
+		},
+	}
+	e.exception = e
+	return e
+}
+
+func NewImplicitConversionTypeError(expected, actual RubyObject) *TypeError {
+	e := &TypeError{
+		StandardError{
+			Exception{
+				Message: fmt.Sprintf(
+					"no implicit conversion of %s into %s",
 					reflect.TypeOf(actual).Elem().Name(),
 					reflect.TypeOf(expected).Elem().Name(),
 				),

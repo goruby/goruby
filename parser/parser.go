@@ -425,9 +425,14 @@ func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 	contextCallExpression := &ast.ContextCallExpression{Token: p.curToken, Context: context}
 	p.nextToken()
 	expr := p.parseExpression(LOWEST)
-	callExp, ok := expr.(*ast.CallExpression)
-	if !ok {
-		msg := fmt.Errorf("could not parse call expression: expected CallExpression, got token '%T'", expr)
+	var callExp *ast.CallExpression
+	switch expr := expr.(type) {
+	case *ast.Identifier:
+		callExp = &ast.CallExpression{Token: expr.Token, Function: expr, Arguments: []ast.Expression{}}
+	case *ast.CallExpression:
+		callExp = expr
+	default:
+		msg := fmt.Errorf("could not parse context call expression: expected Identifier or CallExpression, got token '%T'", expr)
 		p.errors = append(p.errors, msg)
 		return nil
 	}

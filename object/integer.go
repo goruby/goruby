@@ -2,43 +2,42 @@ package object
 
 import "fmt"
 
-var INTEGER *IntegerClass = newIntegerClass()
+var (
+	INTEGER_EIGENCLASS RubyClass = &IntegerEigenclass{}
+	INTEGER_CLASS      RubyClass = &IntegerClass{}
+)
 
-func newIntegerClass() *IntegerClass {
-	cl := &IntegerClass{}
-	cl.methods = &methodSet{cl, integerClassMethods}
-	cl.instanceMethods = &methodSet{methods: integerMethods}
-	return cl
-}
+type IntegerEigenclass struct{}
 
-type IntegerClass struct {
-	methods         *methodSet
-	instanceMethods *methodSet
+func (i *IntegerEigenclass) Inspect() string  { return "Integer" }
+func (i *IntegerEigenclass) Type() ObjectType { return INTEGER_CLASS_OBJ }
+func (i *IntegerEigenclass) Methods() map[string]method {
+	return integerClassMethods
 }
+func (i *IntegerEigenclass) Class() RubyClass      { return OBJECT_CLASS }
+func (i *IntegerEigenclass) SuperClass() RubyClass { return BASIC_OBJECT_CLASS }
+
+type IntegerClass struct{}
 
 func (i *IntegerClass) Inspect() string  { return "Integer" }
 func (i *IntegerClass) Type() ObjectType { return INTEGER_CLASS_OBJ }
-func (i *IntegerClass) Send(name string, args ...RubyObject) RubyObject {
-	return i.methods.Call(name, args...)
+func (i *IntegerClass) Methods() map[string]method {
+	return integerMethods
 }
+func (i *IntegerClass) Class() RubyClass      { return INTEGER_EIGENCLASS }
+func (i *IntegerClass) SuperClass() RubyClass { return OBJECT_CLASS }
 
 func NewInteger(value int64) *Integer {
-	i := &Integer{Value: value}
-	i.methods = INTEGER.instanceMethods
-	i.methods.context = i
-	return i
+	return &Integer{Value: value}
 }
 
 type Integer struct {
-	Value   int64
-	methods *methodSet
+	Value int64
 }
 
 func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
 func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
-func (i *Integer) Send(name string, args ...RubyObject) RubyObject {
-	return i.methods.Call(name, args...)
-}
+func (i *Integer) Class() RubyClass { return INTEGER_CLASS }
 
 var integerClassMethods = map[string]method{}
 
@@ -57,9 +56,7 @@ func integerDiv(context RubyObject, args ...RubyObject) RubyObject {
 	if divisor.Value == 0 {
 		return NewZeroDivisionError()
 	}
-	result := &Integer{Value: i.Value / divisor.Value}
-	result.methods = i.methods.SetContext(result)
-	return result
+	return NewInteger(i.Value / divisor.Value)
 }
 
 func integerMul(context RubyObject, args ...RubyObject) RubyObject {
@@ -68,9 +65,7 @@ func integerMul(context RubyObject, args ...RubyObject) RubyObject {
 	if !ok {
 		return NewCoercionTypeError(args[0], i)
 	}
-	result := &Integer{Value: i.Value * factor.Value}
-	result.methods = i.methods.SetContext(result)
-	return result
+	return NewInteger(i.Value * factor.Value)
 }
 
 func integerAdd(context RubyObject, args ...RubyObject) RubyObject {
@@ -79,7 +74,5 @@ func integerAdd(context RubyObject, args ...RubyObject) RubyObject {
 	if !ok {
 		return NewCoercionTypeError(args[0], i)
 	}
-	result := &Integer{Value: i.Value + add.Value}
-	result.methods = i.methods.SetContext(result)
-	return result
+	return NewInteger(i.Value + add.Value)
 }

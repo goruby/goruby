@@ -1,8 +1,33 @@
 package object
 
-type Object struct {
-}
+var OBJECT_EIGENCLASS RubyClass = &ObjectEigenclass{}
+var OBJECT_CLASS RubyClass = &ObjectClass{}
 
-func (o *Object) PatternMatch(other RubyObject) RubyObject {
-	return NIL
+type ObjectEigenclass struct{}
+
+func (o *ObjectEigenclass) Inspect() string  { return "" }
+func (o *ObjectEigenclass) Type() ObjectType { return EIGENCLASS_OBJ }
+func (o *ObjectEigenclass) Methods() map[string]method {
+	return nil
 }
+func (o *ObjectEigenclass) Class() RubyClass      { return BASIC_OBJECT_CLASS }
+func (o *ObjectEigenclass) SuperClass() RubyClass { return BASIC_OBJECT_CLASS }
+
+type ObjectClass struct{}
+
+func (o *ObjectClass) Inspect() string  { return "Object" }
+func (o *ObjectClass) Type() ObjectType { return OBJECT_CLASS_OBJ }
+func (o *ObjectClass) Methods() map[string]method {
+	return nil
+}
+func (o *ObjectClass) Class() RubyClass      { return OBJECT_EIGENCLASS }
+func (o *ObjectClass) SuperClass() RubyClass { return BASIC_OBJECT_CLASS }
+
+type Object struct{}
+
+func (o *Object) Inspect() string  { return "" }
+func (o *Object) Type() ObjectType { return OBJECT_OBJ }
+func (o *Object) Methods() map[string]method {
+	return nil
+}
+func (o *Object) Class() RubyClass { return OBJECT_CLASS }
