@@ -4,6 +4,7 @@ var classes = &Environment{
 	store: map[string]RubyObject{
 		"BasicObject": BASIC_OBJECT_CLASS,
 		"Object":      OBJECT_CLASS,
+		"Kernel":      KERNEL_MODULE,
 		"String":      STRING_CLASS,
 		"Symbol":      SYMBOL_CLASS,
 		"Integer":     INTEGER_CLASS,

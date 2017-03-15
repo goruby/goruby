@@ -30,6 +30,8 @@ const (
 	ERROR_OBJ              = "ERROR"
 	EXCEPTION_OBJ          = "EXCEPTION"
 	EXCEPTION_CLASS_OBJ    = "EXCEPTION_CLASS"
+	MODULE_OBJ             = "MODULE"
+	MODULE_CLASS_OBJ       = "MODULE_CLASS"
 	BUILTIN_OBJ            = "BUILTIN"
 )
 
