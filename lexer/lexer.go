@@ -164,6 +164,12 @@ func startLexer(l *Lexer) LexerStateFn {
 	case '}':
 		l.emit(token.RBRACE)
 		return startLexer
+	case '[':
+		l.emit(token.LBRACKET)
+		return startLexer
+	case ']':
+		l.emit(token.RBRACKET)
+		return startLexer
 	case ',':
 		l.emit(token.COMMA)
 		return startLexer
