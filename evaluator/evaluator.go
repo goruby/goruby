@@ -48,6 +48,12 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 		function := &object.Function{Parameters: params, Env: env, Body: body}
 		env.Set(node.Name.Value, function)
 		return function
+	case *ast.ArrayLiteral:
+		elements := evalExpressions(node.Elements, env)
+		if len(elements) == 1 && IsError(elements[0]) {
+			return elements[0]
+		}
+		return &object.Array{Elements: elements}
 	case *ast.ContextCallExpression:
 		context := Eval(node.Context, env)
 		if IsError(context) {
@@ -58,6 +64,16 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 			return args[0]
 		}
 		return object.Send(context, node.Call.Function.Value, args...)
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if IsError(left) {
+			return left
+		}
+		index := Eval(node.Index, env)
+		if IsError(index) {
+			return index
+		}
+		return evalIndexExpression(left, index)
 	case *ast.CallExpression:
 		function := Eval(node.Function, env)
 		if IsError(function) {
@@ -223,6 +239,25 @@ func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Ruby
 	} else {
 		return object.NIL
 	}
+}
+
+func evalIndexExpression(left, index object.RubyObject) object.RubyObject {
+	switch {
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		return evalArrayIndexExpression(left, index)
+	default:
+		return newError("index operator not supported: %s", left.Type())
+	}
+}
+
+func evalArrayIndexExpression(array, index object.RubyObject) object.RubyObject {
+	arrayObject := array.(*object.Array)
+	idx := index.(*object.Integer).Value
+	max := int64(len(arrayObject.Elements) - 1)
+	if idx < 0 || idx > max {
+		return object.NIL
+	}
+	return arrayObject.Elements[idx]
 }
 
 func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) object.RubyObject {
