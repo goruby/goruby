@@ -31,3 +31,11 @@ func (o *Object) Methods() map[string]method {
 	return nil
 }
 func (o *Object) Class() RubyClass { return OBJECT_CLASS }
+
+var objectClassMethods = map[string]method{}
+
+var objectMethods = map[string]method{}
+
+func objMethods(context RubyObject, args ...RubyObject) RubyObject {
+	return NIL
+}
