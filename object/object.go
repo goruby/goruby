@@ -24,11 +24,22 @@ func (o *Object) Class() RubyClass { return OBJECT_CLASS }
 var objectClassMethods = map[string]method{}
 
 var objectMethods = map[string]method{
-	"nil?": objectIsNil,
+	"nil?":    withArity(0, objectIsNil),
+	"methods": withArity(0, objMethods),
 }
 
 func objMethods(context RubyObject, args ...RubyObject) RubyObject {
-	return NIL
+	var methodSymbols []RubyObject
+	class := context.Class()
+	for class != nil {
+		methods := class.Methods()
+		for meth, _ := range methods {
+			methodSymbols = append(methodSymbols, &Symbol{meth})
+		}
+		class = class.SuperClass()
+	}
+
+	return &Array{Elements: methodSymbols}
 }
 
 func objectIsNil(context RubyObject, args ...RubyObject) RubyObject {
