@@ -3,7 +3,7 @@ package object
 import "strings"
 
 var (
-	ARRAY_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, arrayClassMethods)
+	ARRAY_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, arrayClassMethods)
 	ARRAY_CLASS      RubyClassObject = &ArrayClass{}
 )
 

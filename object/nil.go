@@ -1,7 +1,7 @@
 package object
 
 var (
-	NIL_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, nilClassMethods)
+	NIL_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, nilClassMethods)
 	NIL_CLASS      RubyClassObject = &NilClass{}
 	NIL            RubyObject      = &Nil{}
 )

@@ -76,3 +76,28 @@ func TestObjectIsNil(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestObjectClass(t *testing.T) {
+	t.Run("regular object", func(t *testing.T) {
+		context := &Integer{1}
+
+		result := objectClass(context)
+
+		_, ok := result.(*IntegerClass)
+		if !ok {
+			t.Logf("Expected IntegerClass, got %T", result)
+			t.Fail()
+		}
+	})
+	t.Run("class object", func(t *testing.T) {
+		context := STRING_CLASS
+
+		result := objectClass(context)
+
+		_, ok := result.(*ClassClass)
+		if !ok {
+			t.Logf("Expected ClassClass, got %T", result)
+			t.Fail()
+		}
+	})
+}
