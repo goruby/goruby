@@ -200,18 +200,14 @@ func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 	p.errors = append(p.errors, msg)
 }
 
-func (p *Parser) parseExpression(precedence int, expressionTerminators ...token.TokenType) ast.Expression {
-	terminators := defaultExpressionTerminators
-	if expressionTerminators != nil {
-		terminators = append(terminators, expressionTerminators...)
-	}
+func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
 		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
 	}
 	leftExp := prefix()
-	for !p.peekTokenOneOf(terminators...) && precedence < p.peekPrecedence() {
+	for precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
