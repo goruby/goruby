@@ -5,28 +5,18 @@ import (
 	"reflect"
 )
 
-var EXCEPTION_EIGENCLASS RubyClass = &ExceptionEigenclass{}
-var EXCEPTION_CLASS RubyClass = &ExceptionClass{}
-
-type ExceptionEigenclass struct{}
-
-func (e *ExceptionEigenclass) Type() ObjectType { return EXCEPTION_OBJ }
-func (e *ExceptionEigenclass) Inspect() string  { return "" }
-func (e *ExceptionEigenclass) Methods() map[string]method {
-	return nil
-}
-func (e *ExceptionEigenclass) Class() RubyClass      { return OBJECT_CLASS }
-func (e *ExceptionEigenclass) SuperClass() RubyClass { return BASIC_OBJECT_CLASS }
+var (
+	EXCEPTION_EIGENCLASS RubyClass = newEigenClass(OBJECT_CLASS, exceptionClassMethods)
+	EXCEPTION_CLASS      RubyClass = &ExceptionClass{}
+)
 
 type ExceptionClass struct{}
 
-func (e *ExceptionClass) Type() ObjectType { return EXCEPTION_OBJ }
-func (e *ExceptionClass) Inspect() string  { return "Exception" }
-func (e *ExceptionClass) Methods() map[string]method {
-	return nil
-}
-func (e *ExceptionClass) Class() RubyClass      { return EXCEPTION_EIGENCLASS }
-func (e *ExceptionClass) SuperClass() RubyClass { return OBJECT_CLASS }
+func (e *ExceptionClass) Type() ObjectType           { return EXCEPTION_OBJ }
+func (e *ExceptionClass) Inspect() string            { return "Exception" }
+func (e *ExceptionClass) Methods() map[string]method { return exceptionMethods }
+func (e *ExceptionClass) Class() RubyClass           { return EXCEPTION_EIGENCLASS }
+func (e *ExceptionClass) SuperClass() RubyClass      { return OBJECT_CLASS }
 
 type Exception struct {
 	exception interface{}
@@ -37,10 +27,11 @@ func (e *Exception) Type() ObjectType { return EXCEPTION_OBJ }
 func (e *Exception) Inspect() string {
 	return fmt.Sprintf("%s: %s", reflect.TypeOf(e.exception).Elem().Name(), e.Message)
 }
-func (e *Exception) Methods() map[string]method {
-	return nil
-}
-func (e *Exception) Class() RubyClass { return nil }
+func (e *Exception) Class() RubyClass { return EXCEPTION_CLASS }
+
+var exceptionClassMethods = map[string]method{}
+
+var exceptionMethods = map[string]method{}
 
 func NewStandardError(message string) *StandardError {
 	e := &StandardError{Exception{Message: message}}
