@@ -6,16 +6,16 @@ import (
 )
 
 var (
-	EXCEPTION_EIGENCLASS RubyClass = newEigenClass(OBJECT_CLASS, exceptionClassMethods)
-	EXCEPTION_CLASS      RubyClass = &ExceptionClass{}
+	EXCEPTION_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, exceptionClassMethods)
+	EXCEPTION_CLASS      RubyClassObject = &ExceptionClass{}
 )
 
 type ExceptionClass struct{}
 
 func (e *ExceptionClass) Type() ObjectType           { return EXCEPTION_OBJ }
 func (e *ExceptionClass) Inspect() string            { return "Exception" }
-func (e *ExceptionClass) Methods() map[string]method { return exceptionMethods }
 func (e *ExceptionClass) Class() RubyClass           { return EXCEPTION_EIGENCLASS }
+func (e *ExceptionClass) Methods() map[string]method { return exceptionMethods }
 func (e *ExceptionClass) SuperClass() RubyClass      { return OBJECT_CLASS }
 
 type Exception struct {

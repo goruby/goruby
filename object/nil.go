@@ -1,17 +1,17 @@
 package object
 
 var (
-	NIL_EIGENCLASS RubyClass  = newEigenClass(OBJECT_CLASS, nilClassMethods)
-	NIL_CLASS      RubyClass  = &NilClass{}
-	NIL            RubyObject = &Nil{}
+	NIL_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, nilClassMethods)
+	NIL_CLASS      RubyClassObject = &NilClass{}
+	NIL            RubyObject      = &Nil{}
 )
 
 type NilClass struct{}
 
 func (n *NilClass) Inspect() string            { return "NilClass" }
 func (n *NilClass) Type() ObjectType           { return NIL_CLASS_OBJ }
-func (n *NilClass) Methods() map[string]method { return nilMethods }
 func (n *NilClass) Class() RubyClass           { return NIL_EIGENCLASS }
+func (n *NilClass) Methods() map[string]method { return nilMethods }
 func (n *NilClass) SuperClass() RubyClass      { return OBJECT_CLASS }
 
 type Nil struct{}

@@ -3,8 +3,8 @@ package object
 import "fmt"
 
 var (
-	CLASS_EIGENCLASS RubyClass = newEigenClass(MODULE_CLASS, classClassMethods)
-	CLASS_CLASS      RubyClass = &ClassClass{}
+	CLASS_EIGENCLASS RubyClass       = newEigenClass(MODULE_CLASS, classClassMethods)
+	CLASS_CLASS      RubyClassObject = &ClassClass{}
 )
 
 type ClassClass struct{}

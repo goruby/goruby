@@ -3,16 +3,16 @@ package object
 import "fmt"
 
 var (
-	INTEGER_EIGENCLASS RubyClass = newEigenClass(OBJECT_CLASS, integerClassMethods)
-	INTEGER_CLASS      RubyClass = &IntegerClass{}
+	INTEGER_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, integerClassMethods)
+	INTEGER_CLASS      RubyClassObject = &IntegerClass{}
 )
 
 type IntegerClass struct{}
 
 func (i *IntegerClass) Inspect() string            { return "Integer" }
 func (i *IntegerClass) Type() ObjectType           { return INTEGER_CLASS_OBJ }
-func (i *IntegerClass) Methods() map[string]method { return integerMethods }
 func (i *IntegerClass) Class() RubyClass           { return INTEGER_EIGENCLASS }
+func (i *IntegerClass) Methods() map[string]method { return integerMethods }
 func (i *IntegerClass) SuperClass() RubyClass      { return OBJECT_CLASS }
 
 func NewInteger(value int64) *Integer {

@@ -45,9 +45,13 @@ type RubyObject interface {
 }
 
 type RubyClass interface {
-	RubyObject
 	Methods() map[string]method
 	SuperClass() RubyClass
+}
+
+type RubyClassObject interface {
+	RubyObject
+	RubyClass
 }
 
 type BuiltinFunction func(args ...RubyObject) RubyObject

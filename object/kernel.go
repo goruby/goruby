@@ -2,14 +2,14 @@ package object
 
 import "fmt"
 
-var KERNEL_MODULE RubyClass = &KernelClass{}
+var KERNEL_MODULE RubyClassObject = &KernelClass{}
 
 type KernelClass struct{}
 
 func (k *KernelClass) Inspect() string            { return "Kernel" }
 func (k *KernelClass) Type() ObjectType           { return MODULE_OBJ }
-func (k *KernelClass) Methods() map[string]method { return kernelMethods }
 func (k *KernelClass) Class() RubyClass           { return newEigenClass(MODULE_CLASS, kernelMethods) }
+func (k *KernelClass) Methods() map[string]method { return kernelMethods }
 func (k *KernelClass) SuperClass() RubyClass      { return MODULE_CLASS }
 
 var kernelFunctions = &Environment{

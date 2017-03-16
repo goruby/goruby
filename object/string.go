@@ -1,16 +1,16 @@
 package object
 
 var (
-	STRING_EIGENCLASS RubyClass = newEigenClass(OBJECT_CLASS, stringClassMethods)
-	STRING_CLASS      RubyClass = &StringClass{}
+	STRING_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, stringClassMethods)
+	STRING_CLASS      RubyClassObject = &StringClass{}
 )
 
 type StringClass struct{}
 
 func (s *StringClass) Inspect() string            { return "String" }
 func (s *StringClass) Type() ObjectType           { return STRING_CLASS_OBJ }
-func (s *StringClass) Methods() map[string]method { return stringMethods }
 func (s *StringClass) Class() RubyClass           { return STRING_EIGENCLASS }
+func (s *StringClass) Methods() map[string]method { return stringMethods }
 func (s *StringClass) SuperClass() RubyClass      { return OBJECT_CLASS }
 
 type String struct {
