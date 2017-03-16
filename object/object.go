@@ -1,7 +1,7 @@
 package object
 
 var (
-	OBJECT_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, objectClassMethods)
+	OBJECT_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, objectClassMethods)
 	OBJECT_CLASS      RubyClassObject = &ObjectClass{}
 )
 
@@ -24,6 +24,7 @@ var objectClassMethods = map[string]method{}
 var objectMethods = map[string]method{
 	"nil?":    withArity(0, objectIsNil),
 	"methods": withArity(0, objMethods),
+	"class":   withArity(0, objectClass),
 }
 
 func objMethods(context RubyObject, args ...RubyObject) RubyObject {
@@ -42,4 +43,13 @@ func objMethods(context RubyObject, args ...RubyObject) RubyObject {
 
 func objectIsNil(context RubyObject, args ...RubyObject) RubyObject {
 	return FALSE
+}
+
+func objectClass(context RubyObject, args ...RubyObject) RubyObject {
+	class := context.Class()
+	if eigenClass, ok := class.(*eigenClass); ok {
+		class = eigenClass.Class()
+	}
+	classObj := class.(RubyClassObject)
+	return classObj
 }

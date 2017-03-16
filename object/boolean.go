@@ -3,7 +3,7 @@ package object
 import "fmt"
 
 var (
-	BOOLEAN_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, nil)
+	BOOLEAN_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, nil)
 	TRUE_CLASS         RubyClassObject = &TrueClass{}
 	FALSE_CLASS        RubyClassObject = &FalseClass{}
 	TRUE               RubyObject      = &Boolean{Value: true}

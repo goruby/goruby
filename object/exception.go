@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	EXCEPTION_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, exceptionClassMethods)
+	EXCEPTION_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, exceptionClassMethods)
 	EXCEPTION_CLASS      RubyClassObject = &ExceptionClass{}
 )
 

@@ -11,6 +11,6 @@ type eigenClass struct {
 
 func (e *eigenClass) Inspect() string            { return "" }
 func (e *eigenClass) Type() ObjectType           { return EIGENCLASS_OBJ }
-func (e *eigenClass) Class() RubyClass           { return OBJECT_CLASS }
+func (e *eigenClass) Class() RubyClass           { return CLASS_CLASS }
 func (e *eigenClass) Methods() map[string]method { return e.methods }
 func (e *eigenClass) SuperClass() RubyClass      { return e.superClass }
