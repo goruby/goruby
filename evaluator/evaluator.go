@@ -348,7 +348,7 @@ func IsError(obj object.RubyObject) bool {
 	return false
 }
 
-func nativeBoolToBooleanObject(input bool) *object.Boolean {
+func nativeBoolToBooleanObject(input bool) object.RubyObject {
 	if input {
 		return object.TRUE
 	}
