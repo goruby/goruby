@@ -1,27 +1,17 @@
 package object
 
-var BASIC_OBJECT_EIGENCLASS *BasicObjectEigenclass = &BasicObjectEigenclass{}
-var BASIC_OBJECT_CLASS *BasicObjectClass = &BasicObjectClass{}
-
-type BasicObjectEigenclass struct{}
-
-func (b *BasicObjectEigenclass) Inspect() string  { return "BasicObject" }
-func (b *BasicObjectEigenclass) Type() ObjectType { return EIGENCLASS_OBJ }
-func (b *BasicObjectEigenclass) Methods() map[string]method {
-	return basicObjectClassMethods
-}
-func (b *BasicObjectEigenclass) Class() RubyClass      { return BASIC_OBJECT_CLASS }
-func (b *BasicObjectEigenclass) SuperClass() RubyClass { return nil }
+var (
+	BASIC_OBJECT_EIGENCLASS RubyClass = newEigenClass(OBJECT_CLASS, basicObjectClassMethods)
+	BASIC_OBJECT_CLASS      RubyClass = &BasicObjectClass{}
+)
 
 type BasicObjectClass struct{}
 
-func (b *BasicObjectClass) Inspect() string  { return "BasicObject" }
-func (b *BasicObjectClass) Type() ObjectType { return BASIC_OBJECT_CLASS_OBJ }
-func (b *BasicObjectClass) Methods() map[string]method {
-	return basicObjectMethods
-}
-func (b *BasicObjectClass) Class() RubyClass      { return BASIC_OBJECT_EIGENCLASS }
-func (b *BasicObjectClass) SuperClass() RubyClass { return nil }
+func (b *BasicObjectClass) Inspect() string            { return "BasicObject" }
+func (b *BasicObjectClass) Type() ObjectType           { return BASIC_OBJECT_CLASS_OBJ }
+func (b *BasicObjectClass) Methods() map[string]method { return basicObjectMethods }
+func (b *BasicObjectClass) Class() RubyClass           { return BASIC_OBJECT_EIGENCLASS }
+func (b *BasicObjectClass) SuperClass() RubyClass      { return nil }
 
 type BasicObject struct{}
 

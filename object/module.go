@@ -1,17 +1,9 @@
 package object
 
 var (
-	MODULE_EIGENCLASS RubyClass = &ModuleEigenClass{}
+	MODULE_EIGENCLASS RubyClass = newEigenClass(OBJECT_CLASS, moduleMethods)
 	MODULE_CLASS      RubyClass = &ModuleClass{}
 )
-
-type ModuleEigenClass struct{}
-
-func (m *ModuleEigenClass) Inspect() string            { return "Module" }
-func (m *ModuleEigenClass) Type() ObjectType           { return EIGENCLASS_OBJ }
-func (m *ModuleEigenClass) Methods() map[string]method { return moduleMethods }
-func (m *ModuleEigenClass) Class() RubyClass           { return OBJECT_CLASS }
-func (m *ModuleEigenClass) SuperClass() RubyClass      { return BASIC_OBJECT_CLASS }
 
 type ModuleClass struct{}
 

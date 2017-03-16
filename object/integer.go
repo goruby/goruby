@@ -3,29 +3,17 @@ package object
 import "fmt"
 
 var (
-	INTEGER_EIGENCLASS RubyClass = &IntegerEigenclass{}
+	INTEGER_EIGENCLASS RubyClass = newEigenClass(OBJECT_CLASS, integerClassMethods)
 	INTEGER_CLASS      RubyClass = &IntegerClass{}
 )
 
-type IntegerEigenclass struct{}
-
-func (i *IntegerEigenclass) Inspect() string  { return "Integer" }
-func (i *IntegerEigenclass) Type() ObjectType { return INTEGER_CLASS_OBJ }
-func (i *IntegerEigenclass) Methods() map[string]method {
-	return integerClassMethods
-}
-func (i *IntegerEigenclass) Class() RubyClass      { return OBJECT_CLASS }
-func (i *IntegerEigenclass) SuperClass() RubyClass { return BASIC_OBJECT_CLASS }
-
 type IntegerClass struct{}
 
-func (i *IntegerClass) Inspect() string  { return "Integer" }
-func (i *IntegerClass) Type() ObjectType { return INTEGER_CLASS_OBJ }
-func (i *IntegerClass) Methods() map[string]method {
-	return integerMethods
-}
-func (i *IntegerClass) Class() RubyClass      { return INTEGER_EIGENCLASS }
-func (i *IntegerClass) SuperClass() RubyClass { return OBJECT_CLASS }
+func (i *IntegerClass) Inspect() string            { return "Integer" }
+func (i *IntegerClass) Type() ObjectType           { return INTEGER_CLASS_OBJ }
+func (i *IntegerClass) Methods() map[string]method { return integerMethods }
+func (i *IntegerClass) Class() RubyClass           { return INTEGER_EIGENCLASS }
+func (i *IntegerClass) SuperClass() RubyClass      { return OBJECT_CLASS }
 
 func NewInteger(value int64) *Integer {
 	return &Integer{Value: value}

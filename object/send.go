@@ -2,6 +2,7 @@ package object
 
 func Send(context RubyObject, method string, args ...RubyObject) RubyObject {
 	class := context.Class()
+
 	// search for the method in the ancestry tree
 	for class != nil {
 		fn, ok := class.Methods()[method]
