@@ -3,16 +3,16 @@ package object
 import "strings"
 
 var (
-	ARRAY_EIGENCLASS RubyClass = newEigenClass(OBJECT_CLASS, arrayClassMethods)
-	ARRAY_CLASS      RubyClass = &ArrayClass{}
+	ARRAY_EIGENCLASS RubyClass       = newEigenClass(OBJECT_CLASS, arrayClassMethods)
+	ARRAY_CLASS      RubyClassObject = &ArrayClass{}
 )
 
 type ArrayClass struct{}
 
 func (a *ArrayClass) Type() ObjectType           { return ARRAY_OBJ }
 func (a *ArrayClass) Inspect() string            { return "Array" }
-func (a *ArrayClass) Methods() map[string]method { return arrayMethods }
 func (a *ArrayClass) Class() RubyClass           { return ARRAY_EIGENCLASS }
+func (a *ArrayClass) Methods() map[string]method { return arrayMethods }
 func (a *ArrayClass) SuperClass() RubyClass      { return OBJECT_CLASS }
 
 type Array struct {
