@@ -65,17 +65,15 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 		if len(args) == 1 && IsError(args[0]) {
 			return args[0]
 		}
+		if context.Type() == object.FUNCTION_OBJ {
+			function := Eval(node.Call.Function, env)
+			if IsError(function) {
+				return function
+			}
+			args = append([]object.RubyObject{function}, args...)
+			return applyFunction(context, args)
+		}
 		return object.Send(context, node.Call.Function.Value, args...)
-	case *ast.IndexExpression:
-		left := Eval(node.Left, env)
-		if IsError(left) {
-			return left
-		}
-		index := Eval(node.Index, env)
-		if IsError(index) {
-			return index
-		}
-		return evalIndexExpression(left, index)
 	case *ast.CallExpression:
 		function := Eval(node.Function, env)
 		if IsError(function) {
@@ -86,6 +84,16 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 			return args[0]
 		}
 		return applyFunction(function, args)
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if IsError(left) {
+			return left
+		}
+		index := Eval(node.Index, env)
+		if IsError(index) {
+			return index
+		}
+		return evalIndexExpression(left, index)
 	case *ast.PrefixExpression:
 		right := Eval(node.Right, env)
 		if IsError(right) {

@@ -934,11 +934,6 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 			expectedArgs:  []string{"1"},
 		},
 		{
-			input:         `add foo;`,
-			expectedIdent: "add",
-			expectedArgs:  []string{"foo"},
-		},
-		{
 			input:         `add "foo";`,
 			expectedIdent: "add",
 			expectedArgs:  []string{"foo"},
@@ -1047,6 +1042,84 @@ func TestContextCallExpression(t *testing.T) {
 		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
 			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
+				stmt.Expression)
+		}
+
+		if !testIdentifier(t, exp.Context, "foo") {
+			return
+		}
+
+		callExp := exp.Call
+
+		if !testIdentifier(t, callExp.Function, "add") {
+			return
+		}
+
+		if len(callExp.Arguments) != 0 {
+			t.Fatalf("wrong length of arguments. got=%d", len(callExp.Arguments))
+		}
+	})
+	t.Run("context call on nonident with no dot", func(t *testing.T) {
+		input := "1 add;"
+
+		l := lexer.New(input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
+				1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
+				stmt.Expression)
+		}
+
+		if !testIntegerLiteral(t, exp.Context, 1) {
+			return
+		}
+
+		callExp := exp.Call
+
+		if !testIdentifier(t, callExp.Function, "add") {
+			return
+		}
+
+		if len(callExp.Arguments) != 0 {
+			t.Fatalf("wrong length of arguments. got=%d", len(callExp.Arguments))
+		}
+	})
+	t.Run("context call on ident with no dot", func(t *testing.T) {
+		input := "foo add;"
+
+		l := lexer.New(input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
+				1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
 				stmt.Expression)
 		}
 

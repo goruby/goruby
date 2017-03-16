@@ -92,6 +92,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.STRING, p.parseCallExpression)
 	p.registerInfix(token.DOT, p.parseContextCallExpression)
 	p.registerInfix(token.SYMBOL, p.parseCallExpression)
+	p.registerInfix(token.RBRACKET, p.parseCallExpression)
 	p.registerInfix(token.ASSIGN, p.parseVariableAssignExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	return p
@@ -433,10 +434,8 @@ func (p *Parser) parseBlockStatement(t ...token.TokenType) *ast.BlockStatement {
 
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	ident, ok := function.(*ast.Identifier)
-	if !ok {
-		msg := fmt.Errorf("could not parse call expression: expected identifier, got token '%T'", function)
-		p.errors = append(p.errors, msg)
-		return nil
+	if !ok || (p.currentTokenIs(token.IDENT) && !p.peekTokenIs(token.COMMA)) {
+		return p.parseContextCallExpression(function)
 	}
 	exp := &ast.CallExpression{Token: ident.Token, Function: ident}
 	args := []ast.Expression{}
@@ -452,7 +451,9 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 
 func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expression {
 	contextCallExpression := &ast.ContextCallExpression{Token: p.curToken, Context: context}
-	p.nextToken()
+	if p.currentTokenIs(token.DOT) {
+		p.nextToken()
+	}
 	expr := p.parseExpression(LOWEST)
 	var callExp *ast.CallExpression
 	switch expr := expr.(type) {
