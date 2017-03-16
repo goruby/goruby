@@ -411,6 +411,10 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"add(x = (add(4) * 3))",
 		},
 		{
+			"a = b = 0;",
+			"a = (b = 0)",
+		},
+		{
 			"a * [1, 2, 3, 4][b * c] * d",
 			"((a * ([1, 2, 3, 4][(b * c)])) * d)",
 		},

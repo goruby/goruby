@@ -15,10 +15,10 @@ const (
 	LOWEST
 	EQUALS      // ==
 	LESSGREATER // > or <
-	SUM         // +
-	PRODUCT     // *
-	PREFIX      // -X or !X
 	ASSIGNMENT  // x = 5
+	SUM         // + or -
+	PRODUCT     // * or /
+	PREFIX      // -X or !X
 	CALL        // myFunction(X)
 	CONTEXT     // foo.myFunction(X)
 	INDEX       // array[index]
