@@ -260,9 +260,10 @@ func (ie *IndexExpression) String() string {
 }
 
 type ContextCallExpression struct {
-	Token   token.Token     // The '.' token
-	Context Expression      // The lefthandside expression
-	Call    *CallExpression // The righthandside call expression
+	Token     token.Token  // The '.' token
+	Context   Expression   // The lefthandside expression
+	Function  *Identifier  // The function to call
+	Arguments []Expression // The function arguments
 }
 
 func (ce *ContextCallExpression) expressionNode()      {}
@@ -271,7 +272,14 @@ func (ce *ContextCallExpression) String() string {
 	var out bytes.Buffer
 	out.WriteString(ce.Context.String())
 	out.WriteString(".")
-	out.WriteString(ce.Call.String())
+	args := []string{}
+	for _, a := range ce.Arguments {
+		args = append(args, a.String())
+	}
+	out.WriteString(ce.Function.String())
+	out.WriteString("(")
+	out.WriteString(strings.Join(args, ", "))
+	out.WriteString(")")
 	return out.String()
 }
 
