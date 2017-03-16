@@ -12,6 +12,9 @@ var classes = &Environment{
 		"TrueClass":   TRUE_CLASS,
 		"FalseClass":  FALSE_CLASS,
 		"Exception":   EXCEPTION_CLASS,
+		"Array":       ARRAY_CLASS,
+		"Class":       CLASS_CLASS,
+		"Module":      MODULE_CLASS,
 	},
 }
 
