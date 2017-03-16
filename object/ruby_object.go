@@ -35,12 +35,6 @@ const (
 	BUILTIN_OBJ            = "BUILTIN"
 )
 
-var (
-	NIL   = &Nil{}
-	TRUE  = &Boolean{Value: true}
-	FALSE = &Boolean{Value: false}
-)
-
 type RubyObject interface {
 	Type() ObjectType
 	Inspect() string

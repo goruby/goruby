@@ -1,8 +1,9 @@
 package object
 
 var (
-	NIL_EIGENCLASS RubyClass = &NilEigenClass{}
-	NIL_CLASS      RubyClass = &NilClass{}
+	NIL_EIGENCLASS RubyClass  = &NilEigenClass{}
+	NIL_CLASS      RubyClass  = &NilClass{}
+	NIL            RubyObject = &Nil{}
 )
 
 type NilEigenClass struct{}

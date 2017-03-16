@@ -2,9 +2,13 @@ package object
 
 import "fmt"
 
-var BOOLEAN_EIGENCLASS RubyClass = &BooleanEigenclass{}
-var TRUE_CLASS RubyClass = &TrueClass{}
-var FALSE_CLASS RubyClass = &FalseClass{}
+var (
+	BOOLEAN_EIGENCLASS RubyClass  = &BooleanEigenclass{}
+	TRUE_CLASS         RubyClass  = &TrueClass{}
+	FALSE_CLASS        RubyClass  = &FalseClass{}
+	TRUE               RubyObject = &Boolean{Value: true}
+	FALSE              RubyObject = &Boolean{Value: false}
+)
 
 type BooleanEigenclass struct{}
 
