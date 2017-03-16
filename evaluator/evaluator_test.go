@@ -473,6 +473,12 @@ func TestArrayIndexExpressions(t *testing.T) {
 	}
 }
 
+func TestNilExpression(t *testing.T) {
+	input := "nil"
+	evaluated := testEval(input)
+	testNilObject(t, evaluated)
+}
+
 func testNilObject(t *testing.T, obj object.RubyObject) bool {
 	if obj != object.NIL {
 		t.Errorf("object is not NIL. got=%T (%+v)", obj, obj)

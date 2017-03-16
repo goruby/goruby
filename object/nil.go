@@ -8,23 +8,33 @@ var (
 
 type NilEigenClass struct{}
 
-func (n *NilEigenClass) Inspect() string            { return "nil" }
-func (n *NilEigenClass) Type() ObjectType           { return NIL_OBJ }
-func (n *NilEigenClass) Methods() map[string]method { return nil }
-func (n *NilEigenClass) Class() RubyClass           { return nil }
-func (n *NilEigenClass) SuperClass() RubyClass      { return nil }
+func (n *NilEigenClass) Inspect() string            { return "(NilClass)" }
+func (n *NilEigenClass) Type() ObjectType           { return EIGENCLASS_OBJ }
+func (n *NilEigenClass) Methods() map[string]method { return nilClassMethods }
+func (n *NilEigenClass) Class() RubyClass           { return BASIC_OBJECT_CLASS }
+func (n *NilEigenClass) SuperClass() RubyClass      { return BASIC_OBJECT_CLASS }
 
 type NilClass struct{}
 
 func (n *NilClass) Inspect() string            { return "NilClass" }
-func (n *NilClass) Type() ObjectType           { return NIL_OBJ }
-func (n *NilClass) Methods() map[string]method { return nil }
-func (n *NilClass) Class() RubyClass           { return nil }
-func (n *NilClass) SuperClass() RubyClass      { return nil }
+func (n *NilClass) Type() ObjectType           { return NIL_CLASS_OBJ }
+func (n *NilClass) Methods() map[string]method { return nilMethods }
+func (n *NilClass) Class() RubyClass           { return NIL_EIGENCLASS }
+func (n *NilClass) SuperClass() RubyClass      { return OBJECT_CLASS }
 
 type Nil struct{}
 
 func (n *Nil) Inspect() string            { return "nil" }
 func (n *Nil) Type() ObjectType           { return NIL_OBJ }
 func (n *Nil) Methods() map[string]method { return nil }
-func (n *Nil) Class() RubyClass           { return nil }
+func (n *Nil) Class() RubyClass           { return NIL_CLASS }
+
+var nilClassMethods = map[string]method{}
+
+var nilMethods = map[string]method{
+	"nil?": withArity(0, nilIsNil),
+}
+
+func nilIsNil(context RubyObject, args ...RubyObject) RubyObject {
+	return TRUE
+}

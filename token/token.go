@@ -48,6 +48,7 @@ const (
 	TRUE
 	FALSE
 	RETURN
+	NIL
 )
 
 var keywords = map[string]TokenType{
@@ -58,6 +59,7 @@ var keywords = map[string]TokenType{
 	"else":   ELSE,
 	"true":   TRUE,
 	"false":  FALSE,
+	"nil":    NIL,
 	"return": RETURN,
 }
 

@@ -22,3 +22,18 @@ func TestObjMethods(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestObjectIsNil(t *testing.T) {
+	result := objectIsNil(TRUE)
+
+	boolean, ok := result.(*Boolean)
+	if !ok {
+		t.Logf("Expected Boolean, got %T", result)
+		t.FailNow()
+	}
+
+	if boolean.Value != false {
+		t.Logf("Expected false, got true")
+		t.Fail()
+	}
+}

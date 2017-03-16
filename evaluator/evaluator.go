@@ -29,6 +29,8 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 		return object.NewInteger(node.Value)
 	case (*ast.Boolean):
 		return nativeBoolToBooleanObject(node.Value)
+	case (*ast.Nil):
+		return object.NIL
 	case *ast.Variable:
 		val := Eval(node.Value, env)
 		if IsError(val) {

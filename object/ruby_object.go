@@ -27,6 +27,7 @@ const (
 	BOOLEAN_OBJ            = "BOOLEAN"
 	BOOLEAN_CLASS_OBJ      = "BOOLEAN_CLASS"
 	NIL_OBJ                = "NIL"
+	NIL_CLASS_OBJ          = "NIL_CLASS"
 	ERROR_OBJ              = "ERROR"
 	EXCEPTION_OBJ          = "EXCEPTION"
 	EXCEPTION_CLASS_OBJ    = "EXCEPTION_CLASS"
