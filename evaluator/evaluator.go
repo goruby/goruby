@@ -61,19 +61,18 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 		if IsError(context) {
 			return context
 		}
-		args := evalExpressions(node.Call.Arguments, env)
+		args := evalExpressions(node.Arguments, env)
 		if len(args) == 1 && IsError(args[0]) {
 			return args[0]
 		}
 		if context.Type() == object.FUNCTION_OBJ {
-			function := Eval(node.Call.Function, env)
+			function := Eval(node.Function, env)
 			if IsError(function) {
 				return function
 			}
-			args = append([]object.RubyObject{function}, args...)
-			return applyFunction(context, args)
+			return applyFunction(function, args)
 		}
-		return object.Send(context, node.Call.Function.Value, args...)
+		return object.Send(context, node.Function.Value, args...)
 	case *ast.CallExpression:
 		function := Eval(node.Function, env)
 		if IsError(function) {

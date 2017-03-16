@@ -450,19 +450,33 @@ func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 	if p.currentTokenIs(token.DOT) {
 		p.nextToken()
 	}
-	expr := p.parseExpression(LOWEST)
-	var callExp *ast.CallExpression
-	switch expr := expr.(type) {
-	case *ast.Identifier:
-		callExp = &ast.CallExpression{Token: expr.Token, Function: expr, Arguments: []ast.Expression{}}
-	case *ast.CallExpression:
-		callExp = expr
-	default:
-		msg := fmt.Errorf("could not parse context call expression: expected Identifier or CallExpression, got token '%T'", expr)
+
+	function := p.parseExpression(CONTEXT)
+	ident, ok := function.(*ast.Identifier)
+	if !ok {
+		msg := fmt.Errorf(
+			"could not parse call expression: expected identifier, got token '%T'",
+			function,
+		)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
-	contextCallExpression.Call = callExp
+	contextCallExpression.Function = ident
+
+	args := []ast.Expression{}
+
+	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE) {
+		contextCallExpression.Arguments = args
+		return contextCallExpression
+	}
+
+	if p.peekTokenIs(token.LPAREN) {
+		p.accept(token.LPAREN)
+		contextCallExpression.Arguments = p.parseExpressionList(token.RPAREN)
+		return contextCallExpression
+	}
+
+	contextCallExpression.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE, token.EOF)
 	return contextCallExpression
 }
 
@@ -478,10 +492,10 @@ func (p *Parser) parseCallExpressionWithParens(function ast.Expression) ast.Expr
 	return exp
 }
 
-func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
+func (p *Parser) parseExpressionList(end ...token.TokenType) []ast.Expression {
 	list := []ast.Expression{}
-	if p.peekTokenIs(end) {
-		p.nextToken()
+	if p.peekTokenOneOf(end...) {
+		p.acceptOneOf(end...)
 		return list
 	}
 
@@ -493,8 +507,8 @@ func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
 		list = append(list, p.parseExpression(LOWEST))
 	}
 
-	if !p.accept(end) {
-		return nil
+	if p.peekTokenOneOf(end...) {
+		p.acceptOneOf(end...)
 	}
 
 	return list

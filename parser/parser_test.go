@@ -981,7 +981,7 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 }
 
 func TestContextCallExpression(t *testing.T) {
-	t.Run("context call with multiple args", func(t *testing.T) {
+	t.Run("context call with multiple args with parens", func(t *testing.T) {
 		input := "foo.add(1, 2 * 3, 4 + 5);"
 
 		l := lexer.New(input)
@@ -1010,19 +1010,58 @@ func TestContextCallExpression(t *testing.T) {
 			return
 		}
 
-		callExp := exp.Call
-
-		if !testIdentifier(t, callExp.Function, "add") {
+		if !testIdentifier(t, exp.Function, "add") {
 			return
 		}
 
-		if len(callExp.Arguments) != 3 {
-			t.Fatalf("wrong length of arguments. got=%d", len(callExp.Arguments))
+		if len(exp.Arguments) != 3 {
+			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
 		}
 
-		testLiteralExpression(t, callExp.Arguments[0], 1)
-		testInfixExpression(t, callExp.Arguments[1], 2, "*", 3)
-		testInfixExpression(t, callExp.Arguments[2], 4, "+", 5)
+		testLiteralExpression(t, exp.Arguments[0], 1)
+		testInfixExpression(t, exp.Arguments[1], 2, "*", 3)
+		testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
+	})
+	t.Run("context call with multiple args no parens", func(t *testing.T) {
+		input := "foo.add 1, 2 * 3, 4 + 5;"
+
+		l := lexer.New(input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
+				1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
+				stmt.Expression)
+		}
+
+		if !testIdentifier(t, exp.Context, "foo") {
+			return
+		}
+
+		if !testIdentifier(t, exp.Function, "add") {
+			return
+		}
+
+		if len(exp.Arguments) != 3 {
+			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+		}
+
+		testLiteralExpression(t, exp.Arguments[0], 1)
+		testInfixExpression(t, exp.Arguments[1], 2, "*", 3)
+		testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
 	})
 	t.Run("context call with no args", func(t *testing.T) {
 		input := "foo.add;"
@@ -1053,14 +1092,12 @@ func TestContextCallExpression(t *testing.T) {
 			return
 		}
 
-		callExp := exp.Call
-
-		if !testIdentifier(t, callExp.Function, "add") {
+		if !testIdentifier(t, exp.Function, "add") {
 			return
 		}
 
-		if len(callExp.Arguments) != 0 {
-			t.Fatalf("wrong length of arguments. got=%d", len(callExp.Arguments))
+		if len(exp.Arguments) != 0 {
+			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
 		}
 	})
 	t.Run("context call on nonident with no dot", func(t *testing.T) {
@@ -1092,14 +1129,53 @@ func TestContextCallExpression(t *testing.T) {
 			return
 		}
 
-		callExp := exp.Call
-
-		if !testIdentifier(t, callExp.Function, "add") {
+		if !testIdentifier(t, exp.Function, "add") {
 			return
 		}
 
-		if len(callExp.Arguments) != 0 {
-			t.Fatalf("wrong length of arguments. got=%d", len(callExp.Arguments))
+		if len(exp.Arguments) != 0 {
+			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+		}
+	})
+	t.Run("context call on nonident with no dot multiargs", func(t *testing.T) {
+		input := "1 add 1"
+
+		l := lexer.New(input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
+				1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
+				stmt.Expression)
+		}
+
+		if !testIntegerLiteral(t, exp.Context, 1) {
+			return
+		}
+
+		if !testIdentifier(t, exp.Function, "add") {
+			return
+		}
+
+		if len(exp.Arguments) != 1 {
+			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+		}
+
+		if !testIntegerLiteral(t, exp.Arguments[0], 1) {
+			return
 		}
 	})
 	t.Run("context call on ident with no dot", func(t *testing.T) {
@@ -1131,14 +1207,12 @@ func TestContextCallExpression(t *testing.T) {
 			return
 		}
 
-		callExp := exp.Call
-
-		if !testIdentifier(t, callExp.Function, "add") {
+		if !testIdentifier(t, exp.Function, "add") {
 			return
 		}
 
-		if len(callExp.Arguments) != 0 {
-			t.Fatalf("wrong length of arguments. got=%d", len(callExp.Arguments))
+		if len(exp.Arguments) != 0 {
+			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
 		}
 	})
 }
