@@ -1361,6 +1361,6 @@ func checkParserErrors(t *testing.T, err error) {
 	errors := err.(*Errors)
 
 	t.Errorf("parser has %d errors", len(errors.errors))
-	t.Errorf("parser error: %q", err.Error())
+	t.Errorf("parser error: %s", err.Error())
 	t.FailNow()
 }
