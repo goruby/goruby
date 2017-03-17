@@ -60,28 +60,25 @@ type Builtin struct {
 	Fn BuiltinFunction
 }
 
-func (b *Builtin) Type() ObjectType           { return BUILTIN_OBJ }
-func (b *Builtin) Inspect() string            { return "builtin function" }
-func (b *Builtin) Methods() map[string]method { return nil }
-func (b *Builtin) Class() RubyClass           { return nil }
+func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
+func (b *Builtin) Inspect() string  { return "builtin function" }
+func (b *Builtin) Class() RubyClass { return nil }
 
 type ReturnValue struct {
 	Value RubyObject
 }
 
-func (rv *ReturnValue) Type() ObjectType           { return RETURN_VALUE_OBJ }
-func (rv *ReturnValue) Inspect() string            { return rv.Value.Inspect() }
-func (rv *ReturnValue) Methods() map[string]method { return nil }
-func (rv *ReturnValue) Class() RubyClass           { return rv.Value.Class() }
+func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
+func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
+func (rv *ReturnValue) Class() RubyClass { return rv.Value.Class() }
 
 type Error struct {
 	Message string
 }
 
-func (e *Error) Type() ObjectType           { return ERROR_OBJ }
-func (e *Error) Inspect() string            { return "ERROR: " + e.Message }
-func (e *Error) Methods() map[string]method { return nil }
-func (e *Error) Class() RubyClass           { return nil }
+func (e *Error) Type() ObjectType { return ERROR_OBJ }
+func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
+func (e *Error) Class() RubyClass { return nil }
 
 type Function struct {
 	Parameters []*ast.Identifier
@@ -104,5 +101,4 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 	return out.String()
 }
-func (f *Function) Methods() map[string]method { return nil }
-func (f *Function) Class() RubyClass           { return nil }
+func (f *Function) Class() RubyClass { return nil }
