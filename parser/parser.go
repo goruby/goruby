@@ -264,6 +264,7 @@ func (p *Parser) parseSymbolLiteral() ast.Expression {
 func (p *Parser) parseArrayLiteral() ast.Expression {
 	array := &ast.ArrayLiteral{Token: p.curToken}
 
+	p.nextToken()
 	array.Elements = p.parseExpressionList(token.RBRACKET)
 
 	return array
@@ -430,18 +431,11 @@ func (p *Parser) parseBlockStatement(t ...token.TokenType) *ast.BlockStatement {
 
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	ident, ok := function.(*ast.Identifier)
-	if !ok || (p.currentTokenIs(token.IDENT) && !p.peekTokenIs(token.COMMA)) {
+	if !ok {
 		return p.parseContextCallExpression(function)
 	}
-	exp := &ast.CallExpression{Token: ident.Token, Function: ident}
-	args := []ast.Expression{}
-	args = append(args, p.parseExpression(LOWEST))
-
-	for p.peekTokenIs(token.COMMA) {
-		p.consume(token.COMMA)
-		args = append(args, p.parseExpression(LOWEST))
-	}
-	exp.Arguments = args
+	exp := &ast.ContextCallExpression{Token: ident.Token, Function: ident}
+	exp.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE)
 	return exp
 }
 
@@ -472,10 +466,12 @@ func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 
 	if p.peekTokenIs(token.LPAREN) {
 		p.accept(token.LPAREN)
+		p.nextToken()
 		contextCallExpression.Arguments = p.parseExpressionList(token.RPAREN)
 		return contextCallExpression
 	}
 
+	p.nextToken()
 	contextCallExpression.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE, token.EOF)
 	return contextCallExpression
 }
@@ -487,19 +483,18 @@ func (p *Parser) parseCallExpressionWithParens(function ast.Expression) ast.Expr
 		p.errors = append(p.errors, msg)
 		return nil
 	}
-	exp := &ast.CallExpression{Token: p.curToken, Function: ident}
+	exp := &ast.ContextCallExpression{Token: p.curToken, Function: ident}
+	p.nextToken()
 	exp.Arguments = p.parseExpressionList(token.RPAREN)
 	return exp
 }
 
 func (p *Parser) parseExpressionList(end ...token.TokenType) []ast.Expression {
 	list := []ast.Expression{}
-	if p.peekTokenOneOf(end...) {
-		p.acceptOneOf(end...)
+	if p.currentTokenOneOf(end...) {
 		return list
 	}
 
-	p.nextToken()
 	list = append(list, p.parseExpression(LOWEST))
 
 	for p.peekTokenIs(token.COMMA) {
