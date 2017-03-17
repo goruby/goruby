@@ -13,11 +13,22 @@ func (m *ModuleClass) Class() RubyClass           { return MODULE_EIGENCLASS }
 func (m *ModuleClass) Methods() map[string]method { return moduleMethods }
 func (m *ModuleClass) SuperClass() RubyClass      { return OBJECT_CLASS }
 
-type Module struct{}
+func newModule(name string, class RubyClass) *Module {
+	return &Module{name, class}
+}
 
-func (m *Module) Inspect() string  { return "Module" }
+type Module struct {
+	name  string
+	class RubyClass
+}
+
+func (m *Module) Inspect() string  { return m.name }
 func (m *Module) Type() ObjectType { return MODULE_OBJ }
-func (m *Module) Class() RubyClass { return MODULE_CLASS }
+func (m *Module) Class() RubyClass {
+	if m.class != nil {
+		return m.class
+	}
+	return MODULE_CLASS
+}
 
-var moduleClassMethods = map[string]method{}
 var moduleMethods = map[string]method{}
