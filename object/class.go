@@ -33,5 +33,5 @@ func classSuperclass(context RubyObject, args ...RubyObject) RubyObject {
 	if superclass == nil {
 		return NIL
 	}
-	return superclass.(RubyClassObject)
+	return superclass.(RubyObject)
 }
