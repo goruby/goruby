@@ -92,7 +92,7 @@ func NewNoMethodError(context RubyObject, method string) *NoMethodError {
 						"undefined method `%s' for %s:%s",
 						method,
 						context.Inspect(),
-						reflect.TypeOf(context).Elem().Name(),
+						context.Class().(RubyObject).Inspect(),
 					),
 				},
 			},
