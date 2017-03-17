@@ -1,7 +1,7 @@
 package object
 
 var (
-	OBJECT_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, objectClassMethods)
+	OBJECT_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, objectClassMethods)
 	OBJECT_CLASS      RubyClassObject = &ObjectClass{}
 )
 
@@ -47,7 +47,7 @@ func objectIsNil(context RubyObject, args ...RubyObject) RubyObject {
 
 func objectClass(context RubyObject, args ...RubyObject) RubyObject {
 	class := context.Class()
-	if eigenClass, ok := class.(*eigenClass); ok {
+	if eigenClass, ok := class.(*eigenclass); ok {
 		class = eigenClass.Class()
 	}
 	classObj := class.(RubyClassObject)

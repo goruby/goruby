@@ -3,7 +3,7 @@ package object
 import "fmt"
 
 var (
-	INTEGER_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, integerClassMethods)
+	INTEGER_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, integerClassMethods)
 	INTEGER_CLASS      RubyClassObject = &IntegerClass{}
 )
 

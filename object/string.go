@@ -1,7 +1,7 @@
 package object
 
 var (
-	STRING_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, stringClassMethods)
+	STRING_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, stringClassMethods)
 	STRING_CLASS      RubyClassObject = &StringClass{}
 )
 
