@@ -51,3 +51,17 @@ func (e *Environment) Set(name string, val RubyObject) RubyObject {
 	e.store[name] = val
 	return val
 }
+
+func (e *Environment) Enclose(outer *Environment) *Environment {
+	env := e.Clone()
+	env.outer = outer
+	return env
+}
+
+func (e *Environment) Clone() *Environment {
+	env := NewEnvironment()
+	for k, v := range e.store {
+		env.store[k] = v
+	}
+	return env
+}

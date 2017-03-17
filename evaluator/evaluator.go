@@ -25,19 +25,14 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 		return evalBlockStatement(node, env)
 
 	// Expressions
+
+	// Literals
 	case (*ast.IntegerLiteral):
 		return object.NewInteger(node.Value)
 	case (*ast.Boolean):
 		return nativeBoolToBooleanObject(node.Value)
 	case (*ast.Nil):
 		return object.NIL
-	case *ast.Variable:
-		val := Eval(node.Value, env)
-		if IsError(val) {
-			return val
-		}
-		env.Set(node.Name.Value, val)
-		return val
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 	case *ast.StringLiteral:
@@ -56,6 +51,13 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 			return elements[0]
 		}
 		return &object.Array{Elements: elements}
+	case *ast.Variable:
+		val := Eval(node.Value, env)
+		if IsError(val) {
+			return val
+		}
+		env.Set(node.Name.Value, val)
+		return val
 	case *ast.ContextCallExpression:
 		context := Eval(node.Context, env)
 		if IsError(context) {
@@ -65,7 +67,7 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 		if len(args) == 1 && IsError(args[0]) {
 			return args[0]
 		}
-		if context.Type() == object.FUNCTION_OBJ {
+		if node.Context == nil {
 			function := Eval(node.Function, env)
 			if IsError(function) {
 				return function
@@ -73,16 +75,6 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 			return applyFunction(function, args)
 		}
 		return object.Send(context, node.Function.Value, args...)
-	case *ast.CallExpression:
-		function := Eval(node.Function, env)
-		if IsError(function) {
-			return function
-		}
-		args := evalExpressions(node.Arguments, env)
-		if len(args) == 1 && IsError(args[0]) {
-			return args[0]
-		}
-		return applyFunction(function, args)
 	case *ast.IndexExpression:
 		left := Eval(node.Left, env)
 		if IsError(left) {

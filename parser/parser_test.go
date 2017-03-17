@@ -854,9 +854,9 @@ func TestCallExpressionParsing(t *testing.T) {
 				program.Statements[0])
 		}
 
-		exp, ok := stmt.Expression.(*ast.CallExpression)
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
-			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
 				stmt.Expression)
 		}
 
@@ -891,10 +891,17 @@ func TestCallExpressionParsing(t *testing.T) {
 				program.Statements[0])
 		}
 
-		exp, ok := stmt.Expression.(*ast.CallExpression)
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
-			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
-				stmt.Expression)
+			t.Fatalf(
+				"stmt.Expression is not ast.ContextCallExpression. got=%T",
+				stmt.Expression,
+			)
+		}
+
+		if exp.Context != nil {
+			t.Logf("Expected context to be nil, got: %s\n", exp.Context)
+			t.Fail()
 		}
 
 		if !testIdentifier(t, exp.Function, "add") {
@@ -902,7 +909,11 @@ func TestCallExpressionParsing(t *testing.T) {
 		}
 
 		if len(exp.Arguments) != 3 {
-			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+			t.Fatalf(
+				"wrong length of arguments. want %d, got=%d",
+				3,
+				len(exp.Arguments),
+			)
 		}
 
 		testLiteralExpression(t, exp.Arguments[0], 1)
@@ -956,10 +967,12 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 		checkParserErrors(t, err)
 
 		stmt := program.Statements[0].(*ast.ExpressionStatement)
-		exp, ok := stmt.Expression.(*ast.CallExpression)
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
-			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
-				stmt.Expression)
+			t.Fatalf(
+				"stmt.Expression is not ast.ContextCallExpression. got=%T",
+				stmt.Expression,
+			)
 		}
 
 		if !testIdentifier(t, exp.Function, tt.expectedIdent) {
@@ -1002,7 +1015,7 @@ func TestContextCallExpression(t *testing.T) {
 
 		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
-			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
 				stmt.Expression)
 		}
 
@@ -1043,7 +1056,7 @@ func TestContextCallExpression(t *testing.T) {
 
 		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
-			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
 				stmt.Expression)
 		}
 
@@ -1084,7 +1097,7 @@ func TestContextCallExpression(t *testing.T) {
 
 		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
-			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
 				stmt.Expression)
 		}
 
@@ -1109,14 +1122,19 @@ func TestContextCallExpression(t *testing.T) {
 		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
+			t.Fatalf(
+				"program.Statements does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
 		}
 
 		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 		if !ok {
-			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
+			t.Fatalf(
+				"stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
 		}
 
 		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
@@ -1146,14 +1164,19 @@ func TestContextCallExpression(t *testing.T) {
 		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
+			t.Fatalf(
+				"program.Statements does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
 		}
 
 		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 		if !ok {
-			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
+			t.Fatalf(
+				"stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
 		}
 
 		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
@@ -1171,7 +1194,10 @@ func TestContextCallExpression(t *testing.T) {
 		}
 
 		if len(exp.Arguments) != 1 {
-			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+			t.Fatalf(
+				"wrong length of arguments. got=%d",
+				len(exp.Arguments),
+			)
 		}
 
 		if !testIntegerLiteral(t, exp.Arguments[0], 1) {
@@ -1203,16 +1229,16 @@ func TestContextCallExpression(t *testing.T) {
 				stmt.Expression)
 		}
 
-		if !testIdentifier(t, exp.Context, "foo") {
+		if !testIdentifier(t, exp.Function, "foo") {
 			return
 		}
 
-		if !testIdentifier(t, exp.Function, "add") {
-			return
-		}
-
-		if len(exp.Arguments) != 0 {
+		if len(exp.Arguments) != 1 {
 			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+		}
+
+		if !testIdentifier(t, exp.Arguments[0], "add") {
+			return
 		}
 	})
 }
