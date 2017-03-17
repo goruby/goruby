@@ -26,11 +26,11 @@ func TestClassSuperclass(t *testing.T) {
 		}
 	})
 	t.Run("Eigenclass", func(t *testing.T) {
-		context := &testRubyObject{superClass: newEigenClass(OBJECT_CLASS, nil)}
+		context := &testRubyObject{superClass: newEigenclass(OBJECT_CLASS, nil)}
 
 		result := classSuperclass(context)
 
-		_, ok := result.(*eigenClass)
+		_, ok := result.(*eigenclass)
 		if !ok {
 			t.Logf("Expected eigenClass object, got %T\n", result)
 			t.Fail()

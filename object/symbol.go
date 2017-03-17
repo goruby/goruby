@@ -1,7 +1,7 @@
 package object
 
 var (
-	SYMBOL_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, symbolClassMethods)
+	SYMBOL_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, symbolClassMethods)
 	SYMBOL_CLASS      RubyClassObject = &SymbolClass{}
 )
 

@@ -1,7 +1,7 @@
 package object
 
 var (
-	MODULE_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, moduleMethods)
+	MODULE_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, moduleMethods)
 	MODULE_CLASS      RubyClassObject = &ModuleClass{}
 )
 

@@ -1,7 +1,7 @@
 package object
 
 var (
-	BASIC_OBJECT_EIGENCLASS RubyClass       = newEigenClass(CLASS_CLASS, basicObjectClassMethods)
+	BASIC_OBJECT_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, basicObjectClassMethods)
 	BASIC_OBJECT_CLASS      RubyClassObject = &BasicObjectClass{}
 )
 
