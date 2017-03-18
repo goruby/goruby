@@ -459,7 +459,7 @@ func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 
 	args := []ast.Expression{}
 
-	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE) {
+	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE, token.DOT) {
 		contextCallExpression.Arguments = args
 		return contextCallExpression
 	}
