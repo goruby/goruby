@@ -19,7 +19,7 @@ var basicObjectClassMethods = map[string]RubyMethod{
 }
 
 var basicObjectMethods = map[string]RubyMethod{
-	"method_missing": publicMethod(basicObjectMethodMissing),
+	"method_missing": privateMethod(basicObjectMethodMissing),
 }
 
 func basicObjectMethodMissing(context RubyObject, args ...RubyObject) RubyObject {

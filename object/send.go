@@ -6,13 +6,16 @@ func Send(context RubyObject, method string, args ...RubyObject) RubyObject {
 	// search for the method in the ancestry tree
 	for class != nil {
 		fn, ok := class.Methods()[method]
-		if ok {
-			if fn.Visibility() == PRIVATE_METHOD {
-				return NewPrivateNoMethodError(context, method)
-			}
-			return fn.Call(context, args...)
+		if !ok {
+			class = class.SuperClass()
+			continue
 		}
-		class = class.SuperClass()
+
+		if fn.Visibility() == PRIVATE_METHOD {
+			return NewPrivateNoMethodError(context, method)
+		}
+
+		return fn.Call(context, args...)
 	}
 
 	methodMissingArgs := append(
@@ -20,5 +23,20 @@ func Send(context RubyObject, method string, args ...RubyObject) RubyObject {
 		args...,
 	)
 
-	return Send(context, "method_missing", methodMissingArgs...)
+	return methodMissing(context, methodMissingArgs...)
+}
+
+func methodMissing(context RubyObject, args ...RubyObject) RubyObject {
+	class := context.Class()
+
+	// search for method_missing in the ancestry tree
+	for class != nil {
+		fn, ok := class.Methods()["method_missing"]
+		if !ok {
+			class = class.SuperClass()
+			continue
+		}
+		return fn.Call(context, args...)
+	}
+	return NewNoMethodError(context, args[0].(*Symbol).Value)
 }
