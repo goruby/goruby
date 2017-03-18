@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestObjMethods(t *testing.T) {
+func TestKernelMethods(t *testing.T) {
 	contextMethods := map[string]RubyMethod{
 		"foo": nil,
 		"bar": nil,
@@ -18,7 +18,7 @@ func TestObjMethods(t *testing.T) {
 		},
 	}
 
-	result := objMethods(context)
+	result := kernelMethods(context)
 
 	array, ok := result.(*Array)
 	if !ok {
@@ -47,7 +47,7 @@ func TestObjMethods(t *testing.T) {
 	for k, _ := range objectMethods {
 		expectedMethods = append(expectedMethods, ":"+k)
 	}
-	for k, _ := range kernelMethods {
+	for k, _ := range kernelMethodSet {
 		expectedMethods = append(expectedMethods, ":"+k)
 	}
 
@@ -67,8 +67,8 @@ func TestObjMethods(t *testing.T) {
 	}
 }
 
-func TestObjectIsNil(t *testing.T) {
-	result := objectIsNil(TRUE)
+func TestKernelIsNil(t *testing.T) {
+	result := kernelIsNil(TRUE)
 
 	boolean, ok := result.(*Boolean)
 	if !ok {
@@ -82,11 +82,11 @@ func TestObjectIsNil(t *testing.T) {
 	}
 }
 
-func TestObjectClass(t *testing.T) {
+func TestKernelClass(t *testing.T) {
 	t.Run("regular object", func(t *testing.T) {
 		context := &Integer{1}
 
-		result := objectClass(context)
+		result := kernelClass(context)
 
 		cl, ok := result.(*Class)
 		if !ok {
@@ -104,7 +104,7 @@ func TestObjectClass(t *testing.T) {
 	t.Run("class object", func(t *testing.T) {
 		context := STRING_CLASS
 
-		result := objectClass(context)
+		result := kernelClass(context)
 
 		cl, ok := result.(*Class)
 		if !ok {
@@ -122,7 +122,7 @@ func TestObjectClass(t *testing.T) {
 	t.Run("class class", func(t *testing.T) {
 		context := CLASS_CLASS
 
-		result := objectClass(context)
+		result := kernelClass(context)
 
 		cl, ok := result.(*Class)
 		if !ok {
