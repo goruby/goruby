@@ -1,24 +1,60 @@
 package object
 
-func withArity(arity int, fn method) method {
-	return func(context RubyObject, args ...RubyObject) RubyObject {
-		if len(args) != arity {
-			return NewWrongNumberOfArgumentsError(arity, len(args))
-		}
-		return fn(context, args...)
+type visibility int
+
+type MethodVisibility visibility
+
+const (
+	PUBLIC_METHOD MethodVisibility = iota
+	PROTECTED_METHOD
+	PRIVATE_METHOD
+)
+
+type RubyMethod interface {
+	Call(context RubyObject, args ...RubyObject) RubyObject
+	Visibility() MethodVisibility
+}
+
+func withArity(arity int, fn RubyMethod) RubyMethod {
+	return &method{
+		fn: func(context RubyObject, args ...RubyObject) RubyObject {
+			if len(args) != arity {
+				return NewWrongNumberOfArgumentsError(arity, len(args))
+			}
+			return fn.Call(context, args...)
+		},
+		visibility: fn.Visibility(),
 	}
 }
 
-type method func(context RubyObject, args ...RubyObject) RubyObject
-
-type methodSet struct {
-	context RubyObject
-	methods map[string]method
+func publicMethod(fn func(context RubyObject, args ...RubyObject) RubyObject) RubyMethod {
+	return &method{visibility: PUBLIC_METHOD, fn: fn}
 }
 
-func (m *methodSet) SetContext(context RubyObject) *methodSet {
-	return &methodSet{context: context, methods: m.methods}
+func protectedMethod(fn func(context RubyObject, args ...RubyObject) RubyObject) RubyMethod {
+	return &method{visibility: PROTECTED_METHOD, fn: fn}
 }
+
+func privateMethod(fn func(context RubyObject, args ...RubyObject) RubyObject) RubyMethod {
+	return &method{visibility: PRIVATE_METHOD, fn: fn}
+}
+
+type publicMethodX func(context RubyObject, args ...RubyObject) RubyObject
+
+func (m publicMethodX) Call(context RubyObject, args ...RubyObject) RubyObject {
+	return m(context, args...)
+}
+func (m publicMethodX) Visibility() MethodVisibility { return PUBLIC_METHOD }
+
+type method struct {
+	visibility MethodVisibility
+	fn         func(context RubyObject, args ...RubyObject) RubyObject
+}
+
+func (m *method) Call(context RubyObject, args ...RubyObject) RubyObject {
+	return m.fn(context, args...)
+}
+func (m *method) Visibility() MethodVisibility { return m.visibility }
 
 func (m *methodSet) Define(name string, fn method) *Symbol {
 	m.methods[name] = fn

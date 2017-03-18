@@ -5,30 +5,10 @@ import (
 	"testing"
 )
 
-func TestMethodSetDefine(t *testing.T) {
-	set := methodSet{context: NewInteger(3), methods: make(map[string]method)}
-
-	sym := set.Define("foo", nil)
-
-	expectedSymbol := &Symbol{"foo"}
-
-	if !reflect.DeepEqual(expectedSymbol, sym) {
-		t.Logf("Expected symbol to equal %s, got %s\n", expectedSymbol, sym)
-		t.Fail()
-	}
-
-	expectedMethodsLength := 1
-	actualMethodsLength := len(set.methods)
-	if actualMethodsLength != expectedMethodsLength {
-		t.Logf("Expected methods to have %d items, got %d\n", expectedMethodsLength, actualMethodsLength)
-		t.Fail()
-	}
-}
-
 func TestWithArity(t *testing.T) {
-	wrappedMethod := func(context RubyObject, args ...RubyObject) RubyObject {
+	wrappedMethod := publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
 		return NewInteger(1)
-	}
+	})
 
 	tests := []struct {
 		arity     int
@@ -55,7 +35,7 @@ func TestWithArity(t *testing.T) {
 	for _, testCase := range tests {
 		fn := withArity(testCase.arity, wrappedMethod)
 
-		result := fn(NIL, testCase.arguments...)
+		result := fn.Call(NIL, testCase.arguments...)
 
 		if !reflect.DeepEqual(result, testCase.result) {
 			t.Logf(

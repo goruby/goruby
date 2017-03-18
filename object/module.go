@@ -7,11 +7,11 @@ var (
 
 type ModuleClass struct{}
 
-func (m *ModuleClass) Inspect() string            { return "Module" }
-func (m *ModuleClass) Type() ObjectType           { return MODULE_CLASS_OBJ }
-func (m *ModuleClass) Class() RubyClass           { return MODULE_EIGENCLASS }
-func (m *ModuleClass) Methods() map[string]method { return moduleMethods }
-func (m *ModuleClass) SuperClass() RubyClass      { return OBJECT_CLASS }
+func (m *ModuleClass) Inspect() string                { return "Module" }
+func (m *ModuleClass) Type() ObjectType               { return MODULE_CLASS_OBJ }
+func (m *ModuleClass) Class() RubyClass               { return MODULE_EIGENCLASS }
+func (m *ModuleClass) Methods() map[string]RubyMethod { return moduleMethods }
+func (m *ModuleClass) SuperClass() RubyClass          { return OBJECT_CLASS }
 
 func newModule(name string, class RubyClass) *Module {
 	return &Module{name, class}
@@ -31,4 +31,24 @@ func (m *Module) Class() RubyClass {
 	return MODULE_CLASS
 }
 
-var moduleMethods = map[string]method{}
+var moduleMethods = map[string]RubyMethod{
+	"ancestors": withArity(0, publicMethod(moduleAncestors)),
+}
+
+func moduleAncestors(context RubyObject, args ...RubyObject) RubyObject {
+	class := context.(RubyClassObject)
+	var ancestors []RubyObject
+	ancestors = append(ancestors, &String{class.Inspect()})
+
+	if mixin, ok := class.(*methodSet); ok {
+		for _, m := range mixin.modules {
+			ancestors = append(ancestors, &String{m.name})
+		}
+	}
+	superClass := class.SuperClass()
+	if superClass != nil {
+		superAncestors := moduleAncestors(superClass.(RubyObject))
+		ancestors = append(ancestors, superAncestors.(*Array).Elements...)
+	}
+	return &Array{ancestors}
+}

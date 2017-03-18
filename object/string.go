@@ -7,11 +7,11 @@ var (
 
 type StringClass struct{}
 
-func (s *StringClass) Inspect() string            { return "String" }
-func (s *StringClass) Type() ObjectType           { return STRING_CLASS_OBJ }
-func (s *StringClass) Class() RubyClass           { return STRING_EIGENCLASS }
-func (s *StringClass) Methods() map[string]method { return stringMethods }
-func (s *StringClass) SuperClass() RubyClass      { return OBJECT_CLASS }
+func (s *StringClass) Inspect() string                { return "String" }
+func (s *StringClass) Type() ObjectType               { return STRING_CLASS_OBJ }
+func (s *StringClass) Class() RubyClass               { return STRING_EIGENCLASS }
+func (s *StringClass) Methods() map[string]RubyMethod { return stringMethods }
+func (s *StringClass) SuperClass() RubyClass          { return OBJECT_CLASS }
 
 type String struct {
 	Value string
@@ -21,8 +21,8 @@ func (s *String) Inspect() string  { return s.Value }
 func (s *String) Type() ObjectType { return STRING_OBJ }
 func (s *String) Class() RubyClass { return STRING_CLASS }
 
-var stringClassMethods = map[string]method{
-	"new": func(context RubyObject, args ...RubyObject) RubyObject {
+var stringClassMethods = map[string]RubyMethod{
+	"new": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
 		switch len(args) {
 		case 0:
 			return &String{}
@@ -35,12 +35,14 @@ var stringClassMethods = map[string]method{
 		default:
 			return NewWrongNumberOfArgumentsError(len(args), 1)
 		}
-	},
+	}),
 }
 
-var stringMethods = map[string]method{
-	"to_s": func(context RubyObject, args ...RubyObject) RubyObject {
-		str := context.(*String)
-		return &String{str.Value}
-	},
+var stringMethods = map[string]RubyMethod{
+	"to_s": withArity(0, publicMethod(stringToS)),
+}
+
+func stringToS(context RubyObject, args ...RubyObject) RubyObject {
+	str := context.(*String)
+	return &String{str.Value}
 }
