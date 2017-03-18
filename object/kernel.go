@@ -2,7 +2,7 @@ package object
 
 import "fmt"
 
-var KERNEL_MODULE RubyObject = newModule("Kernel", newEigenclass(MODULE_CLASS, kernelMethods))
+var KERNEL_MODULE *Module = newModule("Kernel", newEigenclass(MODULE_CLASS, kernelMethods))
 
 var kernelFunctions = &Environment{
 	store: map[string]RubyObject{

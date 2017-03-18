@@ -56,15 +56,25 @@ func (m *method) Call(context RubyObject, args ...RubyObject) RubyObject {
 }
 func (m *method) Visibility() MethodVisibility { return m.visibility }
 
-func (m *methodSet) Define(name string, fn method) *Symbol {
-	m.methods[name] = fn
-	return &Symbol{name}
+func mixin(class RubyClassObject, modules ...*Module) RubyClassObject {
+	return &methodSet{class, modules}
 }
 
-func (m *methodSet) Call(name string, args ...RubyObject) RubyObject {
-	method, ok := m.methods[name]
-	if !ok {
-		return NewNoMethodError(m.context, name)
+type methodSet struct {
+	RubyClassObject
+	modules []*Module
+}
+
+func (m *methodSet) Methods() map[string]RubyMethod {
+	var methods = make(map[string]RubyMethod)
+	for _, mod := range m.modules {
+		moduleMethods := mod.Class().Methods()
+		for k, v := range moduleMethods {
+			methods[k] = v
+		}
 	}
-	return method(m.context, args...)
+	for k, v := range m.RubyClassObject.Methods() {
+		methods[k] = v
+	}
+	return methods
 }

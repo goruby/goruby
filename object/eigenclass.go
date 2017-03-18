@@ -11,7 +11,7 @@ type eigenclass struct {
 
 func (e *eigenclass) Inspect() string {
 	if e.wrappedClass != nil {
-		return e.wrappedClass.Inspect()
+		return e.wrappedClass.(RubyClassObject).Inspect()
 	}
 	return "(singleton class)"
 }
