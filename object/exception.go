@@ -6,18 +6,25 @@ import (
 )
 
 var (
-	EXCEPTION_CLASS RubyClassObject = NewClass("Exception", OBJECT_CLASS, exceptionMethods, exceptionClassMethods)
+	EXCEPTION_CLASS           RubyClassObject = NewClass("Exception", OBJECT_CLASS, exceptionMethods, exceptionClassMethods)
+	STANDARD_ERROR_CLASS      RubyClassObject = NewClass("StandardError", EXCEPTION_CLASS, nil, nil)
+	ZERO_DIVISION_ERROR_CLASS RubyClassObject = NewClass("ZeroDivisionError", STANDARD_ERROR_CLASS, nil, nil)
+	ARGUMENT_ERROR_CLASS      RubyClassObject = NewClass("ArgumentError", STANDARD_ERROR_CLASS, nil, nil)
+	NAME_ERROR_CLASS          RubyClassObject = NewClass("NameError", STANDARD_ERROR_CLASS, nil, nil)
+	NO_METHOD_ERROR_CLASS     RubyClassObject = NewClass("NoMethodError", NAME_ERROR_CLASS, nil, nil)
+	TYPE_ERROR_CLASS          RubyClassObject = NewClass("TypeError", STANDARD_ERROR_CLASS, nil, nil)
 )
 
+func formatException(exception RubyObject, message string) string {
+	return fmt.Sprintf("%s: %s", reflect.TypeOf(exception).Elem().Name(), message)
+}
+
 type Exception struct {
-	exception interface{}
-	Message   string
+	Message string
 }
 
 func (e *Exception) Type() ObjectType { return EXCEPTION_OBJ }
-func (e *Exception) Inspect() string {
-	return fmt.Sprintf("%s: %s", reflect.TypeOf(e.exception).Elem().Name(), e.Message)
-}
+func (e *Exception) Inspect() string  { return formatException(e, e.Message) }
 func (e *Exception) Class() RubyClass { return EXCEPTION_CLASS }
 
 var exceptionClassMethods = map[string]RubyMethod{}
@@ -25,110 +32,111 @@ var exceptionClassMethods = map[string]RubyMethod{}
 var exceptionMethods = map[string]RubyMethod{}
 
 func NewStandardError(message string) *StandardError {
-	e := &StandardError{Exception{Message: message}}
-	e.exception = e
-	return e
+	return &StandardError{Message: message}
 }
 
 type StandardError struct {
-	Exception
+	Message string
 }
 
+func (e *StandardError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *StandardError) Inspect() string  { return formatException(e, e.Message) }
+func (e *StandardError) Class() RubyClass { return STANDARD_ERROR_CLASS }
+
 func NewZeroDivisionError() *ZeroDivisionError {
-	e := &ZeroDivisionError{
-		StandardError{
-			Exception{
-				Message: "divided by 0",
-			},
-		},
+	return &ZeroDivisionError{
+		Message: "divided by 0",
 	}
-	e.exception = e
-	return e
 }
 
 type ZeroDivisionError struct {
-	StandardError
+	Message string
 }
 
+func (e *ZeroDivisionError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *ZeroDivisionError) Inspect() string  { return formatException(e, e.Message) }
+func (e *ZeroDivisionError) Class() RubyClass { return ZERO_DIVISION_ERROR_CLASS }
+
 func NewWrongNumberOfArgumentsError(expected, actual int) *ArgumentError {
-	e := &ArgumentError{
-		StandardError{
-			Exception{
-				Message: fmt.Sprintf(
-					"wrong number of arguments (given %d, expected %d)",
-					actual,
-					expected,
-				),
-			},
-		},
+	return &ArgumentError{
+		Message: fmt.Sprintf(
+			"wrong number of arguments (given %d, expected %d)",
+			actual,
+			expected,
+		),
 	}
-	e.exception = e
-	return e
 }
 
 type ArgumentError struct {
-	StandardError
+	Message string
 }
+
+func (e *ArgumentError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *ArgumentError) Inspect() string  { return formatException(e, e.Message) }
+func (e *ArgumentError) Class() RubyClass { return ARGUMENT_ERROR_CLASS }
 
 type NameError struct {
-	StandardError
+	Message string
 }
 
+func (e *NameError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *NameError) Inspect() string  { return formatException(e, e.Message) }
+func (e *NameError) Class() RubyClass { return NAME_ERROR_CLASS }
+
 func NewNoMethodError(context RubyObject, method string) *NoMethodError {
-	e := &NoMethodError{
-		NameError{
-			StandardError{
-				Exception{
-					Message: fmt.Sprintf(
-						"undefined method `%s' for %s:%s",
-						method,
-						context.Inspect(),
-						context.Class().(RubyObject).Inspect(),
-					),
-				},
-			},
-		},
+	return &NoMethodError{
+		Message: fmt.Sprintf(
+			"undefined method `%s' for %s:%s",
+			method,
+			context.Inspect(),
+			context.Class().(RubyObject).Inspect(),
+		),
 	}
-	e.exception = e
-	return e
+}
+
+func NewPrivateNoMethodError(context RubyObject, method string) *NoMethodError {
+	return &NoMethodError{
+		Message: fmt.Sprintf(
+			"private method `%s' called for %s:%s",
+			method,
+			context.Inspect(),
+			context.Class().(RubyObject).Inspect(),
+		),
+	}
 }
 
 type NoMethodError struct {
-	NameError
+	Message string
 }
 
+func (e *NoMethodError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *NoMethodError) Inspect() string  { return formatException(e, e.Message) }
+func (e *NoMethodError) Class() RubyClass { return NO_METHOD_ERROR_CLASS }
+
 func NewCoercionTypeError(expected, actual RubyObject) *TypeError {
-	e := &TypeError{
-		StandardError{
-			Exception{
-				Message: fmt.Sprintf(
-					"%s can't be coerced into %s",
-					reflect.TypeOf(actual).Elem().Name(),
-					reflect.TypeOf(expected).Elem().Name(),
-				),
-			},
-		},
+	return &TypeError{
+		Message: fmt.Sprintf(
+			"%s can't be coerced into %s",
+			reflect.TypeOf(actual).Elem().Name(),
+			reflect.TypeOf(expected).Elem().Name(),
+		),
 	}
-	e.exception = e
-	return e
 }
 
 func NewImplicitConversionTypeError(expected, actual RubyObject) *TypeError {
-	e := &TypeError{
-		StandardError{
-			Exception{
-				Message: fmt.Sprintf(
-					"no implicit conversion of %s into %s",
-					reflect.TypeOf(actual).Elem().Name(),
-					reflect.TypeOf(expected).Elem().Name(),
-				),
-			},
-		},
+	return &TypeError{
+		Message: fmt.Sprintf(
+			"no implicit conversion of %s into %s",
+			reflect.TypeOf(actual).Elem().Name(),
+			reflect.TypeOf(expected).Elem().Name(),
+		),
 	}
-	e.exception = e
-	return e
 }
 
 type TypeError struct {
-	StandardError
+	Message string
 }
+
+func (e *TypeError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *TypeError) Inspect() string  { return formatException(e, e.Message) }
+func (e *TypeError) Class() RubyClass { return TYPE_ERROR_CLASS }

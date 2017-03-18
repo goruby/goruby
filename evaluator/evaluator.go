@@ -120,10 +120,12 @@ func evalProgram(stmts []ast.Statement, env *object.Environment) object.RubyObje
 		switch result := result.(type) {
 		case *object.ReturnValue:
 			return result.Value
-		case *object.Error:
-			return result
 		case *object.Builtin:
 			return result.Fn()
+		}
+
+		if IsError(result) {
+			return result
 		}
 	}
 	return result
