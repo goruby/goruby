@@ -239,21 +239,23 @@ To run the command as one off run `go run main.go`.
 - [ ] scope operator `::`
 - [ ] classes
 	- [x] class objects
-	- [ ] class Class
+	- [x] class Class
 	- [ ] instance variables
 	- [ ] class variables
-	- [ ] class methods
-	- [ ] instance methods
+	- [x] class methods
+	- [x] instance methods
 	- [ ] method overrides
 	- [ ] private
 	- [ ] protected
 	- [ ] public
-	- [ ] inheritance
+	- [x] inheritance
 	- [ ] constructors
-	- [ ] new
+	- [x] new
 	- [ ] `self`
 	- [ ] singleton classes (also known as the metaclass or eigenclass) `class << self`
 	- [ ] assigment methods
-- [ ] modules
+	- [ ] self defined classes
+	- [ ] self defined classes with inheritance
+- [x] modules
 - [ ] object main
 
