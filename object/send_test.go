@@ -19,6 +19,14 @@ func (t *testRubyObject) Class() RubyClass {
 }
 
 func TestSend(t *testing.T) {
+	superMethods := map[string]RubyMethod{
+		"a_super_method": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
+			return TRUE
+		}),
+		"a_private_super_method": privateMethod(func(context RubyObject, args ...RubyObject) RubyObject {
+			return FALSE
+		}),
+	}
 	methods := map[string]RubyMethod{
 		"a_method": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
 			return TRUE
@@ -26,8 +34,21 @@ func TestSend(t *testing.T) {
 		"another_method": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
 			return FALSE
 		}),
+		"a_private_method": privateMethod(func(context RubyObject, args ...RubyObject) RubyObject {
+			return FALSE
+		}),
 	}
-	context := &testRubyObject{class: &Class{instanceMethods: methods, superClass: BASIC_OBJECT_CLASS}}
+	context := &testRubyObject{
+		class: &Class{
+			name:            "base class",
+			instanceMethods: methods,
+			superClass: &Class{
+				name:            "super class",
+				instanceMethods: superMethods,
+				superClass:      BASIC_OBJECT_CLASS,
+			},
+		},
+	}
 
 	tests := []struct {
 		method         string
@@ -40,6 +61,18 @@ func TestSend(t *testing.T) {
 		{
 			"another_method",
 			FALSE,
+		},
+		{
+			"a_super_method",
+			TRUE,
+		},
+		{
+			"a_private_method",
+			NewPrivateNoMethodError(context, "a_private_method"),
+		},
+		{
+			"a_private_super_method",
+			NewPrivateNoMethodError(context, "a_private_super_method"),
 		},
 		{
 			"unknown_method",
