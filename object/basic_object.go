@@ -2,6 +2,10 @@ package object
 
 var BASIC_OBJECT_CLASS RubyClassObject = NewClass("BasicObject", nil, basicObjectMethods, basicObjectClassMethods)
 
+func init() {
+	classes.Set("BasicObject", BASIC_OBJECT_CLASS)
+}
+
 type BasicObject struct{}
 
 func (b *BasicObject) Inspect() string  { return "" }

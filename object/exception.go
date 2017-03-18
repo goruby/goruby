@@ -15,6 +15,16 @@ var (
 	TYPE_ERROR_CLASS          RubyClassObject = NewClass("TypeError", STANDARD_ERROR_CLASS, nil, nil)
 )
 
+func init() {
+	classes.Set("Exception", EXCEPTION_CLASS)
+	classes.Set("StandardError", STANDARD_ERROR_CLASS)
+	classes.Set("ZeroDivisionError", ZERO_DIVISION_ERROR_CLASS)
+	classes.Set("ArgumentError", ARGUMENT_ERROR_CLASS)
+	classes.Set("NameError", NAME_ERROR_CLASS)
+	classes.Set("NoMethodError", NO_METHOD_ERROR_CLASS)
+	classes.Set("TypeError", TYPE_ERROR_CLASS)
+}
+
 func formatException(exception RubyObject, message string) string {
 	return fmt.Sprintf("%s: %s", reflect.TypeOf(exception).Elem().Name(), message)
 }

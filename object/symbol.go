@@ -2,6 +2,10 @@ package object
 
 var SYMBOL_CLASS RubyClassObject = NewClass("Symbol", OBJECT_CLASS, symbolMethods, symbolClassMethods)
 
+func init() {
+	classes.Set("Symbol", SYMBOL_CLASS)
+}
+
 type Symbol struct {
 	Value string
 }

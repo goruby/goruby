@@ -2,6 +2,10 @@ package object
 
 var STRING_CLASS RubyClassObject = NewClass("String", OBJECT_CLASS, stringMethods, stringClassMethods)
 
+func init() {
+	classes.Set("String", STRING_CLASS)
+}
+
 type String struct {
 	Value string
 }

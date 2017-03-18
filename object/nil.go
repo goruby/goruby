@@ -5,6 +5,10 @@ var (
 	NIL       RubyObject      = &Nil{}
 )
 
+func init() {
+	classes.Set("NilClass", NIL_CLASS)
+}
+
 type Nil struct{}
 
 func (n *Nil) Inspect() string  { return "nil" }

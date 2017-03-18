@@ -9,6 +9,11 @@ var (
 	FALSE       RubyObject      = &Boolean{Value: false}
 )
 
+func init() {
+	classes.Set("TrueClass", TRUE_CLASS)
+	classes.Set("FalseClass", FALSE_CLASS)
+}
+
 type Boolean struct {
 	Value bool
 }

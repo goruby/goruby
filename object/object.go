@@ -2,6 +2,10 @@ package object
 
 var OBJECT_CLASS RubyClassObject = mixin(NewClass("Object", BASIC_OBJECT_CLASS, objectMethods, objectClassMethods), KERNEL_MODULE)
 
+func init() {
+	classes.Set("Object", OBJECT_CLASS)
+}
+
 type Object struct{}
 
 func (o *Object) Inspect() string  { return "" }

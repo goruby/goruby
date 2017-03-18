@@ -4,6 +4,10 @@ import "strings"
 
 var ARRAY_CLASS RubyClassObject = NewClass("Array", OBJECT_CLASS, arrayMethods, arrayClassMethods)
 
+func init() {
+	classes.Set("Array", ARRAY_CLASS)
+}
+
 type Array struct {
 	Elements []RubyObject
 }

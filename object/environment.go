@@ -1,21 +1,7 @@
 package object
 
 var classes = &Environment{
-	store: map[string]RubyObject{
-		"BasicObject": BASIC_OBJECT_CLASS,
-		"Object":      OBJECT_CLASS,
-		"Kernel":      KERNEL_MODULE,
-		"String":      STRING_CLASS,
-		"Symbol":      SYMBOL_CLASS,
-		"Integer":     INTEGER_CLASS,
-		"NilClass":    NIL_CLASS,
-		"TrueClass":   TRUE_CLASS,
-		"FalseClass":  FALSE_CLASS,
-		"Exception":   EXCEPTION_CLASS,
-		"Array":       ARRAY_CLASS,
-		"Class":       CLASS_CLASS,
-		"Module":      MODULE_CLASS,
-	},
+	store: map[string]RubyObject{},
 }
 
 func NewMainEnvironment() *Environment {

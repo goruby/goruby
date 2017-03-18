@@ -4,6 +4,10 @@ import "fmt"
 
 var INTEGER_CLASS RubyClassObject = NewClass("Integer", OBJECT_CLASS, integerMethods, integerClassMethods)
 
+func init() {
+	classes.Set("Integer", INTEGER_CLASS)
+}
+
 func NewInteger(value int64) *Integer {
 	return &Integer{Value: value}
 }
