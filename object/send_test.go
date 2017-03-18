@@ -6,26 +6,17 @@ import (
 )
 
 type testRubyObject struct {
-	methods    map[string]RubyMethod
-	class      RubyClassObject
-	superClass RubyClass
+	class RubyClassObject
 }
 
 func (t *testRubyObject) Type() ObjectType { return ObjectType("TEST_OBJECT") }
 func (t *testRubyObject) Inspect() string  { return "TEST OBJECT" }
 func (t *testRubyObject) Class() RubyClass {
 	if t.class != nil {
-		return newEigenclass(t.class, nil)
+		return t.class
 	}
-	return t
+	return OBJECT_CLASS
 }
-func (t *testRubyObject) SuperClass() RubyClass {
-	if t.superClass != nil {
-		return t.superClass
-	}
-	return BASIC_OBJECT_CLASS
-}
-func (t *testRubyObject) Methods() map[string]RubyMethod { return t.methods }
 
 func TestSend(t *testing.T) {
 	methods := map[string]RubyMethod{
@@ -36,7 +27,7 @@ func TestSend(t *testing.T) {
 			return FALSE
 		}),
 	}
-	context := &testRubyObject{methods: methods}
+	context := &testRubyObject{class: &Class{instanceMethods: methods, superClass: BASIC_OBJECT_CLASS}}
 
 	tests := []struct {
 		method         string

@@ -2,18 +2,7 @@ package object
 
 import "fmt"
 
-var (
-	INTEGER_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, integerClassMethods)
-	INTEGER_CLASS      RubyClassObject = &IntegerClass{}
-)
-
-type IntegerClass struct{}
-
-func (i *IntegerClass) Inspect() string                { return "Integer" }
-func (i *IntegerClass) Type() ObjectType               { return INTEGER_CLASS_OBJ }
-func (i *IntegerClass) Class() RubyClass               { return INTEGER_EIGENCLASS }
-func (i *IntegerClass) Methods() map[string]RubyMethod { return integerMethods }
-func (i *IntegerClass) SuperClass() RubyClass          { return OBJECT_CLASS }
+var INTEGER_CLASS RubyClassObject = NewClass("Integer", OBJECT_CLASS, integerMethods, integerClassMethods)
 
 func NewInteger(value int64) *Integer {
 	return &Integer{Value: value}

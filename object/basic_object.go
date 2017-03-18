@@ -1,17 +1,6 @@
 package object
 
-var (
-	BASIC_OBJECT_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, basicObjectClassMethods)
-	BASIC_OBJECT_CLASS      RubyClassObject = &BasicObjectClass{}
-)
-
-type BasicObjectClass struct{}
-
-func (b *BasicObjectClass) Inspect() string                { return "BasicObject" }
-func (b *BasicObjectClass) Type() ObjectType               { return BASIC_OBJECT_CLASS_OBJ }
-func (b *BasicObjectClass) Class() RubyClass               { return BASIC_OBJECT_EIGENCLASS }
-func (b *BasicObjectClass) Methods() map[string]RubyMethod { return basicObjectMethods }
-func (b *BasicObjectClass) SuperClass() RubyClass          { return nil }
+var BASIC_OBJECT_CLASS RubyClassObject = NewClass("BasicObject", nil, basicObjectMethods, basicObjectClassMethods)
 
 type BasicObject struct{}
 
