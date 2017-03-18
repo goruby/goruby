@@ -10,35 +10,4 @@ func (o *Object) Class() RubyClass { return OBJECT_CLASS }
 
 var objectClassMethods = map[string]RubyMethod{}
 
-var objectMethods = map[string]RubyMethod{
-	"nil?":    withArity(0, publicMethod(objectIsNil)),
-	"methods": withArity(0, publicMethod(objMethods)),
-	"class":   withArity(0, publicMethod(objectClass)),
-}
-
-func objMethods(context RubyObject, args ...RubyObject) RubyObject {
-	var methodSymbols []RubyObject
-	class := context.Class()
-	for class != nil {
-		methods := class.Methods()
-		for meth, _ := range methods {
-			methodSymbols = append(methodSymbols, &Symbol{meth})
-		}
-		class = class.SuperClass()
-	}
-
-	return &Array{Elements: methodSymbols}
-}
-
-func objectIsNil(context RubyObject, args ...RubyObject) RubyObject {
-	return FALSE
-}
-
-func objectClass(context RubyObject, args ...RubyObject) RubyObject {
-	class := context.Class()
-	if eigenClass, ok := class.(*eigenclass); ok {
-		class = eigenClass.Class()
-	}
-	classObj := class.(RubyClassObject)
-	return classObj
-}
+var objectMethods = map[string]RubyMethod{}

@@ -2,7 +2,7 @@ package object
 
 import "fmt"
 
-var KERNEL_MODULE *Module = newModule("Kernel", kernelMethods)
+var KERNEL_MODULE *Module = newModule("Kernel", kernelMethodSet)
 
 var kernelFunctions = &Environment{
 	store: map[string]RubyObject{
@@ -19,15 +19,45 @@ var kernelFunctions = &Environment{
 	},
 }
 
-var kernelMethods = map[string]RubyMethod{
-	"puts": publicMethod(puts),
+var kernelMethodSet = map[string]RubyMethod{
+	"nil?":    withArity(0, publicMethod(kernelIsNil)),
+	"methods": withArity(0, publicMethod(kernelMethods)),
+	"class":   withArity(0, publicMethod(kernelClass)),
+	"puts":    privateMethod(kernelPuts),
 }
 
-func puts(context RubyObject, args ...RubyObject) RubyObject {
+func kernelPuts(context RubyObject, args ...RubyObject) RubyObject {
 	out := ""
 	for _, arg := range args {
 		out += arg.Inspect()
 	}
 	fmt.Println(out)
 	return NIL
+}
+
+func kernelMethods(context RubyObject, args ...RubyObject) RubyObject {
+	var methodSymbols []RubyObject
+	class := context.Class()
+	for class != nil {
+		methods := class.Methods()
+		for meth, _ := range methods {
+			methodSymbols = append(methodSymbols, &Symbol{meth})
+		}
+		class = class.SuperClass()
+	}
+
+	return &Array{Elements: methodSymbols}
+}
+
+func kernelIsNil(context RubyObject, args ...RubyObject) RubyObject {
+	return FALSE
+}
+
+func kernelClass(context RubyObject, args ...RubyObject) RubyObject {
+	class := context.Class()
+	if eigenClass, ok := class.(*eigenclass); ok {
+		class = eigenClass.Class()
+	}
+	classObj := class.(RubyClassObject)
+	return classObj
 }
