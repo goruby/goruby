@@ -4,6 +4,10 @@ import "fmt"
 
 var KERNEL_MODULE *Module = newModule("Kernel", kernelMethodSet)
 
+func init() {
+	classes.Set("Kernel", KERNEL_MODULE)
+}
+
 var kernelFunctions = &Environment{
 	store: map[string]RubyObject{
 		"puts": &Builtin{

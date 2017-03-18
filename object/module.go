@@ -4,6 +4,7 @@ var MODULE_CLASS RubyClassObject = &Class{name: "Module", instanceMethods: modul
 
 func init() {
 	MODULE_CLASS.(*Class).superClass = OBJECT_CLASS
+	classes.Set("Module", MODULE_CLASS)
 }
 
 func newModule(name string, methods map[string]RubyMethod) *Module {
