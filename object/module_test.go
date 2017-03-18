@@ -8,7 +8,7 @@ import (
 
 func TestModuleAncestors(t *testing.T) {
 	t.Run("class extending from BasicObject", func(t *testing.T) {
-		context := &testRubyObject{superClass: BASIC_OBJECT_CLASS}
+		context := &Class{name: "BasicObjectAsParent", superClass: BASIC_OBJECT_CLASS}
 
 		result := moduleAncestors(context)
 
@@ -23,7 +23,7 @@ func TestModuleAncestors(t *testing.T) {
 			t.Fail()
 		}
 
-		expected := fmt.Sprintf("[%s]", strings.Join([]string{"TEST OBJECT", "BasicObject"}, ", "))
+		expected := fmt.Sprintf("[%s]", strings.Join([]string{"BasicObjectAsParent", "BasicObject"}, ", "))
 		actual := fmt.Sprintf("%s", array.Inspect())
 
 		if expected != actual {
@@ -78,7 +78,9 @@ func TestModuleAncestors(t *testing.T) {
 }
 
 func TestModuleIncludedModules(t *testing.T) {
-	context := &testRubyObject{superClass: mixin(BASIC_OBJECT_CLASS, KERNEL_MODULE)}
+	context := &Class{
+		superClass: mixin(BASIC_OBJECT_CLASS, KERNEL_MODULE),
+	}
 
 	result := moduleIncludedModules(context)
 

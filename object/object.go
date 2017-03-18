@@ -1,17 +1,6 @@
 package object
 
-var (
-	OBJECT_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, objectClassMethods)
-	OBJECT_CLASS      RubyClassObject = mixin(&ObjectClass{}, KERNEL_MODULE)
-)
-
-type ObjectClass struct{}
-
-func (o *ObjectClass) Inspect() string                { return "Object" }
-func (o *ObjectClass) Type() ObjectType               { return OBJECT_CLASS_OBJ }
-func (o *ObjectClass) Methods() map[string]RubyMethod { return objectMethods }
-func (o *ObjectClass) Class() RubyClass               { return OBJECT_EIGENCLASS }
-func (o *ObjectClass) SuperClass() RubyClass          { return BASIC_OBJECT_CLASS }
+var OBJECT_CLASS RubyClassObject = mixin(NewClass("Object", BASIC_OBJECT_CLASS, objectMethods, objectClassMethods), KERNEL_MODULE)
 
 type Object struct{}
 

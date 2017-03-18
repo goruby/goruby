@@ -12,8 +12,10 @@ func TestObjMethods(t *testing.T) {
 		"bar": nil,
 	}
 	context := &testRubyObject{
-		methods:    contextMethods,
-		superClass: OBJECT_CLASS,
+		class: &Class{
+			instanceMethods: contextMethods,
+			superClass:      OBJECT_CLASS,
+		},
 	}
 
 	result := objMethods(context)
@@ -86,9 +88,16 @@ func TestObjectClass(t *testing.T) {
 
 		result := objectClass(context)
 
-		_, ok := result.(*IntegerClass)
+		cl, ok := result.(*Class)
 		if !ok {
-			t.Logf("Expected IntegerClass, got %T", result)
+			t.Logf("Expected Class, got %T", result)
+			t.Fail()
+		}
+
+		expected := INTEGER_CLASS
+
+		if !reflect.DeepEqual(expected, cl) {
+			t.Logf("Expected class to equal %+#v, got %+#v", expected, cl)
 			t.Fail()
 		}
 	})
@@ -97,9 +106,34 @@ func TestObjectClass(t *testing.T) {
 
 		result := objectClass(context)
 
-		_, ok := result.(*ClassClass)
+		cl, ok := result.(*Class)
 		if !ok {
-			t.Logf("Expected ClassClass, got %T", result)
+			t.Logf("Expected Class, got %T", result)
+			t.Fail()
+		}
+
+		expected := CLASS_CLASS
+
+		if !reflect.DeepEqual(expected, cl) {
+			t.Logf("Expected class to equal %+#v, got %+#v", expected, cl)
+			t.Fail()
+		}
+	})
+	t.Run("class class", func(t *testing.T) {
+		context := CLASS_CLASS
+
+		result := objectClass(context)
+
+		cl, ok := result.(*Class)
+		if !ok {
+			t.Logf("Expected Class, got %T", result)
+			t.Fail()
+		}
+
+		expected := CLASS_CLASS
+
+		if !reflect.DeepEqual(expected, cl) {
+			t.Logf("Expected class to equal %+#v, got %+#v", expected, cl)
 			t.Fail()
 		}
 	})

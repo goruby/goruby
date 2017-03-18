@@ -1,20 +1,13 @@
 package object
 
-var (
-	MODULE_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, moduleMethods)
-	MODULE_CLASS      RubyClassObject = &ModuleClass{}
-)
+var MODULE_CLASS RubyClassObject = &Class{name: "Module", instanceMethods: moduleMethods}
 
-type ModuleClass struct{}
+func init() {
+	MODULE_CLASS.(*Class).superClass = OBJECT_CLASS
+}
 
-func (m *ModuleClass) Inspect() string                { return "Module" }
-func (m *ModuleClass) Type() ObjectType               { return MODULE_CLASS_OBJ }
-func (m *ModuleClass) Class() RubyClass               { return MODULE_EIGENCLASS }
-func (m *ModuleClass) Methods() map[string]RubyMethod { return moduleMethods }
-func (m *ModuleClass) SuperClass() RubyClass          { return OBJECT_CLASS }
-
-func newModule(name string, class RubyClass) *Module {
-	return &Module{name, class}
+func newModule(name string, methods map[string]RubyMethod) *Module {
+	return &Module{name, newEigenclass(MODULE_CLASS, methods)}
 }
 
 type Module struct {

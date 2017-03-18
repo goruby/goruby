@@ -2,18 +2,7 @@ package object
 
 import "strings"
 
-var (
-	ARRAY_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, arrayClassMethods)
-	ARRAY_CLASS      RubyClassObject = &ArrayClass{}
-)
-
-type ArrayClass struct{}
-
-func (a *ArrayClass) Type() ObjectType               { return ARRAY_OBJ }
-func (a *ArrayClass) Inspect() string                { return "Array" }
-func (a *ArrayClass) Class() RubyClass               { return ARRAY_EIGENCLASS }
-func (a *ArrayClass) Methods() map[string]RubyMethod { return arrayMethods }
-func (a *ArrayClass) SuperClass() RubyClass          { return OBJECT_CLASS }
+var ARRAY_CLASS RubyClassObject = NewClass("Array", OBJECT_CLASS, arrayMethods, arrayClassMethods)
 
 type Array struct {
 	Elements []RubyObject

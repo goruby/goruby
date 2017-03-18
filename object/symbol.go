@@ -1,17 +1,6 @@
 package object
 
-var (
-	SYMBOL_EIGENCLASS RubyClass       = newEigenclass(CLASS_CLASS, symbolClassMethods)
-	SYMBOL_CLASS      RubyClassObject = &SymbolClass{}
-)
-
-type SymbolClass struct{}
-
-func (s *SymbolClass) Inspect() string                { return "Symbol" }
-func (s *SymbolClass) Type() ObjectType               { return SYMBOL_OBJ }
-func (s *SymbolClass) Class() RubyClass               { return SYMBOL_EIGENCLASS }
-func (s *SymbolClass) Methods() map[string]RubyMethod { return symbolMethods }
-func (s *SymbolClass) SuperClass() RubyClass          { return OBJECT_CLASS }
+var SYMBOL_CLASS RubyClassObject = NewClass("Symbol", OBJECT_CLASS, symbolMethods, symbolClassMethods)
 
 type Symbol struct {
 	Value string
