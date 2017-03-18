@@ -40,8 +40,10 @@ func kernelMethods(context RubyObject, args ...RubyObject) RubyObject {
 	class := context.Class()
 	for class != nil {
 		methods := class.Methods()
-		for meth, _ := range methods {
-			methodSymbols = append(methodSymbols, &Symbol{meth})
+		for meth, fn := range methods {
+			if fn.Visibility() == PUBLIC_METHOD {
+				methodSymbols = append(methodSymbols, &Symbol{meth})
+			}
 		}
 		class = class.SuperClass()
 	}

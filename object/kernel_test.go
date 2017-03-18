@@ -7,64 +7,164 @@ import (
 )
 
 func TestKernelMethods(t *testing.T) {
-	contextMethods := map[string]RubyMethod{
-		"foo": nil,
-		"bar": nil,
-	}
-	context := &testRubyObject{
-		class: &Class{
-			instanceMethods: contextMethods,
-			superClass:      OBJECT_CLASS,
-		},
-	}
-
-	result := kernelMethods(context)
-
-	array, ok := result.(*Array)
-	if !ok {
-		t.Logf("Expected array, got %T", result)
-		t.FailNow()
-	}
-
-	var methods []string
-	for i, elem := range array.Elements {
-		sym, ok := elem.(*Symbol)
-		if !ok {
-			t.Logf("Expected all elements to be symbols, got %T at index %d", elem, i)
-			t.Fail()
-		} else {
-			methods = append(methods, sym.Inspect())
+	t.Run("without superclass", func(t *testing.T) {
+		contextMethods := map[string]RubyMethod{
+			"foo": publicMethod(nil),
+			"bar": publicMethod(nil),
 		}
-	}
+		context := &testRubyObject{
+			class: &Class{
+				instanceMethods: contextMethods,
+				superClass:      nil,
+			},
+		}
 
-	var expectedMethods []string
-	for k, _ := range contextMethods {
-		expectedMethods = append(expectedMethods, ":"+k)
-	}
-	for k, _ := range basicObjectMethods {
-		expectedMethods = append(expectedMethods, ":"+k)
-	}
-	for k, _ := range objectMethods {
-		expectedMethods = append(expectedMethods, ":"+k)
-	}
-	for k, _ := range kernelMethodSet {
-		expectedMethods = append(expectedMethods, ":"+k)
-	}
+		result := kernelMethods(context)
 
-	expectedLen := len(expectedMethods)
+		array, ok := result.(*Array)
+		if !ok {
+			t.Logf("Expected array, got %T", result)
+			t.FailNow()
+		}
 
-	if len(array.Elements) != expectedLen {
-		t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
-		t.Fail()
-	}
+		var methods []string
+		for i, elem := range array.Elements {
+			sym, ok := elem.(*Symbol)
+			if !ok {
+				t.Logf("Expected all elements to be symbols, got %T at index %d", elem, i)
+				t.Fail()
+			} else {
+				methods = append(methods, sym.Inspect())
+			}
+		}
 
-	sort.Strings(expectedMethods)
-	sort.Strings(methods)
+		var expectedMethods = []string{
+			":foo", ":bar",
+		}
 
-	if !reflect.DeepEqual(expectedMethods, methods) {
-		t.Logf("Expected methods to equal\n%s\n\tgot\n%s\n", expectedMethods, methods)
-		t.Fail()
-	}
+		expectedLen := len(expectedMethods)
+
+		if len(array.Elements) != expectedLen {
+			t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
+			t.Fail()
+		}
+
+		sort.Strings(expectedMethods)
+		sort.Strings(methods)
+
+		if !reflect.DeepEqual(expectedMethods, methods) {
+			t.Logf("Expected methods to equal\n%s\n\tgot\n%s\n", expectedMethods, methods)
+			t.Fail()
+		}
+	})
+	t.Run("with superclass", func(t *testing.T) {
+		superClassMethods := map[string]RubyMethod{
+			"super_foo": publicMethod(nil),
+			"super_bar": publicMethod(nil),
+		}
+		contextMethods := map[string]RubyMethod{
+			"foo": publicMethod(nil),
+			"bar": publicMethod(nil),
+		}
+		context := &testRubyObject{
+			class: &Class{
+				instanceMethods: contextMethods,
+				superClass: &Class{
+					instanceMethods: superClassMethods,
+					superClass:      nil,
+				},
+			},
+		}
+
+		result := kernelMethods(context)
+
+		array, ok := result.(*Array)
+		if !ok {
+			t.Logf("Expected array, got %T", result)
+			t.FailNow()
+		}
+
+		var methods []string
+		for i, elem := range array.Elements {
+			sym, ok := elem.(*Symbol)
+			if !ok {
+				t.Logf("Expected all elements to be symbols, got %T at index %d", elem, i)
+				t.Fail()
+			} else {
+				methods = append(methods, sym.Inspect())
+			}
+		}
+
+		var expectedMethods = []string{
+			":foo", ":bar", ":super_foo", ":super_bar",
+		}
+
+		expectedLen := len(expectedMethods)
+
+		if len(array.Elements) != expectedLen {
+			t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
+			t.Fail()
+		}
+
+		sort.Strings(expectedMethods)
+		sort.Strings(methods)
+
+		if !reflect.DeepEqual(expectedMethods, methods) {
+			t.Logf("Expected methods to equal\n%s\n\tgot\n%s\n", expectedMethods, methods)
+			t.Fail()
+		}
+	})
+	t.Run("with private methods", func(t *testing.T) {
+		contextMethods := map[string]RubyMethod{
+			"foo":         publicMethod(nil),
+			"bar":         publicMethod(nil),
+			"private_foo": privateMethod(nil),
+		}
+		context := &testRubyObject{
+			class: &Class{
+				instanceMethods: contextMethods,
+				superClass:      nil,
+			},
+		}
+
+		result := kernelMethods(context)
+
+		array, ok := result.(*Array)
+		if !ok {
+			t.Logf("Expected array, got %T", result)
+			t.FailNow()
+		}
+
+		var methods []string
+		for i, elem := range array.Elements {
+			sym, ok := elem.(*Symbol)
+			if !ok {
+				t.Logf("Expected all elements to be symbols, got %T at index %d", elem, i)
+				t.Fail()
+			} else {
+				methods = append(methods, sym.Inspect())
+			}
+		}
+
+		var expectedMethods = []string{
+			":foo", ":bar",
+		}
+
+		expectedLen := len(expectedMethods)
+
+		if len(array.Elements) != expectedLen {
+			t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
+			t.Fail()
+		}
+
+		sort.Strings(expectedMethods)
+		sort.Strings(methods)
+
+		if !reflect.DeepEqual(expectedMethods, methods) {
+			t.Logf("Expected methods to equal\n%s\n\tgot\n%s\n", expectedMethods, methods)
+			t.Fail()
+		}
+	})
 }
 
 func TestKernelIsNil(t *testing.T) {
