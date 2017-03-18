@@ -33,5 +33,8 @@ func classSuperclass(context RubyObject, args ...RubyObject) RubyObject {
 	if superclass == nil {
 		return NIL
 	}
+	if mixin, ok := superclass.(*methodSet); ok {
+		return mixin.RubyClassObject
+	}
 	return superclass.(RubyObject)
 }

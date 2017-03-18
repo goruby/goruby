@@ -52,3 +52,22 @@ func moduleAncestors(context RubyObject, args ...RubyObject) RubyObject {
 	}
 	return &Array{ancestors}
 }
+
+func moduleIncludedModules(context RubyObject, args ...RubyObject) RubyObject {
+	class := context.(RubyClassObject)
+	var includedModules []RubyObject
+
+	if mixin, ok := class.(*methodSet); ok {
+		for _, m := range mixin.modules {
+			includedModules = append(includedModules, &String{m.name})
+		}
+	}
+
+	superClass := class.SuperClass()
+	if superClass != nil {
+		superIncludedModules := moduleIncludedModules(superClass.(RubyObject))
+		includedModules = append(includedModules, superIncludedModules.(*Array).Elements...)
+	}
+
+	return &Array{includedModules}
+}
