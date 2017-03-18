@@ -12,11 +12,11 @@ var (
 
 type ExceptionClass struct{}
 
-func (e *ExceptionClass) Type() ObjectType           { return EXCEPTION_OBJ }
-func (e *ExceptionClass) Inspect() string            { return "Exception" }
-func (e *ExceptionClass) Class() RubyClass           { return EXCEPTION_EIGENCLASS }
-func (e *ExceptionClass) Methods() map[string]method { return exceptionMethods }
-func (e *ExceptionClass) SuperClass() RubyClass      { return OBJECT_CLASS }
+func (e *ExceptionClass) Type() ObjectType               { return EXCEPTION_OBJ }
+func (e *ExceptionClass) Inspect() string                { return "Exception" }
+func (e *ExceptionClass) Class() RubyClass               { return EXCEPTION_EIGENCLASS }
+func (e *ExceptionClass) Methods() map[string]RubyMethod { return exceptionMethods }
+func (e *ExceptionClass) SuperClass() RubyClass          { return OBJECT_CLASS }
 
 type Exception struct {
 	exception interface{}
@@ -29,9 +29,9 @@ func (e *Exception) Inspect() string {
 }
 func (e *Exception) Class() RubyClass { return EXCEPTION_CLASS }
 
-var exceptionClassMethods = map[string]method{}
+var exceptionClassMethods = map[string]RubyMethod{}
 
-var exceptionMethods = map[string]method{}
+var exceptionMethods = map[string]RubyMethod{}
 
 func NewStandardError(message string) *StandardError {
 	e := &StandardError{Exception{Message: message}}

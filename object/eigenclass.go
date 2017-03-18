@@ -1,12 +1,12 @@
 package object
 
-func newEigenclass(wrappedClass RubyClassObject, methods map[string]method) RubyClassObject {
+func newEigenclass(wrappedClass RubyClass, methods map[string]RubyMethod) RubyClassObject {
 	return &eigenclass{methods: methods, wrappedClass: wrappedClass}
 }
 
 type eigenclass struct {
-	methods      map[string]method
-	wrappedClass RubyClassObject
+	methods      map[string]RubyMethod
+	wrappedClass RubyClass
 }
 
 func (e *eigenclass) Inspect() string {
@@ -22,7 +22,7 @@ func (e *eigenclass) Class() RubyClass {
 	}
 	return CLASS_CLASS
 }
-func (e *eigenclass) Methods() map[string]method { return e.methods }
+func (e *eigenclass) Methods() map[string]RubyMethod { return e.methods }
 func (e *eigenclass) SuperClass() RubyClass {
 	if e.wrappedClass != nil {
 		return e.wrappedClass

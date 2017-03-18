@@ -7,7 +7,7 @@ import (
 )
 
 func TestObjMethods(t *testing.T) {
-	contextMethods := map[string]method{
+	contextMethods := map[string]RubyMethod{
 		"foo": nil,
 		"bar": nil,
 	}
@@ -22,13 +22,6 @@ func TestObjMethods(t *testing.T) {
 	if !ok {
 		t.Logf("Expected array, got %T", result)
 		t.FailNow()
-	}
-
-	expectedLen := len(contextMethods) + len(objectMethods) + len(basicObjectMethods)
-
-	if len(array.Elements) != expectedLen {
-		t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
-		t.Fail()
 	}
 
 	var methods []string
@@ -51,6 +44,16 @@ func TestObjMethods(t *testing.T) {
 	}
 	for k, _ := range objectMethods {
 		expectedMethods = append(expectedMethods, ":"+k)
+	}
+	for k, _ := range kernelMethods {
+		expectedMethods = append(expectedMethods, ":"+k)
+	}
+
+	expectedLen := len(expectedMethods)
+
+	if len(array.Elements) != expectedLen {
+		t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
+		t.Fail()
 	}
 
 	sort.Strings(expectedMethods)

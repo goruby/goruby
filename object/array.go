@@ -9,11 +9,11 @@ var (
 
 type ArrayClass struct{}
 
-func (a *ArrayClass) Type() ObjectType           { return ARRAY_OBJ }
-func (a *ArrayClass) Inspect() string            { return "Array" }
-func (a *ArrayClass) Class() RubyClass           { return ARRAY_EIGENCLASS }
-func (a *ArrayClass) Methods() map[string]method { return arrayMethods }
-func (a *ArrayClass) SuperClass() RubyClass      { return OBJECT_CLASS }
+func (a *ArrayClass) Type() ObjectType               { return ARRAY_OBJ }
+func (a *ArrayClass) Inspect() string                { return "Array" }
+func (a *ArrayClass) Class() RubyClass               { return ARRAY_EIGENCLASS }
+func (a *ArrayClass) Methods() map[string]RubyMethod { return arrayMethods }
+func (a *ArrayClass) SuperClass() RubyClass          { return OBJECT_CLASS }
 
 type Array struct {
 	Elements []RubyObject
@@ -29,6 +29,6 @@ func (a *Array) Inspect() string {
 }
 func (a *Array) Class() RubyClass { return ARRAY_CLASS }
 
-var arrayClassMethods = map[string]method{}
+var arrayClassMethods = map[string]RubyMethod{}
 
-var arrayMethods = map[string]method{}
+var arrayMethods = map[string]RubyMethod{}

@@ -9,11 +9,11 @@ var (
 
 type ClassClass struct{}
 
-func (c *ClassClass) Inspect() string            { return "Class" }
-func (c *ClassClass) Type() ObjectType           { return CLASS_OBJ }
-func (c *ClassClass) Class() RubyClass           { return CLASS_EIGENCLASS }
-func (c *ClassClass) Methods() map[string]method { return classMethods }
-func (c *ClassClass) SuperClass() RubyClass      { return MODULE_CLASS }
+func (c *ClassClass) Inspect() string                { return "Class" }
+func (c *ClassClass) Type() ObjectType               { return CLASS_OBJ }
+func (c *ClassClass) Class() RubyClass               { return CLASS_EIGENCLASS }
+func (c *ClassClass) Methods() map[string]RubyMethod { return classMethods }
+func (c *ClassClass) SuperClass() RubyClass          { return MODULE_CLASS }
 
 type Class struct{}
 
@@ -21,10 +21,10 @@ func (c *Class) Inspect() string  { return fmt.Sprintf("#<Class:%p>", c) }
 func (c *Class) Type() ObjectType { return CLASS_OBJ }
 func (c *Class) Class() RubyClass { return CLASS_CLASS }
 
-var classClassMethods = map[string]method{}
+var classClassMethods = map[string]RubyMethod{}
 
-var classMethods = map[string]method{
-	"superclass": withArity(0, classSuperclass),
+var classMethods = map[string]RubyMethod{
+	"superclass": withArity(0, publicMethod(classSuperclass)),
 }
 
 func classSuperclass(context RubyObject, args ...RubyObject) RubyObject {

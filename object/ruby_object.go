@@ -38,14 +38,18 @@ const (
 	BUILTIN_OBJ            = "BUILTIN"
 )
 
-type RubyObject interface {
-	Type() ObjectType
+type inspectable interface {
 	Inspect() string
+}
+
+type RubyObject interface {
+	inspectable
+	Type() ObjectType
 	Class() RubyClass
 }
 
 type RubyClass interface {
-	Methods() map[string]method
+	Methods() map[string]RubyMethod
 	SuperClass() RubyClass
 }
 

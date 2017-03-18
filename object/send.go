@@ -7,7 +7,7 @@ func Send(context RubyObject, method string, args ...RubyObject) RubyObject {
 	for class != nil {
 		fn, ok := class.Methods()[method]
 		if ok {
-			return fn(context, args...)
+			return fn.Call(context, args...)
 		}
 		class = class.SuperClass()
 	}

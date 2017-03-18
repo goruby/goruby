@@ -7,11 +7,11 @@ var (
 
 type BasicObjectClass struct{}
 
-func (b *BasicObjectClass) Inspect() string            { return "BasicObject" }
-func (b *BasicObjectClass) Type() ObjectType           { return BASIC_OBJECT_CLASS_OBJ }
-func (b *BasicObjectClass) Class() RubyClass           { return BASIC_OBJECT_EIGENCLASS }
-func (b *BasicObjectClass) Methods() map[string]method { return basicObjectMethods }
-func (b *BasicObjectClass) SuperClass() RubyClass      { return nil }
+func (b *BasicObjectClass) Inspect() string                { return "BasicObject" }
+func (b *BasicObjectClass) Type() ObjectType               { return BASIC_OBJECT_CLASS_OBJ }
+func (b *BasicObjectClass) Class() RubyClass               { return BASIC_OBJECT_EIGENCLASS }
+func (b *BasicObjectClass) Methods() map[string]RubyMethod { return basicObjectMethods }
+func (b *BasicObjectClass) SuperClass() RubyClass          { return nil }
 
 type BasicObject struct{}
 
@@ -19,14 +19,14 @@ func (b *BasicObject) Inspect() string  { return "" }
 func (b *BasicObject) Type() ObjectType { return BASIC_OBJECT_OBJ }
 func (b *BasicObject) Class() RubyClass { return BASIC_OBJECT_CLASS }
 
-var basicObjectClassMethods = map[string]method{
-	"new": func(context RubyObject, args ...RubyObject) RubyObject {
+var basicObjectClassMethods = map[string]RubyMethod{
+	"new": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
 		return &BasicObject{}
-	},
+	}),
 }
 
-var basicObjectMethods = map[string]method{
-	"method_missing": basicObjectMethodMissing,
+var basicObjectMethods = map[string]RubyMethod{
+	"method_missing": publicMethod(basicObjectMethodMissing),
 }
 
 func basicObjectMethodMissing(context RubyObject, args ...RubyObject) RubyObject {

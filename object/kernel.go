@@ -19,8 +19,8 @@ var kernelFunctions = &Environment{
 	},
 }
 
-var kernelMethods = map[string]method{
-	"puts": puts,
+var kernelMethods = map[string]RubyMethod{
+	"puts": publicMethod(puts),
 }
 
 func puts(context RubyObject, args ...RubyObject) RubyObject {
