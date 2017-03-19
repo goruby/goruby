@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"bytes"
 	"fmt"
 	"unicode"
 	"unicode/utf8"
@@ -164,12 +163,6 @@ func startLexer(l *Lexer) LexerStateFn {
 	case '}':
 		l.emit(token.RBRACE)
 		return startLexer
-	case '[':
-		l.emit(token.LBRACKET)
-		return startLexer
-	case ']':
-		l.emit(token.RBRACKET)
-		return startLexer
 	case ',':
 		l.emit(token.COMMA)
 		return startLexer
@@ -191,9 +184,8 @@ func startLexer(l *Lexer) LexerStateFn {
 }
 
 func lexIdentifier(l *Lexer) LexerStateFn {
-	legalIdentifierCharacters := []byte{'?', '!'}
 	r := l.next()
-	for isLetter(r) || isDigit(r) || bytes.ContainsRune(legalIdentifierCharacters, r) {
+	for isLetter(r) {
 		r = l.next()
 	}
 	l.backup()

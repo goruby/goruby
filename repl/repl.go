@@ -37,7 +37,6 @@ func Start(in io.Reader, out chan<- string) {
 				continue
 			}
 			out <- fmt.Sprintf("%s\n", err.Error())
-			buffer = ""
 			continue
 		}
 

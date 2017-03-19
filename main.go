@@ -36,7 +36,6 @@ func main() {
 		_, err := interpreter.Interpret(input)
 		if err != nil {
 			fmt.Println(err.Error())
-			os.Exit(1)
 		}
 		return
 	}
@@ -53,7 +52,6 @@ func main() {
 	_, err = interpreter.Interpret(string(fileBytes))
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(1)
 	}
 	return
 }
