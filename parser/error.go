@@ -25,7 +25,7 @@ type Errors struct {
 
 func (e *Errors) Error() string {
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "%s:\n", e.context)
+	fmt.Fprintf(&buf, "%s: ", e.context)
 	for _, err := range e.errors {
 		fmt.Fprintf(&buf, "\t%s\n", err.Error())
 	}

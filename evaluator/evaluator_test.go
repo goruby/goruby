@@ -387,99 +387,7 @@ func TestBuiltinFunctions(t *testing.T) {
 	}
 }
 
-func TestMethodCalls(t *testing.T) {
-	input := "x = 2; x.foo :bar"
-
-	evaluated := testEval(input)
-
-	if !IsError(evaluated) {
-		t.Logf("Expected error, got %T:%s\n", evaluated, evaluated)
-		t.Fail()
-	}
-}
-
-func TestArrayLiterals(t *testing.T) {
-	input := "[1, 2 * 2, 3 + 3]"
-	evaluated := testEval(input)
-	result, ok := evaluated.(*object.Array)
-	if !ok {
-		t.Fatalf("object is not Array. got=%T (%+v)", evaluated, evaluated)
-	}
-	if len(result.Elements) != 3 {
-		t.Fatalf(
-			"array has wrong num of elements. got=%d",
-			len(result.Elements),
-		)
-	}
-	testIntegerObject(t, result.Elements[0], 1)
-	testIntegerObject(t, result.Elements[1], 4)
-	testIntegerObject(t, result.Elements[2], 6)
-}
-
-func TestArrayIndexExpressions(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected interface{}
-	}{
-		{
-			"[1, 2, 3][0]",
-			1,
-		},
-		{
-			"[1, 2, 3][1]",
-			2,
-		},
-		{
-			"[1, 2, 3][2]",
-			3,
-		},
-		{
-			"i = 0; [1][i];",
-			1,
-		},
-		{
-			"[1, 2, 3][1 + 1];",
-			3,
-		},
-		{
-			"myArray = [1, 2, 3]; myArray[2];",
-			3,
-		},
-		{
-			"myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
-			6,
-		},
-		{
-			"myArray = [1, 2, 3]; i = myArray[0]; myArray[i]",
-			2,
-		},
-		{
-			"[1, 2, 3][3]",
-			nil,
-		},
-		{
-			"[1, 2, 3][-1]",
-			nil,
-		},
-	}
-	for _, tt := range tests {
-		evaluated := testEval(tt.input)
-		integer, ok := tt.expected.(int)
-		if ok {
-			testIntegerObject(t, evaluated, int64(integer))
-		} else {
-			testNilObject(t, evaluated)
-		}
-	}
-}
-
-func TestNilExpression(t *testing.T) {
-	input := "nil"
-	evaluated := testEval(input)
-	testNilObject(t, evaluated)
-}
-
-func testNilObject(t *testing.T, obj object.RubyObject) bool {
+func testNilObject(t *testing.T, obj object.Object) bool {
 	if obj != object.NIL {
 		t.Errorf("object is not NIL. got=%T (%+v)", obj, obj)
 		return false
@@ -487,7 +395,7 @@ func testNilObject(t *testing.T, obj object.RubyObject) bool {
 	return true
 }
 
-func testEval(input string, context ...*object.Environment) object.RubyObject {
+func testEval(input string, context ...*object.Environment) object.Object {
 	env := object.NewEnvironment()
 	for _, e := range context {
 		env = object.NewEnclosedEnvironment(e)
@@ -501,7 +409,7 @@ func testEval(input string, context ...*object.Environment) object.RubyObject {
 	return Eval(program, env)
 }
 
-func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool {
+func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 	result, ok := obj.(*object.Boolean)
 	if !ok {
 		t.Errorf(
@@ -522,7 +430,7 @@ func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool 
 	return true
 }
 
-func testIntegerObject(t *testing.T, obj object.RubyObject, expected int64) bool {
+func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 	result, ok := obj.(*object.Integer)
 	if !ok {
 		t.Errorf(

@@ -88,8 +88,7 @@ To run the command as one off run `go run main.go`.
 
 ### Supported language feature
 - [ ] everything is an object
-	- [x] allow method calls on everything
-	- [ ] operators are method calls
+	- [ ] allow method calls on everything
 - [ ] full UTF8 support
 	- [ ] Unicode identifier
 	- [ ] Unicode symbols
@@ -122,18 +121,18 @@ To run the command as one off run `go run main.go`.
 	- [ ] flip flop
 - [ ] numbers
 	- [ ] integers
-		- [x] integer arithmetics
-		- [x] integers `1234`
+		- [ ] integers `1234`
 		- [ ] integers with underscores `1_234`
 		- [ ] decimal numbers `0d170`, `0D170`
 		- [ ] octal numbers `0252`, `0o252`, `0O252`
 		- [ ] hexadecimal numbers `0xaa`, `0xAa`, `0xAA`, `0Xaa`, `0XAa`, `0XaA`
 		- [ ] binary numbers `0b10101010`, `0B10101010`
 	- [ ] floats
-		- [ ] float arithmetics
 		- [ ] `12.34`
 		- [ ] `1234e-2`
 		- [ ] `1.234E1`
+- [x] integers
+	- [x] integer arithmetics
 - [x] booleans
 - [ ] strings
 	- [x] double quoted
@@ -172,8 +171,6 @@ To run the command as one off run `go run main.go`.
 	- [ ] interpolation `#{}`
 	- [ ] automatic concatenation
 - [ ] arrays
-	- [x] array literal `[1,2]`
-	- [x] array indexing `arr[2]`
 	- [ ] splat
 	- [ ] array decomposition
 	- [ ] implicit array assignment
@@ -238,24 +235,20 @@ To run the command as one off run `go run main.go`.
 - [ ] constants
 - [ ] scope operator `::`
 - [ ] classes
-	- [x] class objects
-	- [x] class Class
 	- [ ] instance variables
 	- [ ] class variables
-	- [x] class methods
-	- [x] instance methods
+	- [ ] class methods
+	- [ ] instance methods
 	- [ ] method overrides
 	- [ ] private
 	- [ ] protected
 	- [ ] public
-	- [x] inheritance
+	- [ ] inheritance
 	- [ ] constructors
-	- [x] new
+	- [ ] new
 	- [ ] `self`
 	- [ ] singleton classes (also known as the metaclass or eigenclass) `class << self`
 	- [ ] assigment methods
-	- [ ] self defined classes
-	- [ ] self defined classes with inheritance
-- [x] modules
+- [ ] modules
 - [ ] object main
 

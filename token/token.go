@@ -30,14 +30,12 @@ const (
 	COMMA
 	SEMICOLON
 
-	DOT      // .
-	COLON    // :
-	LPAREN   // (
-	RPAREN   // )
-	LBRACE   // {
-	RBRACE   // }
-	LBRACKET // [
-	RBRACKET // ]
+	DOT    // .
+	COLON  // :
+	LPAREN // (
+	RPAREN // )
+	LBRACE // {
+	RBRACE // }
 
 	// Keywords
 	DEF
@@ -48,7 +46,6 @@ const (
 	TRUE
 	FALSE
 	RETURN
-	NIL
 )
 
 var keywords = map[string]TokenType{
@@ -59,7 +56,6 @@ var keywords = map[string]TokenType{
 	"else":   ELSE,
 	"true":   TRUE,
 	"false":  FALSE,
-	"nil":    NIL,
 	"return": RETURN,
 }
 
