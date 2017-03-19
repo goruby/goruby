@@ -1,9 +1,9 @@
 package object
 
-var STRING_CLASS RubyClassObject = NewClass("String", OBJECT_CLASS, stringMethods, stringClassMethods)
+var stringClass RubyClassObject = newClass("String", objectClass, stringMethods, stringClassMethods)
 
 func init() {
-	classes.Set("String", STRING_CLASS)
+	classes.Set("String", stringClass)
 }
 
 type String struct {
@@ -11,8 +11,8 @@ type String struct {
 }
 
 func (s *String) Inspect() string  { return s.Value }
-func (s *String) Type() ObjectType { return STRING_OBJ }
-func (s *String) Class() RubyClass { return STRING_CLASS }
+func (s *String) Type() Type       { return STRING_OBJ }
+func (s *String) Class() RubyClass { return stringClass }
 
 var stringClassMethods = map[string]RubyMethod{
 	"new": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {

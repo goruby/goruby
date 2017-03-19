@@ -7,7 +7,8 @@ import (
 	"github.com/goruby/goruby/object"
 )
 
-func Eval(node ast.Node, env *object.Environment) object.RubyObject {
+// Eval evaluates the given node and traverses recursive over its children
+func Eval(node ast.Node, env object.Environment) object.RubyObject {
 	switch node := node.(type) {
 
 	// Statements
@@ -51,7 +52,7 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 			return elements[0]
 		}
 		return &object.Array{Elements: elements}
-	case *ast.Variable:
+	case *ast.VariableAssignment:
 		val := Eval(node.Value, env)
 		if IsError(val) {
 			return val
@@ -112,7 +113,7 @@ func Eval(node ast.Node, env *object.Environment) object.RubyObject {
 
 }
 
-func evalProgram(stmts []ast.Statement, env *object.Environment) object.RubyObject {
+func evalProgram(stmts []ast.Statement, env object.Environment) object.RubyObject {
 	var result object.RubyObject
 	for _, statement := range stmts {
 		result = Eval(statement, env)
@@ -131,7 +132,7 @@ func evalProgram(stmts []ast.Statement, env *object.Environment) object.RubyObje
 	return result
 }
 
-func evalExpressions(exps []ast.Expression, env *object.Environment) []object.RubyObject {
+func evalExpressions(exps []ast.Expression, env object.Environment) []object.RubyObject {
 	var result []object.RubyObject
 
 	for _, e := range exps {
@@ -230,7 +231,7 @@ func evalStringInfixExpression(
 	return &object.String{Value: leftVal + rightVal}
 }
 
-func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.RubyObject {
+func evalIfExpression(ie *ast.IfExpression, env object.Environment) object.RubyObject {
 	condition := Eval(ie.Condition, env)
 	if IsError(condition) {
 		return condition
@@ -263,7 +264,7 @@ func evalArrayIndexExpression(array, index object.RubyObject) object.RubyObject 
 	return arrayObject.Elements[idx]
 }
 
-func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) object.RubyObject {
+func evalBlockStatement(block *ast.BlockStatement, env object.Environment) object.RubyObject {
 	var result object.RubyObject
 	for _, statement := range block.Statements {
 		result = Eval(statement, env)
@@ -278,7 +279,7 @@ func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) obje
 	return result
 }
 
-func evalIdentifier(node *ast.Identifier, env *object.Environment) object.RubyObject {
+func evalIdentifier(node *ast.Identifier, env object.Environment) object.RubyObject {
 	val, ok := env.Get(node.Value)
 	if !ok {
 		return newError("identifier not found: " + node.Value)
@@ -312,7 +313,7 @@ func applyFunction(fn object.RubyObject, args []object.RubyObject) object.RubyOb
 	}
 }
 
-func extendFunctionEnv(fn *object.Function, args []object.RubyObject) *object.Environment {
+func extendFunctionEnv(fn *object.Function, args []object.RubyObject) object.Environment {
 	env := object.NewEnclosedEnvironment(fn.Env)
 	for paramIdx, param := range fn.Parameters {
 		env.Set(param.Value, args[paramIdx])
@@ -344,6 +345,8 @@ func newError(format string, a ...interface{}) *object.Error {
 	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }
 
+// IsError returns true if the given RubyObject is an object.Error or an
+// object.Exception (or any subclass of object.Exception)
 func IsError(obj object.RubyObject) bool {
 	if obj != nil {
 		return obj.Type() == object.ERROR_OBJ || obj.Type() == object.EXCEPTION_OBJ

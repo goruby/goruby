@@ -40,7 +40,7 @@ func TestVariableExpression(t *testing.T) {
 			)
 		}
 
-		variable, ok := stmt.Expression.(*ast.Variable)
+		variable, ok := stmt.Expression.(*ast.VariableAssignment)
 
 		if !testIdentifier(t, variable.Name, tt.expectedIdentifier) {
 			return
@@ -1495,7 +1495,7 @@ func TestParsingIndexExpressions(t *testing.T) {
 }
 
 func testVariableExpression(t *testing.T, e ast.Expression, name string) bool {
-	variable, ok := e.(*ast.Variable)
+	variable, ok := e.(*ast.VariableAssignment)
 	if !ok {
 		t.Errorf("expression not *ast.Variable. got=%T", e)
 		return false

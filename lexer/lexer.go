@@ -13,8 +13,19 @@ const (
 	eof = -1
 )
 
-type LexerStateFn func(*Lexer) LexerStateFn
+// LexStartFn represents the entrypoint the Lexer uses to start processing the
+// input.
+var LexStartFn = startLexer
 
+// StateFn represents a function which is capable of lexing parts of the
+// input. It returns another StateFn to proceed with.
+//
+// Typically a state function would get called from LexStartFn and should
+// return LexStartFn to go back to the decision loop. It also could return
+// another non start state function if the partial input to parse is abiguous.
+type StateFn func(*Lexer) StateFn
+
+// New returns a Lexer instance ready to process the given input.
 func New(input string) *Lexer {
 	l := &Lexer{
 		input:  input,
@@ -24,24 +35,28 @@ func New(input string) *Lexer {
 	return l
 }
 
+// Lexer is the engine to process input and emit Tokens
 type Lexer struct {
 	input  string           // the string being scanned.
-	state  LexerStateFn     // the next lexing function to enter
+	state  StateFn          // the next lexing function to enter
 	pos    int              // current position in the input.
 	start  int              // start position of this item.
 	width  int              // width of last rune read from input.
 	tokens chan token.Token // channel of scanned tokens.
 }
 
+// NextToken will return the next token processed from the lexer.
+//
+// Callers should make sure to call Lexer.HasNext before calling this method
+// as it will panic if it is called after token.EOF is returned.
 func (l *Lexer) NextToken() token.Token {
 	for {
 		select {
 		case item, ok := <-l.tokens:
 			if ok {
 				return item
-			} else {
-				panic(fmt.Errorf("No items left"))
 			}
+			panic(fmt.Errorf("No items left"))
 		default:
 			l.state = l.state(l)
 			if l.state == nil {
@@ -49,7 +64,6 @@ func (l *Lexer) NextToken() token.Token {
 			}
 		}
 	}
-	panic("not reached")
 }
 
 // HasNext returns true if there are tokens left, false if EOF has reached
@@ -58,7 +72,7 @@ func (l *Lexer) HasNext() bool {
 }
 
 // emit passes a token back to the client.
-func (l *Lexer) emit(t token.TokenType) {
+func (l *Lexer) emit(t token.Type) {
 	l.tokens <- token.NewToken(t, l.input[l.start:l.pos], l.start)
 	l.start = l.pos
 }
@@ -96,12 +110,12 @@ func (l *Lexer) peek() rune {
 
 // error returns an error token and terminates the scan by passing
 // back a nil pointer that will be the next state, terminating l.run.
-func (l *Lexer) errorf(format string, args ...interface{}) LexerStateFn {
+func (l *Lexer) errorf(format string, args ...interface{}) StateFn {
 	l.tokens <- token.NewToken(token.ILLEGAL, fmt.Sprintf(format, args...), l.start)
 	return nil
 }
 
-func startLexer(l *Lexer) LexerStateFn {
+func startLexer(l *Lexer) StateFn {
 	r := l.next()
 	if isWhitespace(r) {
 		l.ignore()
@@ -135,7 +149,7 @@ func startLexer(l *Lexer) LexerStateFn {
 	case '!':
 		if l.peek() == '=' {
 			l.next()
-			l.emit(token.NOT_EQ)
+			l.emit(token.NOTEQ)
 		} else {
 			l.emit(token.BANG)
 		}
@@ -190,7 +204,7 @@ func startLexer(l *Lexer) LexerStateFn {
 	}
 }
 
-func lexIdentifier(l *Lexer) LexerStateFn {
+func lexIdentifier(l *Lexer) StateFn {
 	legalIdentifierCharacters := []byte{'?', '!'}
 	r := l.next()
 	for isLetter(r) || isDigit(r) || bytes.ContainsRune(legalIdentifierCharacters, r) {
@@ -202,7 +216,7 @@ func lexIdentifier(l *Lexer) LexerStateFn {
 	return startLexer
 }
 
-func lexDigit(l *Lexer) LexerStateFn {
+func lexDigit(l *Lexer) StateFn {
 	r := l.next()
 	for isDigit(r) {
 		r = l.next()
@@ -212,7 +226,7 @@ func lexDigit(l *Lexer) LexerStateFn {
 	return startLexer
 }
 
-func lexString(l *Lexer) LexerStateFn {
+func lexString(l *Lexer) StateFn {
 	l.ignore()
 	r := l.next()
 
@@ -226,7 +240,7 @@ func lexString(l *Lexer) LexerStateFn {
 	return startLexer
 }
 
-func lexSymbol(l *Lexer) LexerStateFn {
+func lexSymbol(l *Lexer) StateFn {
 	l.ignore()
 	r := l.next()
 

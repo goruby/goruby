@@ -2,17 +2,22 @@ package object
 
 import "strings"
 
-var ARRAY_CLASS RubyClassObject = NewClass("Array", OBJECT_CLASS, arrayMethods, arrayClassMethods)
+var arrayClass RubyClassObject = newClass("Array", objectClass, arrayMethods, arrayClassMethods)
 
 func init() {
-	classes.Set("Array", ARRAY_CLASS)
+	classes.Set("Array", arrayClass)
 }
 
+// An Array represents a Ruby Array
 type Array struct {
 	Elements []RubyObject
 }
 
-func (a *Array) Type() ObjectType { return ARRAY_OBJ }
+// Type returns the ObjectType of the array
+func (a *Array) Type() Type { return ARRAY_OBJ }
+
+// Inspect returns all elements within the array, divided by comma and
+// surrounded by brackets
 func (a *Array) Inspect() string {
 	elems := make([]string, len(a.Elements))
 	for i, elem := range a.Elements {
@@ -20,7 +25,9 @@ func (a *Array) Inspect() string {
 	}
 	return "[" + strings.Join(elems, ", ") + "]"
 }
-func (a *Array) Class() RubyClass { return ARRAY_CLASS }
+
+// Class returns the class of the Array
+func (a *Array) Class() RubyClass { return arrayClass }
 
 var arrayClassMethods = map[string]RubyMethod{}
 

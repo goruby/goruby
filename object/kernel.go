@@ -2,25 +2,22 @@ package object
 
 import "fmt"
 
-var KERNEL_MODULE *Module = newModule("Kernel", kernelMethodSet)
+var kernelModule *Module = newModule("Kernel", kernelMethodSet)
+var kernelFunctions = NewEnclosedEnvironment(classes)
 
 func init() {
-	classes.Set("Kernel", KERNEL_MODULE)
-}
-
-var kernelFunctions = &Environment{
-	store: map[string]RubyObject{
-		"puts": &Builtin{
-			Fn: func(args ...RubyObject) RubyObject {
-				out := ""
-				for _, arg := range args {
-					out += arg.Inspect()
-				}
-				fmt.Println(out)
-				return NIL
-			},
+	classes.Set("Kernel", kernelModule)
+	kernelFunctions.Set("puts", &Builtin{
+		Fn: func(args ...RubyObject) RubyObject {
+			out := ""
+			for _, arg := range args {
+				out += arg.Inspect()
+			}
+			fmt.Println(out)
+			return NIL
 		},
 	},
+	)
 }
 
 var kernelMethodSet = map[string]RubyMethod{

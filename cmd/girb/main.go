@@ -18,10 +18,10 @@ func main() {
 	}
 	fmt.Printf("Hello %s! This is the Ruby programming language in Go!\n", user.Username)
 	fmt.Printf("Feel free to type in commands\n")
-	Start(os.Stdin, os.Stdout)
+	start(os.Stdin, os.Stdout)
 }
 
-func Start(in io.Reader, out io.Writer) {
+func start(in io.Reader, out io.Writer) {
 	printChan := make(chan string)
 	sigChan := make(chan os.Signal, 4)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGHUP, os.Kill)

@@ -6,23 +6,23 @@ import (
 )
 
 var (
-	EXCEPTION_CLASS           RubyClassObject = NewClass("Exception", OBJECT_CLASS, exceptionMethods, exceptionClassMethods)
-	STANDARD_ERROR_CLASS      RubyClassObject = NewClass("StandardError", EXCEPTION_CLASS, nil, nil)
-	ZERO_DIVISION_ERROR_CLASS RubyClassObject = NewClass("ZeroDivisionError", STANDARD_ERROR_CLASS, nil, nil)
-	ARGUMENT_ERROR_CLASS      RubyClassObject = NewClass("ArgumentError", STANDARD_ERROR_CLASS, nil, nil)
-	NAME_ERROR_CLASS          RubyClassObject = NewClass("NameError", STANDARD_ERROR_CLASS, nil, nil)
-	NO_METHOD_ERROR_CLASS     RubyClassObject = NewClass("NoMethodError", NAME_ERROR_CLASS, nil, nil)
-	TYPE_ERROR_CLASS          RubyClassObject = NewClass("TypeError", STANDARD_ERROR_CLASS, nil, nil)
+	exceptionClass         RubyClassObject = newClass("Exception", objectClass, exceptionMethods, exceptionClassMethods)
+	standardErrorClass     RubyClassObject = newClass("StandardError", exceptionClass, nil, nil)
+	zeroDivisionErrorClass RubyClassObject = newClass("ZeroDivisionError", standardErrorClass, nil, nil)
+	argumentErrorClass     RubyClassObject = newClass("ArgumentError", standardErrorClass, nil, nil)
+	nameErrorClass         RubyClassObject = newClass("NameError", standardErrorClass, nil, nil)
+	noMethodErrorClass     RubyClassObject = newClass("NoMethodError", nameErrorClass, nil, nil)
+	typeErrorClass         RubyClassObject = newClass("TypeError", standardErrorClass, nil, nil)
 )
 
 func init() {
-	classes.Set("Exception", EXCEPTION_CLASS)
-	classes.Set("StandardError", STANDARD_ERROR_CLASS)
-	classes.Set("ZeroDivisionError", ZERO_DIVISION_ERROR_CLASS)
-	classes.Set("ArgumentError", ARGUMENT_ERROR_CLASS)
-	classes.Set("NameError", NAME_ERROR_CLASS)
-	classes.Set("NoMethodError", NO_METHOD_ERROR_CLASS)
-	classes.Set("TypeError", TYPE_ERROR_CLASS)
+	classes.Set("Exception", exceptionClass)
+	classes.Set("StandardError", standardErrorClass)
+	classes.Set("ZeroDivisionError", zeroDivisionErrorClass)
+	classes.Set("ArgumentError", argumentErrorClass)
+	classes.Set("NameError", nameErrorClass)
+	classes.Set("NoMethodError", noMethodErrorClass)
+	classes.Set("TypeError", typeErrorClass)
 }
 
 func formatException(exception RubyObject, message string) string {
@@ -33,9 +33,9 @@ type Exception struct {
 	Message string
 }
 
-func (e *Exception) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *Exception) Type() Type       { return EXCEPTION_OBJ }
 func (e *Exception) Inspect() string  { return formatException(e, e.Message) }
-func (e *Exception) Class() RubyClass { return EXCEPTION_CLASS }
+func (e *Exception) Class() RubyClass { return exceptionClass }
 
 var exceptionClassMethods = map[string]RubyMethod{}
 
@@ -49,9 +49,9 @@ type StandardError struct {
 	Message string
 }
 
-func (e *StandardError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *StandardError) Type() Type       { return EXCEPTION_OBJ }
 func (e *StandardError) Inspect() string  { return formatException(e, e.Message) }
-func (e *StandardError) Class() RubyClass { return STANDARD_ERROR_CLASS }
+func (e *StandardError) Class() RubyClass { return standardErrorClass }
 
 func NewZeroDivisionError() *ZeroDivisionError {
 	return &ZeroDivisionError{
@@ -63,9 +63,9 @@ type ZeroDivisionError struct {
 	Message string
 }
 
-func (e *ZeroDivisionError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *ZeroDivisionError) Type() Type       { return EXCEPTION_OBJ }
 func (e *ZeroDivisionError) Inspect() string  { return formatException(e, e.Message) }
-func (e *ZeroDivisionError) Class() RubyClass { return ZERO_DIVISION_ERROR_CLASS }
+func (e *ZeroDivisionError) Class() RubyClass { return zeroDivisionErrorClass }
 
 func NewWrongNumberOfArgumentsError(expected, actual int) *ArgumentError {
 	return &ArgumentError{
@@ -81,17 +81,17 @@ type ArgumentError struct {
 	Message string
 }
 
-func (e *ArgumentError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *ArgumentError) Type() Type       { return EXCEPTION_OBJ }
 func (e *ArgumentError) Inspect() string  { return formatException(e, e.Message) }
-func (e *ArgumentError) Class() RubyClass { return ARGUMENT_ERROR_CLASS }
+func (e *ArgumentError) Class() RubyClass { return argumentErrorClass }
 
 type NameError struct {
 	Message string
 }
 
-func (e *NameError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *NameError) Type() Type       { return EXCEPTION_OBJ }
 func (e *NameError) Inspect() string  { return formatException(e, e.Message) }
-func (e *NameError) Class() RubyClass { return NAME_ERROR_CLASS }
+func (e *NameError) Class() RubyClass { return nameErrorClass }
 
 func NewNoMethodError(context RubyObject, method string) *NoMethodError {
 	return &NoMethodError{
@@ -119,9 +119,9 @@ type NoMethodError struct {
 	Message string
 }
 
-func (e *NoMethodError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *NoMethodError) Type() Type       { return EXCEPTION_OBJ }
 func (e *NoMethodError) Inspect() string  { return formatException(e, e.Message) }
-func (e *NoMethodError) Class() RubyClass { return NO_METHOD_ERROR_CLASS }
+func (e *NoMethodError) Class() RubyClass { return noMethodErrorClass }
 
 func NewCoercionTypeError(expected, actual RubyObject) *TypeError {
 	return &TypeError{
@@ -147,6 +147,6 @@ type TypeError struct {
 	Message string
 }
 
-func (e *TypeError) Type() ObjectType { return EXCEPTION_OBJ }
+func (e *TypeError) Type() Type       { return EXCEPTION_OBJ }
 func (e *TypeError) Inspect() string  { return formatException(e, e.Message) }
-func (e *TypeError) Class() RubyClass { return TYPE_ERROR_CLASS }
+func (e *TypeError) Class() RubyClass { return typeErrorClass }

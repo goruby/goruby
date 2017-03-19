@@ -10,17 +10,20 @@ import (
 	"github.com/goruby/goruby/parser"
 )
 
+// Interpreter defines the methods of an interpreter
 type Interpreter interface {
 	Interpret(string) (object.RubyObject, error)
-	SetEnvironment(*object.Environment)
+	SetEnvironment(object.Environment)
 }
 
+// New returns an Interpreter ready to use and with the environment set to
+// object.NewMainEnvironment()
 func New() Interpreter {
 	return &interpreter{environment: object.NewMainEnvironment()}
 }
 
 type interpreter struct {
-	environment *object.Environment
+	environment object.Environment
 }
 
 func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
@@ -35,7 +38,7 @@ func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
 	return evaluated, nil
 }
 
-func (i *interpreter) SetEnvironment(env *object.Environment) {
+func (i *interpreter) SetEnvironment(env object.Environment) {
 	i.environment = env
 }
 

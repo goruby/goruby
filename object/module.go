@@ -1,14 +1,14 @@
 package object
 
-var MODULE_CLASS RubyClassObject = &Class{name: "Module", instanceMethods: moduleMethods}
+var moduleClass RubyClassObject = &class{name: "Module", instanceMethods: moduleMethods}
 
 func init() {
-	MODULE_CLASS.(*Class).superClass = OBJECT_CLASS
-	classes.Set("Module", MODULE_CLASS)
+	moduleClass.(*class).superClass = objectClass
+	classes.Set("Module", moduleClass)
 }
 
 func newModule(name string, methods map[string]RubyMethod) *Module {
-	return &Module{name, newEigenclass(MODULE_CLASS, methods)}
+	return &Module{name, newEigenclass(moduleClass, methods)}
 }
 
 type Module struct {
@@ -16,13 +16,13 @@ type Module struct {
 	class RubyClass
 }
 
-func (m *Module) Inspect() string  { return m.name }
-func (m *Module) Type() ObjectType { return MODULE_OBJ }
+func (m *Module) Inspect() string { return m.name }
+func (m *Module) Type() Type      { return MODULE_OBJ }
 func (m *Module) Class() RubyClass {
 	if m.class != nil {
 		return m.class
 	}
-	return MODULE_CLASS
+	return moduleClass
 }
 
 var moduleMethods = map[string]RubyMethod{

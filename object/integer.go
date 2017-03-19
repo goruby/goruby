@@ -2,7 +2,7 @@ package object
 
 import "fmt"
 
-var INTEGER_CLASS RubyClassObject = NewClass("Integer", OBJECT_CLASS, integerMethods, integerClassMethods)
+var INTEGER_CLASS RubyClassObject = newClass("Integer", objectClass, integerMethods, integerClassMethods)
 
 func init() {
 	classes.Set("Integer", INTEGER_CLASS)
@@ -17,7 +17,7 @@ type Integer struct {
 }
 
 func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
-func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
+func (i *Integer) Type() Type       { return INTEGER_OBJ }
 func (i *Integer) Class() RubyClass { return INTEGER_CLASS }
 
 var integerClassMethods = map[string]RubyMethod{}

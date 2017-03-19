@@ -1,20 +1,26 @@
 package object
 
-var BASIC_OBJECT_CLASS RubyClassObject = NewClass("BasicObject", nil, basicObjectMethods, basicObjectClassMethods)
+var basicObjectClass RubyClassObject = newClass("BasicObject", nil, basicObjectMethods, basicObjectClassMethods)
 
 func init() {
-	classes.Set("BasicObject", BASIC_OBJECT_CLASS)
+	classes.Set("BasicObject", basicObjectClass)
 }
 
-type BasicObject struct{}
+// basicObject represents a basicObject object in Ruby
+type basicObject struct{}
 
-func (b *BasicObject) Inspect() string  { return "" }
-func (b *BasicObject) Type() ObjectType { return BASIC_OBJECT_OBJ }
-func (b *BasicObject) Class() RubyClass { return BASIC_OBJECT_CLASS }
+// Inspect returns empty string. BasicObjects do not have an `inspect` method.
+func (b *basicObject) Inspect() string { return "" }
+
+// Type returns the ObjectType of the array
+func (b *basicObject) Type() Type { return BASIC_OBJECT_OBJ }
+
+// Class returns the class of BasicObject
+func (b *basicObject) Class() RubyClass { return basicObjectClass }
 
 var basicObjectClassMethods = map[string]RubyMethod{
 	"new": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
-		return &BasicObject{}
+		return &basicObject{}
 	}),
 }
 

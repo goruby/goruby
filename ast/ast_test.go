@@ -10,7 +10,7 @@ func TestString(t *testing.T) {
 	program := &Program{
 		Statements: []Statement{
 			&ExpressionStatement{
-				Expression: &Variable{
+				Expression: &VariableAssignment{
 					Name: &Identifier{
 						Token: token.Token{Type: token.IDENT, Literal: "myVar"},
 						Value: "myVar",

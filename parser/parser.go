@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Possible precendece values
 const (
 	_ int = iota
 	LOWEST
@@ -24,9 +25,9 @@ const (
 	INDEX       // array[index]
 )
 
-var precedences = map[token.TokenType]int{
+var precedences = map[token.Type]int{
 	token.EQ:       EQUALS,
-	token.NOT_EQ:   EQUALS,
+	token.NOTEQ:    EQUALS,
 	token.LT:       LESSGREATER,
 	token.GT:       LESSGREATER,
 	token.PLUS:     SUM,
@@ -48,11 +49,12 @@ type (
 	infixParseFn  func(ast.Expression) ast.Expression
 )
 
-var defaultExpressionTerminators = []token.TokenType{
+var defaultExpressionTerminators = []token.Type{
 	token.SEMICOLON,
 	token.NEWLINE,
 }
 
+// New returns a Parser ready to use the tokens emitted by l
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:      l,
@@ -62,7 +64,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken()
 	p.nextToken()
 
-	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	p.prefixParseFns = make(map[token.Type]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
@@ -77,13 +79,13 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.NIL, p.parseNilLiteral)
 
-	p.infixParseFns = make(map[token.TokenType]infixParseFn)
+	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
 	p.registerInfix(token.EQ, p.parseInfixExpression)
-	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
+	p.registerInfix(token.NOTEQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpressionWithParens)
@@ -98,6 +100,8 @@ func New(l *lexer.Lexer) *Parser {
 	return p
 }
 
+// A Parser parses the token emitted by the provided lexer.Lexer and returns an
+// AST describing the parsed program.
 type Parser struct {
 	l      *lexer.Lexer
 	errors []error
@@ -105,15 +109,15 @@ type Parser struct {
 	curToken  token.Token
 	peekToken token.Token
 
-	prefixParseFns map[token.TokenType]prefixParseFn
-	infixParseFns  map[token.TokenType]infixParseFn
+	prefixParseFns map[token.Type]prefixParseFn
+	infixParseFns  map[token.Type]infixParseFn
 }
 
-func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+func (p *Parser) registerPrefix(tokenType token.Type, fn prefixParseFn) {
 	p.prefixParseFns[tokenType] = fn
 }
 
-func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+func (p *Parser) registerInfix(tokenType token.Type, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
@@ -122,11 +126,12 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.l.NextToken()
 }
 
+// Errors returns all errors which happened during the parsing of the input.
 func (p *Parser) Errors() []error {
 	return p.errors
 }
 
-func (p *Parser) peekError(t ...token.TokenType) {
+func (p *Parser) peekError(t ...token.Type) {
 	err := &unexpectedTokenError{
 		expectedTokens: t,
 		actualToken:    p.peekToken.Type,
@@ -134,6 +139,10 @@ func (p *Parser) peekError(t ...token.TokenType) {
 	p.errors = append(p.errors, err)
 }
 
+// ParseProgram returns the parsed program AST and all errors which occured
+// during the parse process. If the error is not nil the AST may be incomplete
+// and callers should always check if they can handle the error with providing
+// more input by checking with e.g. IsEOFError.
 func (p *Parser) ParseProgram() (*ast.Program, error) {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
@@ -145,7 +154,7 @@ func (p *Parser) ParseProgram() (*ast.Program, error) {
 		p.nextToken()
 	}
 	if len(p.errors) != 0 {
-		return program, NewErrors("Parsing errors", p.Errors()...)
+		return program, NewErrors("Parsing errors", p.errors...)
 	}
 	return program, nil
 }
@@ -154,7 +163,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.EOF:
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.NEWLINE},
+			expectedTokens: []token.Type{token.NEWLINE},
 			actualToken:    token.EOF,
 		}
 		p.errors = append(p.errors, err)
@@ -195,7 +204,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return stmt
 }
 
-func (p *Parser) noPrefixParseFnError(t token.TokenType) {
+func (p *Parser) noPrefixParseFnError(t token.Type) {
 	msg := fmt.Errorf("no prefix parse function for type %s found", t)
 	p.errors = append(p.errors, msg)
 }
@@ -225,7 +234,7 @@ func (p *Parser) parseVariableAssignExpression(variable ast.Expression) ast.Expr
 		p.errors = append(p.errors, msg)
 		return nil
 	}
-	variableExp := &ast.Variable{
+	variableExp := &ast.VariableAssignment{
 		Name: ident,
 	}
 	p.nextToken()
@@ -332,7 +341,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		)
 		err := errors.Wrap(
 			&unexpectedTokenError{
-				expectedTokens: []token.TokenType{token.NEWLINE, token.SEMICOLON},
+				expectedTokens: []token.Type{token.NEWLINE, token.SEMICOLON},
 				actualToken:    p.peekToken.Type,
 			},
 			msg,
@@ -407,9 +416,9 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	return identifiers
 }
 
-func (p *Parser) parseBlockStatement(t ...token.TokenType) *ast.BlockStatement {
+func (p *Parser) parseBlockStatement(t ...token.Type) *ast.BlockStatement {
 	terminatorTokens := append(
-		[]token.TokenType{
+		[]token.Type{
 			token.END,
 			token.EOF,
 		},
@@ -489,7 +498,7 @@ func (p *Parser) parseCallExpressionWithParens(function ast.Expression) ast.Expr
 	return exp
 }
 
-func (p *Parser) parseExpressionList(end ...token.TokenType) []ast.Expression {
+func (p *Parser) parseExpressionList(end ...token.Type) []ast.Expression {
 	list := []ast.Expression{}
 	if p.currentTokenOneOf(end...) {
 		return list
@@ -523,7 +532,7 @@ func (p *Parser) curPrecedence() int {
 	return LOWEST
 }
 
-func (p *Parser) currentTokenOneOf(types ...token.TokenType) bool {
+func (p *Parser) currentTokenOneOf(types ...token.Type) bool {
 	for _, typ := range types {
 		if p.curToken.Type == typ {
 			return true
@@ -532,11 +541,11 @@ func (p *Parser) currentTokenOneOf(types ...token.TokenType) bool {
 	return false
 }
 
-func (p *Parser) currentTokenIs(t token.TokenType) bool {
+func (p *Parser) currentTokenIs(t token.Type) bool {
 	return p.curToken.Type == t
 }
 
-func (p *Parser) peekTokenOneOf(types ...token.TokenType) bool {
+func (p *Parser) peekTokenOneOf(types ...token.Type) bool {
 	for _, typ := range types {
 		if p.peekToken.Type == typ {
 			return true
@@ -545,37 +554,37 @@ func (p *Parser) peekTokenOneOf(types ...token.TokenType) bool {
 	return false
 }
 
-func (p *Parser) peekTokenIs(t token.TokenType) bool {
+func (p *Parser) peekTokenIs(t token.Type) bool {
 	return p.peekToken.Type == t
 }
 
 // accept moves to the next Token
 // if it's from the valid set.
-func (p *Parser) accept(t token.TokenType) bool {
+func (p *Parser) accept(t token.Type) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
 		return true
-	} else {
-		p.peekError(t)
-		return false
 	}
+
+	p.peekError(t)
+	return false
 }
 
 // acceptOneOf moves to the next Token
 // if it's from the valid set.
-func (p *Parser) acceptOneOf(t ...token.TokenType) bool {
+func (p *Parser) acceptOneOf(t ...token.Type) bool {
 	if p.peekTokenOneOf(t...) {
 		p.nextToken()
 		return true
-	} else {
-		p.peekError(t...)
-		return false
 	}
+
+	p.peekError(t...)
+	return false
 }
 
 // consume consumes the next token
 // if it's from the valid set.
-func (p *Parser) consume(t token.TokenType) bool {
+func (p *Parser) consume(t token.Type) bool {
 	isRightToken := p.accept(t)
 	if isRightToken {
 		p.nextToken()

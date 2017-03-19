@@ -1,9 +1,9 @@
 package object
 
-var SYMBOL_CLASS RubyClassObject = NewClass("Symbol", OBJECT_CLASS, symbolMethods, symbolClassMethods)
+var symbolClass RubyClassObject = newClass("Symbol", objectClass, symbolMethods, symbolClassMethods)
 
 func init() {
-	classes.Set("Symbol", SYMBOL_CLASS)
+	classes.Set("Symbol", symbolClass)
 }
 
 type Symbol struct {
@@ -11,8 +11,8 @@ type Symbol struct {
 }
 
 func (s *Symbol) Inspect() string  { return ":" + s.Value }
-func (s *Symbol) Type() ObjectType { return SYMBOL_OBJ }
-func (s *Symbol) Class() RubyClass { return SYMBOL_CLASS }
+func (s *Symbol) Type() Type       { return SYMBOL_OBJ }
+func (s *Symbol) Class() RubyClass { return symbolClass }
 
 var symbolClassMethods = map[string]RubyMethod{}
 

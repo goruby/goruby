@@ -2,18 +2,20 @@ package token
 
 //go:generate stringer -type=TokenType
 
+// Recognized token types
 const (
-	ILLEGAL TokenType = iota
-	EOF
+	ILLEGAL Type = iota // An illegal/unknown character
+	EOF                 // end of input
 
-	NEWLINE // \n
 	// Identifier + literals
+
 	IDENT
 	INT
 	STRING
 	SYMBOL // :symbol
 
 	// Operators
+
 	ASSIGN   // =
 	PLUS     // +
 	MINUS    // -
@@ -21,12 +23,14 @@ const (
 	ASTERISK // *
 	SLASH    // /
 
-	LT     // <
-	GT     // >
-	EQ     // ==
-	NOT_EQ // !=
+	LT    // <
+	GT    // >
+	EQ    // ==
+	NOTEQ // !=
 
 	// Delimiters
+
+	NEWLINE // \n
 	COMMA
 	SEMICOLON
 
@@ -40,6 +44,7 @@ const (
 	RBRACKET // ]
 
 	// Keywords
+
 	DEF
 	END
 	IF
@@ -51,7 +56,7 @@ const (
 	NIL
 )
 
-var keywords = map[string]TokenType{
+var keywords = map[string]Type{
 	"def":    DEF,
 	"end":    END,
 	"if":     IF,
@@ -63,21 +68,27 @@ var keywords = map[string]TokenType{
 	"return": RETURN,
 }
 
-func LookupIdent(ident string) TokenType {
+// LookupIdent returns a keyword TokenType if ident is a keyword or IDENT
+// otherwise
+func LookupIdent(ident string) Type {
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}
 	return IDENT
 }
 
-type TokenType int
+// A Type represents a type of a known token
+type Type int
 
-func NewToken(typ TokenType, literal string, pos int) Token {
+// NewToken returns a new Token associated with the given Type typ, the Literal
+// literal and the Position pos
+func NewToken(typ Type, literal string, pos int) Token {
 	return Token{typ, literal, pos}
 }
 
+// A Token represents a known token with its literal representation
 type Token struct {
-	Type    TokenType
+	Type    Type
 	Literal string
 	Pos     int
 }

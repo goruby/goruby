@@ -2,6 +2,7 @@ package object
 
 type visibility int
 
+// MethodVisibility represents the visibility of a method
 type MethodVisibility visibility
 
 const (
@@ -10,6 +11,7 @@ const (
 	PRIVATE_METHOD
 )
 
+// RubyMethod defines a Ruby method
 type RubyMethod interface {
 	Call(context RubyObject, args ...RubyObject) RubyObject
 	Visibility() MethodVisibility
