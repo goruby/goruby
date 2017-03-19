@@ -11,7 +11,7 @@ import (
 )
 
 type Interpreter interface {
-	Interpret(string) (object.Object, error)
+	Interpret(string) (object.RubyObject, error)
 	SetEnvironment(*object.Environment)
 }
 
@@ -23,7 +23,7 @@ type interpreter struct {
 	environment *object.Environment
 }
 
-func (i *interpreter) Interpret(input string) (object.Object, error) {
+func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
 	node, err := i.parse(input)
 	if err != nil {
 		return nil, err

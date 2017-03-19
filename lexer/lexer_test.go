@@ -31,6 +31,14 @@ end
 "foo bar"
 :sym
 .
+
+def nil?
+end
+
+def run!
+end
+[1, 2]
+nil
 `
 
 	tests := []struct {
@@ -117,6 +125,26 @@ end
 		{token.SYMBOL, "sym"},
 		{token.NEWLINE, "\n"},
 		{token.DOT, "."},
+		{token.NEWLINE, "\n"},
+		{token.NEWLINE, "\n"},
+		{token.DEF, "def"},
+		{token.IDENT, "nil?"},
+		{token.NEWLINE, "\n"},
+		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.NEWLINE, "\n"},
+		{token.DEF, "def"},
+		{token.IDENT, "run!"},
+		{token.NEWLINE, "\n"},
+		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.LBRACKET, "["},
+		{token.INT, "1"},
+		{token.COMMA, ","},
+		{token.INT, "2"},
+		{token.RBRACKET, "]"},
+		{token.NEWLINE, "\n"},
+		{token.NIL, "nil"},
 		{token.NEWLINE, "\n"},
 		{token.EOF, ""},
 	}
