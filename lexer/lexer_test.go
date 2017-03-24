@@ -39,6 +39,7 @@ def run!
 end
 [1, 2]
 nil
+require
 `
 
 	tests := []struct {
@@ -145,6 +146,8 @@ nil
 		{token.RBRACKET, "]"},
 		{token.NEWLINE, "\n"},
 		{token.NIL, "nil"},
+		{token.NEWLINE, "\n"},
+		{token.REQUIRE, "require"},
 		{token.NEWLINE, "\n"},
 		{token.EOF, ""},
 	}
