@@ -30,7 +30,10 @@ type Environment interface {
 	// Set sets the RubyObject for the given key. If there is already an
 	// object with that key it will be overridden by object
 	Set(key string, object RubyObject) RubyObject
-	// Enclose(outer Environment) Environment
+	// SetGlobal sets val under name at the root of the environment
+	SetGlobal(name string, val RubyObject) RubyObject
+	// Outer returns the parent environment
+	Outer() Environment
 }
 
 type environment struct {
@@ -53,6 +56,21 @@ func (e *environment) Get(name string) (RubyObject, bool) {
 func (e *environment) Set(name string, val RubyObject) RubyObject {
 	e.store[name] = val
 	return val
+}
+
+// SetGlobal sets val under name at the root of the environment
+func (e *environment) SetGlobal(name string, val RubyObject) RubyObject {
+	var env Environment = e
+	for env.Outer() != nil {
+		env = env.Outer()
+	}
+	env.Set(name, val)
+	return val
+}
+
+// Outer returns the parent environment
+func (e *environment) Outer() Environment {
+	return e.outer
 }
 
 // Enclose encloses the environment and returns a new one wrapped by outer
