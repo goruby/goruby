@@ -11,13 +11,19 @@ func newModule(name string, methods map[string]RubyMethod) *Module {
 	return &Module{name, newEigenclass(moduleClass, methods)}
 }
 
+// Module represents a module in Ruby
 type Module struct {
 	name  string
 	class RubyClass
 }
 
+// Inspect returns the name of the module
 func (m *Module) Inspect() string { return m.name }
-func (m *Module) Type() Type      { return MODULE_OBJ }
+
+// Type returns MODULE_OBJ
+func (m *Module) Type() Type { return MODULE_OBJ }
+
+// Class returns the set class or moduleClass
 func (m *Module) Class() RubyClass {
 	if m.class != nil {
 		return m.class

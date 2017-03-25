@@ -194,7 +194,7 @@ func TestKernelClass(t *testing.T) {
 			t.Fail()
 		}
 
-		expected := INTEGER_CLASS
+		expected := integerClass
 
 		if !reflect.DeepEqual(expected, cl) {
 			t.Logf("Expected class to equal %+#v, got %+#v", expected, cl)

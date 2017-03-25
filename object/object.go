@@ -6,10 +6,16 @@ func init() {
 	classes.Set("Object", objectClass)
 }
 
+// Object represents an Object in Ruby
 type Object struct{}
 
-func (o *Object) Inspect() string  { return "" }
-func (o *Object) Type() Type       { return OBJECT_OBJ }
+// Inspect return ""
+func (o *Object) Inspect() string { return "" }
+
+// Type returns OBJECT_OBJ
+func (o *Object) Type() Type { return OBJECT_OBJ }
+
+// Class returns objectClass
 func (o *Object) Class() RubyClass { return objectClass }
 
 var objectClassMethods = map[string]RubyMethod{}

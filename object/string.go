@@ -6,12 +6,18 @@ func init() {
 	classes.Set("String", stringClass)
 }
 
+// String represents a string in Ruby
 type String struct {
 	Value string
 }
 
-func (s *String) Inspect() string  { return s.Value }
-func (s *String) Type() Type       { return STRING_OBJ }
+// Inspect returns the Value
+func (s *String) Inspect() string { return s.Value }
+
+// Type returns STRING_OBJ
+func (s *String) Type() Type { return STRING_OBJ }
+
+// Class returns stringClass
 func (s *String) Class() RubyClass { return stringClass }
 
 var stringClassMethods = map[string]RubyMethod{
