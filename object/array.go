@@ -8,6 +8,15 @@ func init() {
 	classes.Set("Array", arrayClass)
 }
 
+// NewArray returns a new array populated with elements.
+func NewArray(elements ...RubyObject) *Array {
+	arr := &Array{Elements: make([]RubyObject, len(elements))}
+	for i, elem := range elements {
+		arr.Elements[i] = elem
+	}
+	return arr
+}
+
 // An Array represents a Ruby Array
 type Array struct {
 	Elements []RubyObject
