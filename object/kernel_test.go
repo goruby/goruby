@@ -13,7 +13,7 @@ func TestKernelMethods(t *testing.T) {
 			"bar": publicMethod(nil),
 		}
 		context := &testRubyObject{
-			class: &Class{
+			class: &class{
 				instanceMethods: contextMethods,
 				superClass:      nil,
 			},
@@ -67,9 +67,9 @@ func TestKernelMethods(t *testing.T) {
 			"bar": publicMethod(nil),
 		}
 		context := &testRubyObject{
-			class: &Class{
+			class: &class{
 				instanceMethods: contextMethods,
-				superClass: &Class{
+				superClass: &class{
 					instanceMethods: superClassMethods,
 					superClass:      nil,
 				},
@@ -121,7 +121,7 @@ func TestKernelMethods(t *testing.T) {
 			"private_foo": privateMethod(nil),
 		}
 		context := &testRubyObject{
-			class: &Class{
+			class: &class{
 				instanceMethods: contextMethods,
 				superClass:      nil,
 			},
@@ -188,13 +188,13 @@ func TestKernelClass(t *testing.T) {
 
 		result := kernelClass(context)
 
-		cl, ok := result.(*Class)
+		cl, ok := result.(*class)
 		if !ok {
 			t.Logf("Expected Class, got %T", result)
 			t.Fail()
 		}
 
-		expected := INTEGER_CLASS
+		expected := integerClass
 
 		if !reflect.DeepEqual(expected, cl) {
 			t.Logf("Expected class to equal %+#v, got %+#v", expected, cl)
@@ -202,17 +202,17 @@ func TestKernelClass(t *testing.T) {
 		}
 	})
 	t.Run("class object", func(t *testing.T) {
-		context := STRING_CLASS
+		context := stringClass
 
 		result := kernelClass(context)
 
-		cl, ok := result.(*Class)
+		cl, ok := result.(*class)
 		if !ok {
 			t.Logf("Expected Class, got %T", result)
 			t.Fail()
 		}
 
-		expected := CLASS_CLASS
+		expected := classClass
 
 		if !reflect.DeepEqual(expected, cl) {
 			t.Logf("Expected class to equal %+#v, got %+#v", expected, cl)
@@ -220,17 +220,17 @@ func TestKernelClass(t *testing.T) {
 		}
 	})
 	t.Run("class class", func(t *testing.T) {
-		context := CLASS_CLASS
+		context := classClass
 
 		result := kernelClass(context)
 
-		cl, ok := result.(*Class)
+		cl, ok := result.(*class)
 		if !ok {
 			t.Logf("Expected Class, got %T", result)
 			t.Fail()
 		}
 
-		expected := CLASS_CLASS
+		expected := classClass
 
 		if !reflect.DeepEqual(expected, cl) {
 			t.Logf("Expected class to equal %+#v, got %+#v", expected, cl)

@@ -1,18 +1,24 @@
 package object
 
-var STRING_CLASS RubyClassObject = NewClass("String", OBJECT_CLASS, stringMethods, stringClassMethods)
+var stringClass RubyClassObject = newClass("String", objectClass, stringMethods, stringClassMethods)
 
 func init() {
-	classes.Set("String", STRING_CLASS)
+	classes.Set("String", stringClass)
 }
 
+// String represents a string in Ruby
 type String struct {
 	Value string
 }
 
-func (s *String) Inspect() string  { return s.Value }
-func (s *String) Type() ObjectType { return STRING_OBJ }
-func (s *String) Class() RubyClass { return STRING_CLASS }
+// Inspect returns the Value
+func (s *String) Inspect() string { return s.Value }
+
+// Type returns STRING_OBJ
+func (s *String) Type() Type { return STRING_OBJ }
+
+// Class returns stringClass
+func (s *String) Class() RubyClass { return stringClass }
 
 var stringClassMethods = map[string]RubyMethod{
 	"new": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {

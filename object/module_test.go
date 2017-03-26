@@ -8,7 +8,7 @@ import (
 
 func TestModuleAncestors(t *testing.T) {
 	t.Run("class extending from BasicObject", func(t *testing.T) {
-		context := &Class{name: "BasicObjectAsParent", superClass: BASIC_OBJECT_CLASS}
+		context := &class{name: "BasicObjectAsParent", superClass: basicObjectClass}
 
 		result := moduleAncestors(context)
 
@@ -37,11 +37,11 @@ func TestModuleAncestors(t *testing.T) {
 			expectedAncestors []string
 		}{
 			{
-				BASIC_OBJECT_CLASS,
+				basicObjectClass,
 				[]string{"BasicObject"},
 			},
 			{
-				OBJECT_CLASS,
+				objectClass,
 				[]string{"Object", "Kernel", "BasicObject"},
 			},
 		}
@@ -78,8 +78,8 @@ func TestModuleAncestors(t *testing.T) {
 }
 
 func TestModuleIncludedModules(t *testing.T) {
-	context := &Class{
-		superClass: mixin(BASIC_OBJECT_CLASS, KERNEL_MODULE),
+	context := &class{
+		superClass: mixin(basicObjectClass, kernelModule),
 	}
 
 	result := moduleIncludedModules(context)

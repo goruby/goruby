@@ -487,7 +487,7 @@ func testNilObject(t *testing.T, obj object.RubyObject) bool {
 	return true
 }
 
-func testEval(input string, context ...*object.Environment) object.RubyObject {
+func testEval(input string, context ...object.Environment) object.RubyObject {
 	env := object.NewEnvironment()
 	for _, e := range context {
 		env = object.NewEnclosedEnvironment(e)
@@ -513,7 +513,7 @@ func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool 
 	}
 	if result.Value != expected {
 		t.Errorf(
-			"object has wrong value. got=%d, want=%d",
+			"object has wrong value. got=%t, want=%t",
 			result.Value,
 			expected,
 		)

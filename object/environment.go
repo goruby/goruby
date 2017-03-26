@@ -1,31 +1,46 @@
 package object
 
-var classes = &Environment{
-	store: map[string]RubyObject{},
+var classes = NewEnvironment()
+
+// NewMainEnvironment returns a new Environment populated with all Ruby classes
+// and the Kernel functions
+func NewMainEnvironment() Environment {
+	return kernelFunctions
 }
 
-func NewMainEnvironment() *Environment {
-	kernelFunctions.outer = classes
-	return NewEnclosedEnvironment(kernelFunctions)
-}
-
-func NewEnclosedEnvironment(outer *Environment) *Environment {
-	env := NewEnvironment()
+// NewEnclosedEnvironment returns an Environment wrapped by outer
+func NewEnclosedEnvironment(outer Environment) Environment {
+	s := make(map[string]RubyObject)
+	env := &environment{store: s, outer: nil}
 	env.outer = outer
 	return env
 }
 
-func NewEnvironment() *Environment {
+// NewEnvironment returns a new Environment ready to use
+func NewEnvironment() Environment {
 	s := make(map[string]RubyObject)
-	return &Environment{store: s, outer: nil}
+	return &environment{store: s, outer: nil}
 }
 
-type Environment struct {
+// Environment holds Ruby object referenced by strings
+type Environment interface {
+	// Get returns the RubyObject found for this key. If it is not found,
+	// ok  will be false
+	Get(key string) (object RubyObject, ok bool)
+	// Set sets the RubyObject for the given key. If there is already an
+	// object with that key it will be overridden by object
+	Set(key string, object RubyObject) RubyObject
+	// Enclose(outer Environment) Environment
+}
+
+type environment struct {
 	store map[string]RubyObject
-	outer *Environment
+	outer Environment
 }
 
-func (e *Environment) Get(name string) (RubyObject, bool) {
+// Get returns the RubyObject found for this key. If it is not found,
+// ok  will be false
+func (e *environment) Get(name string) (RubyObject, bool) {
 	obj, ok := e.store[name]
 	if !ok && e.outer != nil {
 		obj, ok = e.outer.Get(name)
@@ -33,19 +48,23 @@ func (e *Environment) Get(name string) (RubyObject, bool) {
 	return obj, ok
 }
 
-func (e *Environment) Set(name string, val RubyObject) RubyObject {
+// Set sets the RubyObject for the given key. If there is already an
+// object with that key it will be overridden by object
+func (e *environment) Set(name string, val RubyObject) RubyObject {
 	e.store[name] = val
 	return val
 }
 
-func (e *Environment) Enclose(outer *Environment) *Environment {
-	env := e.Clone()
+// Enclose encloses the environment and returns a new one wrapped by outer
+func (e *environment) Enclose(outer Environment) Environment {
+	env := e.clone()
 	env.outer = outer
 	return env
 }
 
-func (e *Environment) Clone() *Environment {
-	env := NewEnvironment()
+func (e *environment) clone() *environment {
+	s := make(map[string]RubyObject)
+	env := &environment{store: s, outer: nil}
 	for k, v := range e.store {
 		env.store[k] = v
 	}

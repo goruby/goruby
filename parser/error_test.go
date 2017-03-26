@@ -10,7 +10,7 @@ import (
 func TestIsEOF(t *testing.T) {
 	t.Run("Errors with unexpected token EOF", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.EOF,
 		}
 
@@ -23,7 +23,7 @@ func TestIsEOF(t *testing.T) {
 	})
 	t.Run("Errors with unexpected token not EOF", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.NEWLINE,
 		}
 
@@ -36,7 +36,7 @@ func TestIsEOF(t *testing.T) {
 	})
 	t.Run("unexpected token EOF", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.EOF,
 		}
 
@@ -49,7 +49,7 @@ func TestIsEOF(t *testing.T) {
 	})
 	t.Run("unexpected token not EOF", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.NEWLINE,
 		}
 
@@ -62,7 +62,7 @@ func TestIsEOF(t *testing.T) {
 	})
 	t.Run("unexpected token EOF wrapped error", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.EOF,
 		}
 		wrapped := errors.Wrap(err, "some error")
@@ -76,7 +76,7 @@ func TestIsEOF(t *testing.T) {
 	})
 	t.Run("unexpected token not EOF wrapped error", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.NEWLINE,
 		}
 		wrapped := errors.Wrap(err, "some error")
@@ -103,7 +103,7 @@ func TestIsEOF(t *testing.T) {
 func TestIsEOFInsteadOfNewline(t *testing.T) {
 	t.Run("Errors with unexpected token EOF, expected token NEWLINE", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.NEWLINE},
+			expectedTokens: []token.Type{token.NEWLINE},
 			actualToken:    token.EOF,
 		}
 
@@ -116,7 +116,7 @@ func TestIsEOFInsteadOfNewline(t *testing.T) {
 	})
 	t.Run("unexpected token EOF, expected token NEWLINE", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.NEWLINE},
+			expectedTokens: []token.Type{token.NEWLINE},
 			actualToken:    token.EOF,
 		}
 
@@ -129,7 +129,7 @@ func TestIsEOFInsteadOfNewline(t *testing.T) {
 	})
 	t.Run("Errors with unexpected token not EOF", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.NEWLINE,
 		}
 
@@ -142,7 +142,7 @@ func TestIsEOFInsteadOfNewline(t *testing.T) {
 	})
 	t.Run("unexpected token not EOF", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.NEWLINE,
 		}
 
@@ -155,7 +155,7 @@ func TestIsEOFInsteadOfNewline(t *testing.T) {
 	})
 	t.Run("unexpected token EOF expected NEWLINE wrapped error", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.NEWLINE},
+			expectedTokens: []token.Type{token.NEWLINE},
 			actualToken:    token.EOF,
 		}
 		wrapped := errors.Wrap(err, "some error")
@@ -169,7 +169,7 @@ func TestIsEOFInsteadOfNewline(t *testing.T) {
 	})
 	t.Run("unexpected token EOF expected not NEWLINE wrapped error", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.EOF,
 		}
 		wrapped := errors.Wrap(err, "some error")
@@ -183,7 +183,7 @@ func TestIsEOFInsteadOfNewline(t *testing.T) {
 	})
 	t.Run("unexpected token not EOF wrapped error", func(t *testing.T) {
 		err := &unexpectedTokenError{
-			expectedTokens: []token.TokenType{token.IDENT},
+			expectedTokens: []token.Type{token.IDENT},
 			actualToken:    token.NEWLINE,
 		}
 		wrapped := errors.Wrap(err, "some error")

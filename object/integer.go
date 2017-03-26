@@ -2,23 +2,30 @@ package object
 
 import "fmt"
 
-var INTEGER_CLASS RubyClassObject = NewClass("Integer", OBJECT_CLASS, integerMethods, integerClassMethods)
+var integerClass RubyClassObject = newClass("Integer", objectClass, integerMethods, integerClassMethods)
 
 func init() {
-	classes.Set("Integer", INTEGER_CLASS)
+	classes.Set("Integer", integerClass)
 }
 
+// NewInteger returns a new Integer with the given value
 func NewInteger(value int64) *Integer {
 	return &Integer{Value: value}
 }
 
+// Integer represents an integer in Ruby
 type Integer struct {
 	Value int64
 }
 
-func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
-func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
-func (i *Integer) Class() RubyClass { return INTEGER_CLASS }
+// Inspect returns the value as string
+func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
+
+// Type returns INTEGER_OBJ
+func (i *Integer) Type() Type { return INTEGER_OBJ }
+
+// Class returns integerClass
+func (i *Integer) Class() RubyClass { return integerClass }
 
 var integerClassMethods = map[string]RubyMethod{}
 

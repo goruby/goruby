@@ -1,16 +1,22 @@
 package object
 
-var OBJECT_CLASS RubyClassObject = mixin(NewClass("Object", BASIC_OBJECT_CLASS, objectMethods, objectClassMethods), KERNEL_MODULE)
+var objectClass = mixin(newClass("Object", basicObjectClass, objectMethods, objectClassMethods), kernelModule)
 
 func init() {
-	classes.Set("Object", OBJECT_CLASS)
+	classes.Set("Object", objectClass)
 }
 
+// Object represents an Object in Ruby
 type Object struct{}
 
-func (o *Object) Inspect() string  { return "" }
-func (o *Object) Type() ObjectType { return OBJECT_OBJ }
-func (o *Object) Class() RubyClass { return OBJECT_CLASS }
+// Inspect return ""
+func (o *Object) Inspect() string { return "" }
+
+// Type returns OBJECT_OBJ
+func (o *Object) Type() Type { return OBJECT_OBJ }
+
+// Class returns objectClass
+func (o *Object) Class() RubyClass { return objectClass }
 
 var objectClassMethods = map[string]RubyMethod{}
 

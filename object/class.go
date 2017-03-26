@@ -2,41 +2,43 @@ package object
 
 import "fmt"
 
-var CLASS_CLASS RubyClassObject = &Class{name: "Class", superClass: MODULE_CLASS, instanceMethods: classMethods}
+var classClass RubyClassObject = &class{name: "Class", superClass: moduleClass, instanceMethods: classMethods}
 
 func init() {
-	CLASS_CLASS.(*Class).class = CLASS_CLASS
-	classes.Set("Class", CLASS_CLASS)
+	classClass.(*class).class = classClass
+	classes.Set("Class", classClass)
 }
 
-func NewClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod) RubyClassObject {
-	return &Class{name: name, superClass: superClass, instanceMethods: instanceMethods, class: newEigenclass(CLASS_CLASS, classMethods)}
+// newClass returns a new Ruby Class
+func newClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod) *class {
+	return &class{name: name, superClass: superClass, instanceMethods: instanceMethods, class: newEigenclass(classClass, classMethods)}
 }
 
-type Class struct {
+// class represents a Ruby Class object
+type class struct {
 	name            string
 	superClass      RubyClass
 	class           RubyClass
 	instanceMethods map[string]RubyMethod
 }
 
-func (c *Class) Inspect() string {
+func (c *class) Inspect() string {
 	if c.name != "" {
 		return c.name
 	}
 	return fmt.Sprintf("#<Class:%p>", c)
 }
-func (c *Class) Type() ObjectType { return CLASS_OBJ }
-func (c *Class) Class() RubyClass {
+func (c *class) Type() Type { return CLASS_OBJ }
+func (c *class) Class() RubyClass {
 	if c.class != nil {
 		return c.class
 	}
-	return CLASS_CLASS
+	return classClass
 }
-func (c *Class) SuperClass() RubyClass {
+func (c *class) SuperClass() RubyClass {
 	return c.superClass
 }
-func (c *Class) Methods() map[string]RubyMethod {
+func (c *class) Methods() map[string]RubyMethod {
 	return c.instanceMethods
 }
 

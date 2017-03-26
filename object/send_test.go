@@ -9,13 +9,13 @@ type testRubyObject struct {
 	class RubyClassObject
 }
 
-func (t *testRubyObject) Type() ObjectType { return ObjectType("TEST_OBJECT") }
-func (t *testRubyObject) Inspect() string  { return "TEST OBJECT" }
+func (t *testRubyObject) Type() Type      { return Type("TEST_OBJECT") }
+func (t *testRubyObject) Inspect() string { return "TEST OBJECT" }
 func (t *testRubyObject) Class() RubyClass {
 	if t.class != nil {
 		return t.class
 	}
-	return OBJECT_CLASS
+	return objectClass
 }
 
 func TestSend(t *testing.T) {
@@ -39,13 +39,13 @@ func TestSend(t *testing.T) {
 		}),
 	}
 	context := &testRubyObject{
-		class: &Class{
+		class: &class{
 			name:            "base class",
 			instanceMethods: methods,
-			superClass: &Class{
+			superClass: &class{
 				name:            "super class",
 				instanceMethods: superMethods,
-				superClass:      BASIC_OBJECT_CLASS,
+				superClass:      basicObjectClass,
 			},
 		},
 	}

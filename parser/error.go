@@ -14,15 +14,22 @@ var _ error = &unexpectedTokenError{}
 // Make sure Errors implements error interface
 var _ error = &Errors{}
 
+// NewErrors returns a composite Error object wrapping multiple errors into
+// one.
 func NewErrors(context string, errors ...error) *Errors {
 	return &Errors{context, errors}
 }
 
+// Errors represents a group of errors and its context
+//
+// Errors implements the error interface to be used as an error in the code.
 type Errors struct {
 	context string
 	errors  []error
 }
 
+// Error returns all error messages divided by newlines and prepended with the
+// error context.
 func (e *Errors) Error() string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "%s:\n", e.context)
@@ -32,6 +39,10 @@ func (e *Errors) Error() string {
 	return buf.String()
 }
 
+// IsEOFError returns true if err represents an unexpectedTokenError with its
+// actual token type set to token.EOF.
+//
+// It returns false for any other error.
 func IsEOFError(err error) bool {
 	if errors, ok := err.(*Errors); ok {
 		for _, e := range errors.errors {
@@ -53,6 +64,11 @@ func IsEOFError(err error) bool {
 	return true
 }
 
+// IsEOFInsteadOfNewlineError returns true if err represents an unexpectedTokenError with its
+// actual token type set to token.EOF and if its expected token types includes
+// token.NEWLINE.
+//
+// It returns false for any other error.
 func IsEOFInsteadOfNewlineError(err error) bool {
 	if !IsEOFError(err) {
 		return false
@@ -78,8 +94,8 @@ func IsEOFInsteadOfNewlineError(err error) bool {
 }
 
 type unexpectedTokenError struct {
-	expectedTokens []token.TokenType
-	actualToken    token.TokenType
+	expectedTokens []token.Type
+	actualToken    token.Type
 }
 
 func (u *unexpectedTokenError) Error() string {

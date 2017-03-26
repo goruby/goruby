@@ -8,7 +8,7 @@ import (
 
 func TestClassInspect(t *testing.T) {
 	t.Run("class Class", func(t *testing.T) {
-		context := &Class{}
+		context := &class{}
 
 		actual := context.Inspect()
 
@@ -20,7 +20,7 @@ func TestClassInspect(t *testing.T) {
 		}
 	})
 	t.Run("other class", func(t *testing.T) {
-		context := &Class{name: "Foo"}
+		context := &class{name: "Foo"}
 
 		actual := context.Inspect()
 
@@ -34,13 +34,13 @@ func TestClassInspect(t *testing.T) {
 }
 
 func TestClassClass(t *testing.T) {
-	class := &Class{}
+	clazz := &class{}
 
-	context := &Class{class: class}
+	context := &class{class: clazz}
 
 	actual := context.Class()
 
-	expected := class
+	expected := clazz
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Logf("Expected Class to equal %v, got %v", expected, actual)
@@ -49,11 +49,11 @@ func TestClassClass(t *testing.T) {
 }
 
 func TestClassSuperClass(t *testing.T) {
-	context := &Class{superClass: BASIC_OBJECT_CLASS}
+	context := &class{superClass: basicObjectClass}
 
 	actual := context.SuperClass()
 
-	expected := BASIC_OBJECT_CLASS
+	expected := basicObjectClass
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Logf("Expected SuperClass to equal %+#v, got %+#v", expected, actual)
@@ -66,7 +66,7 @@ func TestClassMethods(t *testing.T) {
 		"a_method": nil,
 	}
 
-	context := &Class{instanceMethods: contextMethods}
+	context := &class{instanceMethods: contextMethods}
 
 	actual := context.Methods()
 
@@ -79,7 +79,7 @@ func TestClassMethods(t *testing.T) {
 }
 
 func TestClassType(t *testing.T) {
-	context := &Class{}
+	context := &class{}
 
 	actual := context.Type()
 
@@ -93,29 +93,29 @@ func TestClassType(t *testing.T) {
 
 func TestClassSuperclass(t *testing.T) {
 	t.Run("anything else than BasicObject", func(t *testing.T) {
-		context := &Class{superClass: OBJECT_CLASS}
+		context := &class{superClass: objectClass}
 
 		result := classSuperclass(context)
 
-		_, ok := result.(*Class)
+		_, ok := result.(*class)
 		if !ok {
 			t.Logf("Expected Class object, got %T\n", result)
 			t.Fail()
 		}
 	})
 	t.Run("BasicObject", func(t *testing.T) {
-		context := BASIC_OBJECT_CLASS
+		context := basicObjectClass
 
 		result := classSuperclass(context)
 
-		_, ok := result.(*Nil)
+		_, ok := result.(*nilObject)
 		if !ok {
 			t.Logf("Expected Nil object, got %T\n", result)
 			t.Fail()
 		}
 	})
 	t.Run("Eigenclass", func(t *testing.T) {
-		context := &Class{superClass: newEigenclass(OBJECT_CLASS, nil)}
+		context := &class{superClass: newEigenclass(objectClass, nil)}
 
 		result := classSuperclass(context)
 

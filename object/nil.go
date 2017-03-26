@@ -1,19 +1,20 @@
 package object
 
 var (
-	NIL_CLASS RubyClassObject = NewClass("NilClass", OBJECT_CLASS, nilMethods, nilClassMethods)
-	NIL       RubyObject      = &Nil{}
+	nilClass RubyClassObject = newClass("NilClass", objectClass, nilMethods, nilClassMethods)
+	// NIL represents the singleton object nil
+	NIL RubyObject = &nilObject{}
 )
 
 func init() {
-	classes.Set("NilClass", NIL_CLASS)
+	classes.Set("NilClass", nilClass)
 }
 
-type Nil struct{}
+type nilObject struct{}
 
-func (n *Nil) Inspect() string  { return "nil" }
-func (n *Nil) Type() ObjectType { return NIL_OBJ }
-func (n *Nil) Class() RubyClass { return NIL_CLASS }
+func (n *nilObject) Inspect() string  { return "nil" }
+func (n *nilObject) Type() Type       { return NIL_OBJ }
+func (n *nilObject) Class() RubyClass { return nilClass }
 
 var nilClassMethods = map[string]RubyMethod{}
 

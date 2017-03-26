@@ -42,7 +42,7 @@ nil
 `
 
 	tests := []struct {
-		expectedType    token.TokenType
+		expectedType    token.Type
 		expectedLiteral string
 	}{
 		{token.IDENT, "five"},
@@ -113,7 +113,7 @@ nil
 		{token.INT, "10"},
 		{token.NEWLINE, "\n"},
 		{token.INT, "10"},
-		{token.NOT_EQ, "!="},
+		{token.NOTEQ, "!="},
 		{token.INT, "9"},
 		{token.NEWLINE, "\n"},
 		{token.STRING, ""},
