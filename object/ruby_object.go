@@ -62,39 +62,71 @@ type RubyClassObject interface {
 	RubyClass
 }
 
+// A BuiltinFunction represents a function
 type BuiltinFunction func(args ...RubyObject) RubyObject
 
+// Builtin represents a builtin within the interpreter. It holds a function
+// which can be called directly. It is no real Ruby object.
+//
+// Ruby does not have any builtin functions as everything is bound to an object.
+//
+// This object will go away soon. Don't depend on it.
 type Builtin struct {
 	Fn BuiltinFunction
 }
 
-func (b *Builtin) Type() Type       { return BUILTIN_OBJ }
-func (b *Builtin) Inspect() string  { return "builtin function" }
+// Type returns BUILTIN_OBJ
+func (b *Builtin) Type() Type { return BUILTIN_OBJ }
+
+// Inspect returns 'buitin function'
+func (b *Builtin) Inspect() string { return "builtin function" }
+
+// Class returns nil
 func (b *Builtin) Class() RubyClass { return nil }
 
+// ReturnValue represents a wrapper object for a return statement. It is no
+// real Ruby object and only used within the interpreter evaluation
 type ReturnValue struct {
 	Value RubyObject
 }
 
-func (rv *ReturnValue) Type() Type       { return RETURN_VALUE_OBJ }
-func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }
+// Type returns RETURN_VALUE_OBJ
+func (rv *ReturnValue) Type() Type { return RETURN_VALUE_OBJ }
+
+// Inspect returns the string representation of the wrapped object
+func (rv *ReturnValue) Inspect() string { return rv.Value.Inspect() }
+
+// Class reurns the class of the wrapped object
 func (rv *ReturnValue) Class() RubyClass { return rv.Value.Class() }
 
+// Error represents the old way of marking something within the evaluation
+// phase as error. It is obsolete and should be replaced by a real exception.
+//
+// This object will go away soon. Don't depend on it.
 type Error struct {
 	Message string
 }
 
-func (e *Error) Type() Type       { return ERROR_OBJ }
-func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
+// Type returns ERROR_OBJ
+func (e *Error) Type() Type { return ERROR_OBJ }
+
+// Inspect returns the wrapped message preprended with 'ERROR: '
+func (e *Error) Inspect() string { return "ERROR: " + e.Message }
+
+// Class returns nil
 func (e *Error) Class() RubyClass { return nil }
 
+// A Function represents a user defined function. It is no real Ruby object.
 type Function struct {
 	Parameters []*ast.Identifier
 	Body       *ast.BlockStatement
 	Env        Environment
 }
 
+// Type returns FUNCTION_OBJ
 func (f *Function) Type() Type { return FUNCTION_OBJ }
+
+// Inspect returns the function body
 func (f *Function) Inspect() string {
 	var out bytes.Buffer
 	params := []string{}
@@ -109,4 +141,6 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 	return out.String()
 }
+
+// Class returns nil
 func (f *Function) Class() RubyClass { return nil }
