@@ -6,8 +6,13 @@ type visibility int
 type MethodVisibility visibility
 
 const (
+	// PUBLIC_METHOD declares that a method is visible from the outside of an object
 	PUBLIC_METHOD MethodVisibility = iota
+	// PROTECTED_METHOD declares that a method is not visible from the outside
+	// of an object but to all of its decendents
 	PROTECTED_METHOD
+	// PRIVATE_METHOD declares that a method is not visible from the outside
+	// of an object and not to all of its decendents
 	PRIVATE_METHOD
 )
 

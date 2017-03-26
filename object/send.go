@@ -1,5 +1,6 @@
 package object
 
+// Send sends message method with args to context and returns its result
 func Send(context RubyObject, method string, args ...RubyObject) RubyObject {
 	class := context.Class()
 

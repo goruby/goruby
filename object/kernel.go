@@ -2,7 +2,7 @@ package object
 
 import "fmt"
 
-var kernelModule *Module = newModule("Kernel", kernelMethodSet)
+var kernelModule = newModule("Kernel", kernelMethodSet)
 var kernelFunctions = NewEnclosedEnvironment(classes)
 
 func init() {

@@ -10,7 +10,7 @@ func init() {
 }
 
 // newClass returns a new Ruby Class
-func newClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod) RubyClassObject {
+func newClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod) *class {
 	return &class{name: name, superClass: superClass, instanceMethods: instanceMethods, class: newEigenclass(classClass, classMethods)}
 }
 

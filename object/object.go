@@ -1,6 +1,6 @@
 package object
 
-var objectClass RubyClassObject = mixin(newClass("Object", basicObjectClass, objectMethods, objectClassMethods), kernelModule)
+var objectClass = mixin(newClass("Object", basicObjectClass, objectMethods, objectClassMethods), kernelModule)
 
 func init() {
 	classes.Set("Object", objectClass)
