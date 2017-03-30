@@ -190,7 +190,7 @@ end
 		},
 		{
 			"foobar",
-			"NameError: undefined local variable or method `foobar' for nil:NilClass",
+			"NameError: undefined local variable or method `foobar' for :Object",
 		},
 		{
 			`
@@ -204,7 +204,9 @@ end
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		env := object.NewEnvironment()
+		env.Set("self", &object.Object{})
+		evaluated := testEval(tt.input, env)
 
 		ok := IsError(evaluated)
 		if !ok {

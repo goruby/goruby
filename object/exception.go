@@ -127,11 +127,11 @@ func (e *ArgumentError) Inspect() string { return formatException(e, e.Message) 
 func (e *ArgumentError) Class() RubyClass { return argumentErrorClass }
 
 // NewNameError returns a NameError with the default message for undefined names
-func NewNameError(context RubyObject, method string) *NameError {
+func NewNameError(context RubyObject, name string) *NameError {
 	return &NameError{
 		Message: fmt.Sprintf(
 			"undefined local variable or method `%s' for %s:%s",
-			method,
+			name,
 			context.Inspect(),
 			context.Class().(RubyObject).Inspect(),
 		),

@@ -12,7 +12,7 @@ func Send(context RubyObject, method string, args ...RubyObject) RubyObject {
 			continue
 		}
 
-		if fn.Visibility() == PRIVATE_METHOD {
+		if fn.Visibility() == PRIVATE_METHOD && context.Type() != SELF {
 			return NewPrivateNoMethodError(context, method)
 		}
 

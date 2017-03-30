@@ -38,54 +38,110 @@ func TestSend(t *testing.T) {
 			return FALSE
 		}),
 	}
-	context := &testRubyObject{
-		class: &class{
-			name:            "base class",
-			instanceMethods: methods,
-			superClass: &class{
-				name:            "super class",
-				instanceMethods: superMethods,
-				superClass:      basicObjectClass,
+	t.Run("normal object as context", func(t *testing.T) {
+		context := &testRubyObject{
+			class: &class{
+				name:            "base class",
+				instanceMethods: methods,
+				superClass: &class{
+					name:            "super class",
+					instanceMethods: superMethods,
+					superClass:      basicObjectClass,
+				},
 			},
-		},
-	}
-
-	tests := []struct {
-		method         string
-		expectedResult RubyObject
-	}{
-		{
-			"a_method",
-			TRUE,
-		},
-		{
-			"another_method",
-			FALSE,
-		},
-		{
-			"a_super_method",
-			TRUE,
-		},
-		{
-			"a_private_method",
-			NewPrivateNoMethodError(context, "a_private_method"),
-		},
-		{
-			"a_private_super_method",
-			NewPrivateNoMethodError(context, "a_private_super_method"),
-		},
-		{
-			"unknown_method",
-			NewNoMethodError(context, "unknown_method"),
-		},
-	}
-
-	for _, testCase := range tests {
-		result := Send(context, testCase.method)
-
-		if !reflect.DeepEqual(result, testCase.expectedResult) {
-			t.Logf("Expected result to equal\n%+#v\n\tgot\n%+#v\n", testCase.expectedResult, result)
-			t.Fail()
 		}
-	}
+
+		tests := []struct {
+			method         string
+			expectedResult RubyObject
+		}{
+			{
+				"a_method",
+				TRUE,
+			},
+			{
+				"another_method",
+				FALSE,
+			},
+			{
+				"a_super_method",
+				TRUE,
+			},
+			{
+				"a_private_method",
+				NewPrivateNoMethodError(context, "a_private_method"),
+			},
+			{
+				"a_private_super_method",
+				NewPrivateNoMethodError(context, "a_private_super_method"),
+			},
+			{
+				"unknown_method",
+				NewNoMethodError(context, "unknown_method"),
+			},
+		}
+
+		for _, testCase := range tests {
+			result := Send(context, testCase.method)
+
+			if !reflect.DeepEqual(result, testCase.expectedResult) {
+				t.Logf("Expected result to equal\n%+#v\n\tgot\n%+#v\n", testCase.expectedResult, result)
+				t.Fail()
+			}
+		}
+	})
+	t.Run("self as context", func(t *testing.T) {
+		context := &Self{
+			&testRubyObject{
+				class: &class{
+					name:            "base class",
+					instanceMethods: methods,
+					superClass: &class{
+						name:            "super class",
+						instanceMethods: superMethods,
+						superClass:      basicObjectClass,
+					},
+				},
+			},
+		}
+
+		tests := []struct {
+			method         string
+			expectedResult RubyObject
+		}{
+			{
+				"a_method",
+				TRUE,
+			},
+			{
+				"another_method",
+				FALSE,
+			},
+			{
+				"a_super_method",
+				TRUE,
+			},
+			{
+				"a_private_method",
+				FALSE,
+			},
+			{
+				"a_private_super_method",
+				FALSE,
+			},
+			{
+				"unknown_method",
+				NewNoMethodError(context, "unknown_method"),
+			},
+		}
+
+		for _, testCase := range tests {
+			result := Send(context, testCase.method)
+
+			if !reflect.DeepEqual(result, testCase.expectedResult) {
+				t.Logf("Expected result to equal\n%+#v\n\tgot\n%+#v\n", testCase.expectedResult, result)
+				t.Fail()
+			}
+		}
+	})
 }

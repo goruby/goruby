@@ -5,7 +5,10 @@ var classes = NewEnvironment()
 // NewMainEnvironment returns a new Environment populated with all Ruby classes
 // and the Kernel functions
 func NewMainEnvironment() Environment {
-	return kernelFunctions
+	env := kernelFunctions
+	env.Set("self", &Self{&Object{}})
+	env.SetGlobal("$LOADED_FEATURES", NewArray())
+	return env
 }
 
 // NewEnclosedEnvironment returns an Environment wrapped by outer

@@ -51,7 +51,7 @@ func TestInterpreterInterpret(t *testing.T) {
 
 			add foo, x
 			`
-		env := object.NewEnvironment()
+		env := object.NewMainEnvironment()
 		env.Set("x", &object.Integer{Value: 3})
 		i := New()
 		i.SetEnvironment(env)
