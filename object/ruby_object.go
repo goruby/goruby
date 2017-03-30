@@ -36,6 +36,7 @@ const (
 	MODULE_OBJ             Type = "MODULE"
 	MODULE_CLASS_OBJ       Type = "MODULE_CLASS"
 	BUILTIN_OBJ            Type = "BUILTIN"
+	SELF                   Type = "SELF"
 )
 
 type inspectable interface {
@@ -126,3 +127,14 @@ func (f *Function) Inspect() string {
 
 // Class returns nil
 func (f *Function) Class() RubyClass { return nil }
+
+// Self represents the value associated to `self`. It acts as a wrapper around
+// the RubyObject and is just meant to indicate that the given object is
+// self in the given context.
+type Self struct {
+	RubyObject
+}
+
+// Type returns SELF
+func (s *Self) Type() Type { return SELF }
+

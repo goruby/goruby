@@ -69,6 +69,9 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 		if IsError(context) {
 			return context
 		}
+		if context == nil {
+			context, _ = env.Get("self")
+		}
 		args := evalExpressions(node.Arguments, env)
 		if len(args) == 1 && IsError(args[0]) {
 			return args[0]
@@ -113,7 +116,7 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 	case *ast.RequireExpression:
 		return evalRequireExpression(node, env)
 	case nil:
-		return object.NIL
+		return nil
 	default:
 		return object.NewException("Unknown AST: %T", node)
 	}
@@ -328,14 +331,19 @@ func evalBlockStatement(block *ast.BlockStatement, env object.Environment) objec
 
 func evalIdentifier(node *ast.Identifier, env object.Environment) object.RubyObject {
 	val, ok := env.Get(node.Value)
-	if !ok {
-		return object.NewNameError(object.NIL, node.Value)
-	}
-	if fn, ok := val.(*object.Function); ok {
-		if len(fn.Parameters) != 0 {
-			return val
+	if ok {
+		if fn, ok := val.(*object.Function); ok {
+			if len(fn.Parameters) != 0 {
+				return val
+			}
+			return applyFunction(fn, []object.RubyObject{})
 		}
-		return applyFunction(fn, []object.RubyObject{})
+		return val
+	}
+	self, _ := env.Get("self")
+	val = object.Send(self, node.Value)
+	if IsError(val) {
+		return object.NewNameError(self, node.Value)
 	}
 	return val
 }
