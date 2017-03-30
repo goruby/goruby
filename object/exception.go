@@ -6,13 +6,17 @@ import (
 )
 
 var (
-	exceptionClass         RubyClassObject = newClass("Exception", objectClass, exceptionMethods, exceptionClassMethods)
-	standardErrorClass     RubyClassObject = newClass("StandardError", exceptionClass, nil, nil)
-	zeroDivisionErrorClass RubyClassObject = newClass("ZeroDivisionError", standardErrorClass, nil, nil)
-	argumentErrorClass     RubyClassObject = newClass("ArgumentError", standardErrorClass, nil, nil)
-	nameErrorClass         RubyClassObject = newClass("NameError", standardErrorClass, nil, nil)
-	noMethodErrorClass     RubyClassObject = newClass("NoMethodError", nameErrorClass, nil, nil)
-	typeErrorClass         RubyClassObject = newClass("TypeError", standardErrorClass, nil, nil)
+	exceptionClass           RubyClassObject = newClass("Exception", objectClass, exceptionMethods, exceptionClassMethods)
+	standardErrorClass       RubyClassObject = newClass("StandardError", exceptionClass, nil, nil)
+	zeroDivisionErrorClass   RubyClassObject = newClass("ZeroDivisionError", standardErrorClass, nil, nil)
+	argumentErrorClass       RubyClassObject = newClass("ArgumentError", standardErrorClass, nil, nil)
+	nameErrorClass           RubyClassObject = newClass("NameError", standardErrorClass, nil, nil)
+	noMethodErrorClass       RubyClassObject = newClass("NoMethodError", nameErrorClass, nil, nil)
+	typeErrorClass           RubyClassObject = newClass("TypeError", standardErrorClass, nil, nil)
+	scriptErrorClass         RubyClassObject = newClass("ScriptError", exceptionClass, nil, nil)
+	loadErrorClass           RubyClassObject = newClass("LoadError", scriptErrorClass, nil, nil)
+	syntaxErrorClass         RubyClassObject = newClass("SyntaxError", scriptErrorClass, nil, nil)
+	notImplementedErrorClass RubyClassObject = newClass("NotImplementedError", scriptErrorClass, nil, nil)
 )
 
 func init() {
@@ -23,6 +27,10 @@ func init() {
 	classes.Set("NameError", nameErrorClass)
 	classes.Set("NoMethodError", noMethodErrorClass)
 	classes.Set("TypeError", typeErrorClass)
+	classes.Set("ScriptError", scriptErrorClass)
+	classes.Set("LoadError", loadErrorClass)
+	classes.Set("SyntaxError", syntaxErrorClass)
+	classes.Set("NotImplementedError", notImplementedErrorClass)
 }
 
 func formatException(exception RubyObject, message string) string {
@@ -199,3 +207,79 @@ func (e *TypeError) Inspect() string { return formatException(e, e.Message) }
 
 // Class returns typeErrorClass
 func (e *TypeError) Class() RubyClass { return typeErrorClass }
+
+// ScriptError represetns an error in the loaded script
+type ScriptError struct {
+	Message string
+}
+
+// Type returns EXCEPTION_OBJ
+func (e *ScriptError) Type() Type { return EXCEPTION_OBJ }
+
+// Inspect returns a string starting with the exception class name, followed by the message
+func (e *ScriptError) Inspect() string { return formatException(e, e.Message) }
+
+// Class returns scriptErrorClass
+func (e *ScriptError) Class() RubyClass { return scriptErrorClass }
+
+// NewLoadError returns a new LoadError with the default message
+func NewLoadError(filepath string) *LoadError {
+	return &LoadError{
+		Message: fmt.Sprintf(
+			"no such file to load -- %s",
+			filepath,
+		),
+	}
+}
+
+// LoadError represents an error while loading another file
+type LoadError struct {
+	Message string
+}
+
+// Type returns EXCEPTION_OBJ
+func (e *LoadError) Type() Type { return EXCEPTION_OBJ }
+
+// Inspect returns a string starting with the exception class name, followed by the message
+func (e *LoadError) Inspect() string { return formatException(e, e.Message) }
+
+// Class returns loadErrorClass
+func (e *LoadError) Class() RubyClass { return loadErrorClass }
+
+// NewSyntaxError returns a new SyntaxError with the default message
+func NewSyntaxError(syntaxError string) *SyntaxError {
+	return &SyntaxError{
+		Message: fmt.Sprintf(
+			"syntax error, %s",
+			syntaxError,
+		),
+	}
+}
+
+// SyntaxError represents a syntax error in the ruby scripts
+type SyntaxError struct {
+	Message string
+}
+
+// Type returns EXCEPTION_OBJ
+func (e *SyntaxError) Type() Type { return EXCEPTION_OBJ }
+
+// Inspect returns a string starting with the exception class name, followed by the message
+func (e *SyntaxError) Inspect() string { return formatException(e, e.Message) }
+
+// Class returns syntaxErrorClass
+func (e *SyntaxError) Class() RubyClass { return syntaxErrorClass }
+
+// NotImplementedError represents an error for a not implemented feature on a given platform
+type NotImplementedError struct {
+	Message string
+}
+
+// Type returns EXCEPTION_OBJ
+func (e *NotImplementedError) Type() Type { return EXCEPTION_OBJ }
+
+// Inspect returns a string starting with the exception class name, followed by the message
+func (e *NotImplementedError) Inspect() string { return formatException(e, e.Message) }
+
+// Class returns notImplementedErrorClass
+func (e *NotImplementedError) Class() RubyClass { return notImplementedErrorClass }

@@ -479,6 +479,129 @@ func TestNilExpression(t *testing.T) {
 	testNilObject(t, evaluated)
 }
 
+func TestRequireExpression(t *testing.T) {
+	t.Run("simple require", func(t *testing.T) {
+		input := `require "testfile.rb"
+		x + 2
+		`
+
+		evaluated := testEval(input)
+
+		testIntegerObject(t, evaluated, int64(7))
+	})
+	t.Run("simple require no filetype", func(t *testing.T) {
+		input := `require "testfile"
+		x + 2
+		`
+
+		evaluated := testEval(input)
+
+		testIntegerObject(t, evaluated, int64(7))
+	})
+	t.Run("require return value", func(t *testing.T) {
+		input := `require "testfile.rb"
+		`
+
+		evaluated := testEval(input)
+
+		testBooleanObject(t, evaluated, true)
+	})
+	t.Run("require appends to $LOADED_FEATURES", func(t *testing.T) {
+		input := `require "testfile.rb"
+		`
+
+		env := object.NewEnvironment()
+		testEval(input, env)
+
+		loadedFeatures, ok := env.Get("$LOADED_FEATURES")
+		if !ok {
+			t.Logf("Expected env to contain $LOADED_FEATURES object")
+			t.Fail()
+		}
+
+		arr, ok := loadedFeatures.(*object.Array)
+		if !ok {
+			t.Logf("Expected loadedFeatures to be an array, got %T", loadedFeatures)
+			t.Fail()
+		}
+
+		expectedLen := 1
+		actualLen := len(arr.Elements)
+
+		if expectedLen != actualLen {
+			t.Logf("Expected array to have %d elements, got %d", expectedLen, actualLen)
+			t.Fail()
+		}
+
+		expectedElemValue := "testfile.rb"
+		actualElemValue := arr.Elements[0].Inspect()
+
+		if expectedElemValue != actualElemValue {
+			t.Logf("Expected elem value to equal %s, got %s", expectedElemValue, actualElemValue)
+			t.Fail()
+		}
+	})
+	t.Run("require only parses the files once", func(t *testing.T) {
+		input := `require "testfile_require_once.rb"
+			x
+		`
+
+		evaluated := testEval(input)
+
+		testIntegerObject(t, evaluated, int64(7))
+	})
+	t.Run("require returns false if already required", func(t *testing.T) {
+		input := `require "testfile"
+			require "testfile"
+		`
+
+		evaluated := testEval(input)
+
+		testBooleanObject(t, evaluated, false)
+	})
+	t.Run("recursive require", func(t *testing.T) {
+		input := `require "testfile_recursive_require.rb"
+		x + 2
+		`
+
+		evaluated := testEval(input)
+
+		testIntegerObject(t, evaluated, int64(7))
+	})
+	t.Run("syntax error in file", func(t *testing.T) {
+		input := `require "testfile_syntax_error.rb"
+		`
+
+		evaluated := testEval(input)
+
+		expected := "SyntaxError: syntax error, Parsing errors:\n\texpected next token to be of type [END], got EOF instead\n"
+		testExceptionObject(t, evaluated, expected)
+	})
+	t.Run("file not found", func(t *testing.T) {
+		input := `require "this/file/does/not/exist"
+		`
+
+		evaluated := testEval(input)
+
+		expected := "LoadError: no such file to load -- this/file/does/not/exist"
+		testExceptionObject(t, evaluated, expected)
+	})
+}
+
+func testExceptionObject(t *testing.T, obj object.RubyObject, errorMessage string) {
+	if !IsError(obj) {
+		t.Logf("Expected error or exception, got %T", obj)
+		t.Fail()
+	}
+
+	actual := obj.Inspect()
+
+	if errorMessage != actual {
+		t.Logf("Expected obj to stringify to %q, got %q", errorMessage, actual)
+		t.Fail()
+	}
+}
+
 func testNilObject(t *testing.T, obj object.RubyObject) bool {
 	if obj != object.NIL {
 		t.Errorf("object is not NIL. got=%T (%+v)", obj, obj)
