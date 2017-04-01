@@ -37,6 +37,12 @@ func formatException(exception RubyObject, message string) string {
 	return fmt.Sprintf("%s: %s", reflect.TypeOf(exception).Elem().Name(), message)
 }
 
+// NewException creates a new exception with the given message template and
+//uses fmt.Sprintf to interpolate the args into messageinto message.
+func NewException(message string, args ...interface{}) *Exception {
+	return &Exception{Message: fmt.Sprintf(message, args...)}
+}
+
 // Exception represents a basic exception
 type Exception struct {
 	Message string
@@ -119,6 +125,18 @@ func (e *ArgumentError) Inspect() string { return formatException(e, e.Message) 
 
 // Class returns argumentErrorClass
 func (e *ArgumentError) Class() RubyClass { return argumentErrorClass }
+
+// NewNameError returns a NameError with the default message for undefined names
+func NewNameError(context RubyObject, method string) *NameError {
+	return &NameError{
+		Message: fmt.Sprintf(
+			"undefined local variable or method `%s' for %s:%s",
+			method,
+			context.Inspect(),
+			context.Class().(RubyObject).Inspect(),
+		),
+	}
+}
 
 // A NameError represents an error accessing an identifier unknown to the environment
 type NameError struct {

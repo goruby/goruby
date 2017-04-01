@@ -31,7 +31,6 @@ const (
 	BOOLEAN_CLASS_OBJ      Type = "BOOLEAN_CLASS"
 	NIL_OBJ                Type = "NIL"
 	NIL_CLASS_OBJ          Type = "NIL_CLASS"
-	ERROR_OBJ              Type = "ERROR"
 	EXCEPTION_OBJ          Type = "EXCEPTION"
 	EXCEPTION_CLASS_OBJ    Type = "EXCEPTION_CLASS"
 	MODULE_OBJ             Type = "MODULE"
@@ -98,23 +97,6 @@ func (rv *ReturnValue) Inspect() string { return rv.Value.Inspect() }
 
 // Class reurns the class of the wrapped object
 func (rv *ReturnValue) Class() RubyClass { return rv.Value.Class() }
-
-// Error represents the old way of marking something within the evaluation
-// phase as error. It is obsolete and should be replaced by a real exception.
-//
-// This object will go away soon. Don't depend on it.
-type Error struct {
-	Message string
-}
-
-// Type returns ERROR_OBJ
-func (e *Error) Type() Type { return ERROR_OBJ }
-
-// Inspect returns the wrapped message preprended with 'ERROR: '
-func (e *Error) Inspect() string { return "ERROR: " + e.Message }
-
-// Class returns nil
-func (e *Error) Class() RubyClass { return nil }
 
 // A Function represents a user defined function. It is no real Ruby object.
 type Function struct {
