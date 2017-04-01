@@ -40,6 +40,7 @@ end
 [1, 2]
 nil
 require
+self
 `
 
 	tests := []struct {
@@ -148,6 +149,8 @@ require
 		{token.NIL, "nil"},
 		{token.NEWLINE, "\n"},
 		{token.REQUIRE, "require"},
+		{token.NEWLINE, "\n"},
+		{token.SELF, "self"},
 		{token.NEWLINE, "\n"},
 		{token.EOF, ""},
 	}

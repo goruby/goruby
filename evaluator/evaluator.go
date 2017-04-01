@@ -39,6 +39,9 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 		return nativeBoolToBooleanObject(node.Value)
 	case (*ast.Nil):
 		return object.NIL
+	case (*ast.Self):
+		self, _ := env.Get("self")
+		return self
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 	case *ast.StringLiteral:

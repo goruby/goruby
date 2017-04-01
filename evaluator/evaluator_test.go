@@ -480,6 +480,22 @@ func TestNilExpression(t *testing.T) {
 	testNilObject(t, evaluated)
 }
 
+func TestSelfExpression(t *testing.T) {
+	input := "self"
+
+	env := object.NewMainEnvironment()
+	env.Set("self", &object.Self{&object.Integer{Value: 3}})
+	evaluated := testEval(input, env)
+
+	self, ok := evaluated.(*object.Self)
+	if !ok {
+		t.Logf("Expected evaluated object to be object.Self, got=%T", evaluated)
+		t.Fail()
+	}
+
+	testIntegerObject(t, self.RubyObject, 3)
+}
+
 func TestRequireExpression(t *testing.T) {
 	t.Run("simple require", func(t *testing.T) {
 		input := `require "testfile.rb"

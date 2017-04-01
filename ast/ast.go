@@ -141,6 +141,18 @@ func (v *VariableAssignment) expressionNode() {}
 // TokenLiteral returns the literal of the Name token
 func (v *VariableAssignment) TokenLiteral() string { return v.Name.Token.Literal }
 
+// Self represents self in the current context in the program
+type Self struct {
+	Token token.Token // the token.SELF token
+}
+
+func (s *Self) String() string  { return s.Token.Literal }
+func (s *Self) expressionNode() {}
+func (s *Self) literalNode()    {}
+
+// TokenLiteral returns the literal of the token.IDENT token
+func (s *Self) TokenLiteral() string { return s.Token.Literal }
+
 // An Identifier represents an identifier in the program
 type Identifier struct {
 	Token token.Token // the token.IDENT token
