@@ -115,7 +115,7 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 	case nil:
 		return object.NIL
 	default:
-		return newError("Unknown AST: %T", node)
+		return object.NewException("Unknown AST: %T", node)
 	}
 
 }
@@ -199,7 +199,7 @@ func evalPrefixExpression(operator string, right object.RubyObject) object.RubyO
 	case "-":
 		return evalMinusPrefixOperatorExpression(right)
 	default:
-		return newError("unknown operator: %s%s", operator, right.Type())
+		return object.NewException("unknown operator: %s%s", operator, right.Type())
 	}
 }
 
@@ -221,7 +221,7 @@ func evalMinusPrefixOperatorExpression(right object.RubyObject) object.RubyObjec
 	case *object.Integer:
 		return &object.Integer{Value: -right.Value}
 	default:
-		return newError("unknown operator: -%s", right.Type())
+		return object.NewException("unknown operator: -%s", right.Type())
 	}
 }
 
@@ -236,9 +236,9 @@ func evalInfixExpression(operator string, left, right object.RubyObject) object.
 	case operator == "!=":
 		return nativeBoolToBooleanObject(left != right)
 	case left.Type() != right.Type():
-		return newError("type mismatch: %s %s %s", left.Type(), operator, right.Type())
+		return object.NewException("type mismatch: %s %s %s", left.Type(), operator, right.Type())
 	default:
-		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
+		return object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
@@ -263,7 +263,7 @@ func evalIntegerInfixExpression(operator string, left, right object.RubyObject) 
 	case "!=":
 		return nativeBoolToBooleanObject(leftVal != rightVal)
 	default:
-		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
+		return object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
@@ -271,7 +271,7 @@ func evalStringInfixExpression(
 	operator string,
 	left, right object.RubyObject) object.RubyObject {
 	if operator != "+" {
-		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
+		return object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 	leftVal := left.(*object.String).Value
 	rightVal := right.(*object.String).Value
@@ -297,7 +297,7 @@ func evalIndexExpression(left, index object.RubyObject) object.RubyObject {
 	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
 		return evalArrayIndexExpression(left, index)
 	default:
-		return newError("index operator not supported: %s", left.Type())
+		return object.NewException("index operator not supported: %s", left.Type())
 	}
 }
 
@@ -317,7 +317,7 @@ func evalBlockStatement(block *ast.BlockStatement, env object.Environment) objec
 		result = Eval(statement, env)
 		if result != nil {
 			rt := result.Type()
-			if rt == object.RETURN_VALUE_OBJ || rt == object.ERROR_OBJ {
+			if rt == object.RETURN_VALUE_OBJ || IsError(result) {
 				return result
 			}
 
@@ -329,7 +329,7 @@ func evalBlockStatement(block *ast.BlockStatement, env object.Environment) objec
 func evalIdentifier(node *ast.Identifier, env object.Environment) object.RubyObject {
 	val, ok := env.Get(node.Value)
 	if !ok {
-		return newError("identifier not found: " + node.Value)
+		return object.NewNameError(object.NIL, node.Value)
 	}
 	if fn, ok := val.(*object.Function); ok {
 		if len(fn.Parameters) != 0 {
@@ -344,11 +344,7 @@ func applyFunction(fn object.RubyObject, args []object.RubyObject) object.RubyOb
 	switch fn := fn.(type) {
 	case *object.Function:
 		if len(args) != len(fn.Parameters) {
-			return newError(
-				"ArgumentError: wrong number of arguments (given %d, expected %d)",
-				len(args),
-				len(fn.Parameters),
-			)
+			return object.NewWrongNumberOfArgumentsError(len(fn.Parameters), len(args))
 		}
 		extendedEnv := extendFunctionEnv(fn, args)
 		evaluated := Eval(fn.Body, extendedEnv)
@@ -356,7 +352,7 @@ func applyFunction(fn object.RubyObject, args []object.RubyObject) object.RubyOb
 	case *object.Builtin:
 		return fn.Fn(args...)
 	default:
-		return newError("not a function: %s", fn.Type())
+		return object.NewSyntaxError(fmt.Sprintf("not a function: %s", fn.Type()))
 	}
 }
 
@@ -388,15 +384,11 @@ func isTruthy(obj object.RubyObject) bool {
 	}
 }
 
-func newError(format string, a ...interface{}) *object.Error {
-	return &object.Error{Message: fmt.Sprintf(format, a...)}
-}
-
 // IsError returns true if the given RubyObject is an object.Error or an
 // object.Exception (or any subclass of object.Exception)
 func IsError(obj object.RubyObject) bool {
 	if obj != nil {
-		return obj.Type() == object.ERROR_OBJ || obj.Type() == object.EXCEPTION_OBJ
+		return obj.Type() == object.EXCEPTION_OBJ
 	}
 	return false
 }

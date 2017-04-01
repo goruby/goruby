@@ -143,39 +143,39 @@ func TestErrorHandling(t *testing.T) {
 	}{
 		{
 			"5 + true;",
-			"type mismatch: INTEGER + BOOLEAN",
+			"Exception: type mismatch: INTEGER + BOOLEAN",
 		},
 		{
 			"5 + true; 5;",
-			"type mismatch: INTEGER + BOOLEAN",
+			"Exception: type mismatch: INTEGER + BOOLEAN",
 		},
 		{
 			"-true",
-			"unknown operator: -BOOLEAN",
+			"Exception: unknown operator: -BOOLEAN",
 		},
 		{
 			"true + false;",
-			"unknown operator: BOOLEAN + BOOLEAN",
+			"Exception: unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
 			"true + false + true + false;",
-			"unknown operator: BOOLEAN + BOOLEAN",
+			"Exception: unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
 			"5; true + false; 5",
-			"unknown operator: BOOLEAN + BOOLEAN",
+			"Exception: unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
 			`"Hello" - "World"`,
-			"unknown operator: STRING - STRING",
+			"Exception: unknown operator: STRING - STRING",
 		},
 		{
 			"if (10 > 1); true + false; end",
-			"unknown operator: BOOLEAN + BOOLEAN",
+			"Exception: unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
 			"if (10 > 1); true + false; end",
-			"unknown operator: BOOLEAN + BOOLEAN",
+			"Exception: unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
 			`
@@ -186,11 +186,11 @@ if (10 > 1)
 	return 1;
 end
 `,
-			"unknown operator: BOOLEAN + BOOLEAN",
+			"Exception: unknown operator: BOOLEAN + BOOLEAN",
 		},
 		{
 			"foobar",
-			"identifier not found: foobar",
+			"NameError: undefined local variable or method `foobar' for nil:NilClass",
 		},
 		{
 			`
@@ -206,21 +206,20 @@ end
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
 
-		errObj, ok := evaluated.(*object.Error)
+		ok := IsError(evaluated)
 		if !ok {
 			t.Errorf(
 				"no error object returned. got=%T(%+v)",
 				evaluated,
 				evaluated,
 			)
-			continue
 		}
 
-		if errObj.Message != tt.expectedMessage {
+		if evaluated.Inspect() != tt.expectedMessage {
 			t.Errorf(
 				"wrong error message. expected=%q, got=%q",
 				tt.expectedMessage,
-				errObj.Message,
+				evaluated.Inspect(),
 			)
 		}
 	}
@@ -373,15 +372,15 @@ func TestBuiltinFunctions(t *testing.T) {
 		case nil:
 			testNilObject(t, evaluated)
 		case string:
-			errObj, ok := evaluated.(*object.Error)
+			ok := IsError(evaluated)
 			if !ok {
 				t.Errorf("object is not Error. got=%T (%+v)",
 					evaluated, evaluated)
 				continue
 			}
-			if errObj.Message != expected {
+			if evaluated.Inspect() != expected {
 				t.Errorf("wrong error message. expected=%q, got=%q",
-					expected, errObj.Message)
+					expected, evaluated.Inspect())
 			}
 		}
 	}
@@ -619,7 +618,7 @@ func testEval(input string, context ...object.Environment) object.RubyObject {
 	p := parser.New(l)
 	program, err := p.ParseProgram()
 	if err != nil {
-		return newError(err.Error())
+		return object.NewSyntaxError(err.Error())
 	}
 	return Eval(program, env)
 }
