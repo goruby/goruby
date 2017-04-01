@@ -372,39 +372,6 @@ func TestSymbolLiteral(t *testing.T) {
 	}
 }
 
-func TestBuiltinFunctions(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected interface{}
-	}{
-		{`puts;`, nil},
-		{`puts "foo";`, nil},
-	}
-
-	for _, tt := range tests {
-		evaluated, err := testEval(tt.input, object.NewMainEnvironment())
-		checkError(t, err)
-
-		switch expected := tt.expected.(type) {
-		case int:
-			testIntegerObject(t, evaluated, int64(expected))
-		case nil:
-			testNilObject(t, evaluated)
-		case string:
-			ok := IsError(evaluated)
-			if !ok {
-				t.Errorf("object is not Error. got=%T (%+v)",
-					evaluated, evaluated)
-				continue
-			}
-			if evaluated.Inspect() != expected {
-				t.Errorf("wrong error message. expected=%q, got=%q",
-					expected, evaluated.Inspect())
-			}
-		}
-	}
-}
-
 func TestMethodCalls(t *testing.T) {
 	input := "x = 2; x.foo :bar"
 
