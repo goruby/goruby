@@ -101,9 +101,11 @@ func (rv *ReturnValue) Class() RubyClass { return rv.Value.Class() }
 
 // A Function represents a user defined function. It is no real Ruby object.
 type Function struct {
-	Parameters []*ast.Identifier
-	Body       *ast.BlockStatement
-	Env        Environment
+	Parameters       []*ast.Identifier
+	Body             *ast.BlockStatement
+	Env              Environment
+	CallFn           func(context RubyObject, args []RubyObject) RubyObject
+	MethodVisibility MethodVisibility
 }
 
 // Type returns FUNCTION_OBJ
@@ -128,6 +130,16 @@ func (f *Function) Inspect() string {
 // Class returns nil
 func (f *Function) Class() RubyClass { return nil }
 
+// Call implements the RubyMethod interface. It calls f.CallFn
+func (f *Function) Call(context RubyObject, args ...RubyObject) RubyObject {
+	return f.CallFn(f, args)
+}
+
+// Visibility implements the RubyMethod interface. It returns f.MethodVisibility
+func (f *Function) Visibility() MethodVisibility {
+	return f.MethodVisibility
+}
+
 // Self represents the value associated to `self`. It acts as a wrapper around
 // the RubyObject and is just meant to indicate that the given object is
 // self in the given context.
@@ -138,3 +150,13 @@ type Self struct {
 // Type returns SELF
 func (s *Self) Type() Type { return SELF }
 
+// extendedObject is a wrapper object for an object extended by methods.
+type extendedObject struct {
+	RubyObject
+	class *eigenclass
+}
+
+func (e *extendedObject) Class() RubyClass { return e.class }
+func (e *extendedObject) addMethod(name string, method RubyMethod) {
+	e.class.addMethod(name, method)
+}

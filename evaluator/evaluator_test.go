@@ -205,7 +205,7 @@ end
 
 	for _, tt := range tests {
 		env := object.NewEnvironment()
-		env.Set("self", &object.Object{})
+		env.Set("self", &object.Self{&object.Object{}})
 		evaluated := testEval(tt.input, env)
 
 		ok := IsError(evaluated)
@@ -269,7 +269,9 @@ func TestFunctionObject(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		env := object.NewEnvironment()
+		env.Set("self", &object.Self{&object.Object{}})
+		evaluated := testEval(tt.input, env)
 		fn, ok := evaluated.(*object.Function)
 		if !ok {
 			t.Fatalf("object is not Function. got=%T (%+v)", evaluated, evaluated)
@@ -310,7 +312,9 @@ func TestFunctionApplication(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		testIntegerObject(t, testEval(tt.input), tt.expected)
+		env := object.NewEnvironment()
+		env.Set("self", &object.Self{&object.Object{}})
+		testIntegerObject(t, testEval(tt.input, env), tt.expected)
 	}
 }
 

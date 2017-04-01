@@ -3,6 +3,8 @@ package object
 import (
 	"reflect"
 	"testing"
+
+	"github.com/goruby/goruby/ast"
 )
 
 type testRubyObject struct {
@@ -142,6 +144,167 @@ func TestSend(t *testing.T) {
 				t.Logf("Expected result to equal\n%+#v\n\tgot\n%+#v\n", testCase.expectedResult, result)
 				t.Fail()
 			}
+		}
+	})
+}
+
+func TestAddMethod(t *testing.T) {
+	t.Run("vanilla object", func(t *testing.T) {
+		context := &testRubyObject{
+			class: &class{
+				name:            "base class",
+				instanceMethods: map[string]RubyMethod{},
+				superClass:      objectClass,
+			},
+		}
+
+		fn := &Function{
+			Parameters: []*ast.Identifier{
+				&ast.Identifier{Value: "x"},
+			},
+			Env:  &environment{store: map[string]RubyObject{}},
+			Body: nil,
+		}
+
+		newContext := AddMethod(context, "foo", fn)
+
+		_, ok := newContext.Class().Methods()["foo"]
+		if !ok {
+			t.Logf("Expected object to have method foo")
+			t.Fail()
+		}
+	})
+	t.Run("extended object", func(t *testing.T) {
+		context := &extendedObject{
+			RubyObject: &testRubyObject{
+				class: &class{
+					name:            "base class",
+					instanceMethods: map[string]RubyMethod{},
+					superClass:      objectClass,
+				},
+			},
+			class: newEigenclass(objectClass, map[string]RubyMethod{
+				"bar": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
+					return NIL
+				}),
+			}),
+		}
+
+		fn := &Function{
+			Parameters: []*ast.Identifier{
+				&ast.Identifier{Value: "x"},
+			},
+			Env:  &environment{store: map[string]RubyObject{}},
+			Body: nil,
+		}
+
+		newContext := AddMethod(context, "foo", fn)
+
+		_, ok := newContext.Class().Methods()["foo"]
+		if !ok {
+			t.Logf("Expected object to have method foo")
+			t.Fail()
+		}
+
+		_, ok = newContext.Class().Methods()["bar"]
+		if !ok {
+			t.Logf("Expected object to have method bar")
+			t.Fail()
+		}
+	})
+	t.Run("vanilla self object", func(t *testing.T) {
+		context := &Self{
+			RubyObject: &testRubyObject{
+				class: &class{
+					name:            "base class",
+					instanceMethods: map[string]RubyMethod{},
+					superClass:      objectClass,
+				},
+			},
+		}
+
+		fn := &Function{
+			Parameters: []*ast.Identifier{
+				&ast.Identifier{Value: "x"},
+			},
+			Env:  &environment{store: map[string]RubyObject{}},
+			Body: nil,
+		}
+
+		newContext := AddMethod(context, "foo", fn)
+
+		_, ok := newContext.Class().Methods()["foo"]
+		if !ok {
+			t.Logf("Expected object to have method foo")
+			t.Fail()
+		}
+
+		returnedSelf, ok := newContext.(*Self)
+		if !ok {
+			t.Logf("Expected returned object to be self, got %T", newContext)
+			t.Fail()
+		}
+
+		returnPointer := reflect.ValueOf(returnedSelf).Pointer()
+		contextPointer := reflect.ValueOf(context).Pointer()
+
+		if returnPointer != contextPointer {
+			t.Logf("Expected input and return context to be the same")
+			t.Fail()
+		}
+	})
+	t.Run("extended self object", func(t *testing.T) {
+		context := &Self{
+			RubyObject: &extendedObject{
+				RubyObject: &testRubyObject{
+					class: &class{
+						name:            "base class",
+						instanceMethods: map[string]RubyMethod{},
+						superClass:      objectClass,
+					},
+				},
+				class: newEigenclass(objectClass, map[string]RubyMethod{
+					"bar": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
+						return NIL
+					}),
+				}),
+			},
+		}
+
+		fn := &Function{
+			Parameters: []*ast.Identifier{
+				&ast.Identifier{Value: "x"},
+			},
+			Env:  &environment{store: map[string]RubyObject{}},
+			Body: nil,
+		}
+
+		newContext := AddMethod(context, "foo", fn)
+
+		_, ok := newContext.Class().Methods()["foo"]
+		if !ok {
+			t.Logf("Expected object to have method foo")
+			t.Fail()
+		}
+
+		_, ok = newContext.Class().Methods()["bar"]
+		if !ok {
+			t.Logf("Expected object to have method bar")
+			t.Fail()
+		}
+
+		returnedSelf, ok := newContext.(*Self)
+		if !ok {
+			t.Logf("Expected returned object to be self, got %T", newContext)
+			t.Fail()
+		}
+
+		returnPointer := reflect.ValueOf(returnedSelf).Pointer()
+		contextPointer := reflect.ValueOf(context).Pointer()
+
+		if returnPointer != contextPointer {
+			t.Logf("Expected input and return context to be the same")
+			t.Fail()
 		}
 	})
 }

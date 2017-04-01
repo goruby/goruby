@@ -51,8 +51,14 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 	case *ast.FunctionLiteral:
 		params := node.Parameters
 		body := node.Body
-		function := &object.Function{Parameters: params, Env: env, Body: body}
-		env.Set(node.Name.Value, function)
+		context, _ := env.Get("self")
+		function := &object.Function{
+			Parameters: params,
+			Env:        env,
+			Body:       body,
+			CallFn:     applyFunction,
+		}
+		object.AddMethod(context, node.Name.Value, function)
 		return function
 	case *ast.ArrayLiteral:
 		elements := evalExpressions(node.Elements, env)
@@ -79,11 +85,7 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 		if len(args) == 1 && IsError(args[0]) {
 			return args[0]
 		}
-		if node.Context == nil {
-			function := Eval(node.Function, env)
-			if IsError(function) {
-				return function
-			}
+		if function, ok := env.Get(node.Function.Value); ok {
 			return applyFunction(function, args)
 		}
 		return object.Send(context, node.Function.Value, args...)
