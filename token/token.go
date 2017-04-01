@@ -1,6 +1,6 @@
 package token
 
-//go:generate stringer -type=TokenType
+//go:generate stringer -type=Type
 
 // Recognized token types
 const (
@@ -47,6 +47,7 @@ const (
 
 	DEF
 	REQUIRE
+	SELF
 	END
 	IF
 	THEN
@@ -68,6 +69,7 @@ var keywords = map[string]Type{
 	"nil":     NIL,
 	"return":  RETURN,
 	"require": REQUIRE,
+	"self":    SELF,
 }
 
 // LookupIdent returns a keyword TokenType if ident is a keyword or IDENT

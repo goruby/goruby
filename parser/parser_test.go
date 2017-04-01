@@ -2,10 +2,12 @@ package parser
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/lexer"
+	"github.com/goruby/goruby/token"
 )
 
 func TestVariableExpression(t *testing.T) {
@@ -133,6 +135,34 @@ func TestIdentifierExpression(t *testing.T) {
 			"ident.TokenLiteral not %s. got=%s", "foobar",
 			ident.TokenLiteral(),
 		)
+	}
+}
+
+func TestSelfExpression(t *testing.T) {
+	input := "self;"
+
+	l := lexer.New(input)
+	p := New(l)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf(
+			"program has not enough statements. got=%d",
+			len(program.Statements),
+		)
+	}
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+
+	_, ok = stmt.Expression.(*ast.Self)
+	if !ok {
+		t.Fatalf("expression not *ast.Self. got=%T", stmt.Expression)
 	}
 }
 
@@ -1113,6 +1143,69 @@ func TestContextCallExpression(t *testing.T) {
 			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
 		}
 	})
+	t.Run("context call on self with no args", func(t *testing.T) {
+		input := "self.add;"
+
+		l := lexer.New(input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
+				1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
+				stmt.Expression)
+		}
+
+		if _, ok := exp.Context.(*ast.Self); !ok {
+			t.Logf("exp.Context is not ast.Self, got=%T", exp.Context)
+			t.Fail()
+		}
+
+		if !testIdentifier(t, exp.Function, "add") {
+			return
+		}
+
+		if len(exp.Arguments) != 0 {
+			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+		}
+	})
+	t.Run("context call on self with no dot", func(t *testing.T) {
+		input := "self add;"
+
+		l := lexer.New(input)
+		p := New(l)
+		_, err := p.ParseProgram()
+
+		if err == nil {
+			t.Logf("Expected parser error, got nil")
+			t.FailNow()
+		}
+
+		expected := &unexpectedTokenError{
+			expectedTokens: []token.Type{token.NEWLINE, token.SEMICOLON, token.DOT, token.EOF},
+			actualToken:    token.IDENT,
+		}
+
+		errors := err.(*Errors)
+		actual := errors.errors[0]
+
+		if !reflect.DeepEqual(expected, actual) {
+			t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, actual)
+			t.Fail()
+		}
+	})
 	t.Run("context call on nonident with no dot", func(t *testing.T) {
 		input := "1 add;"
 
@@ -1268,7 +1361,6 @@ func TestContextCallExpression(t *testing.T) {
 			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
 				stmt.Expression)
 		}
-		fmt.Printf("Expression: %+#v\n", exp)
 
 		context, ok := exp.Context.(*ast.ContextCallExpression)
 		if !ok {
@@ -1325,7 +1417,6 @@ func TestContextCallExpression(t *testing.T) {
 			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
 				stmt.Expression)
 		}
-		fmt.Printf("Expression: %+#v\n", exp)
 
 		context, ok := exp.Context.(*ast.ContextCallExpression)
 		if !ok {
@@ -1382,7 +1473,6 @@ func TestContextCallExpression(t *testing.T) {
 			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
 				stmt.Expression)
 		}
-		fmt.Printf("Expression: %+#v\n", exp)
 
 		context, ok := exp.Context.(*ast.ContextCallExpression)
 		if !ok {
@@ -1390,10 +1480,6 @@ func TestContextCallExpression(t *testing.T) {
 				"expr.Context is not ast.ContextCallExpression. got=%T",
 				exp.Context,
 			)
-		}
-
-		if !testIdentifier(t, context.Context, "foo") {
-			return
 		}
 
 		if !testIdentifier(t, context.Function, "add") {

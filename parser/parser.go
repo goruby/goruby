@@ -79,6 +79,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.NIL, p.parseNilLiteral)
 	p.registerPrefix(token.REQUIRE, p.parseRequireExpression)
+	p.registerPrefix(token.SELF, p.parseSelf)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -249,6 +250,15 @@ func (p *Parser) parseNilLiteral() ast.Expression {
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+func (p *Parser) parseSelf() ast.Expression {
+	self := &ast.Self{Token: p.curToken}
+	if !p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON, token.DOT, token.EOF) {
+		p.peekError(token.NEWLINE, token.SEMICOLON, token.DOT, token.EOF)
+		return nil
+	}
+	return self
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
@@ -462,6 +472,10 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 
 func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expression {
 	contextCallExpression := &ast.ContextCallExpression{Token: p.curToken, Context: context}
+	if _, ok := context.(*ast.Self); ok && !p.currentTokenIs(token.DOT) {
+		p.peekError(p.curToken.Type)
+		return nil
+	}
 	if p.currentTokenIs(token.DOT) {
 		p.nextToken()
 	}
