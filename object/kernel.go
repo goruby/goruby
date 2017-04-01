@@ -3,7 +3,7 @@ package object
 import "fmt"
 
 var kernelModule = newModule("Kernel", kernelMethodSet)
-var kernelFunctions = NewEnclosedEnvironment(classes)
+var kernelFunctions = NewEnclosedEnvironment(classes.Clone())
 
 func init() {
 	classes.Set("Kernel", kernelModule)

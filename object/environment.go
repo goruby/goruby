@@ -5,7 +5,7 @@ var classes = NewEnvironment()
 // NewMainEnvironment returns a new Environment populated with all Ruby classes
 // and the Kernel functions
 func NewMainEnvironment() Environment {
-	env := kernelFunctions
+	env := kernelFunctions.Clone()
 	env.Set("self", &Self{&Object{}})
 	env.SetGlobal("$LOADED_FEATURES", NewArray())
 	return env
@@ -37,6 +37,11 @@ type Environment interface {
 	SetGlobal(name string, val RubyObject) RubyObject
 	// Outer returns the parent environment
 	Outer() Environment
+	// Clone returns a copy of the environment. It will shallow copy its values
+	//
+	// Note that clone will also not set its outer env, so calls to Outer will
+	// return nil on cloned Environments
+	Clone() Environment
 }
 
 type environment struct {
@@ -81,6 +86,10 @@ func (e *environment) Enclose(outer Environment) Environment {
 	env := e.clone()
 	env.outer = outer
 	return env
+}
+
+func (e *environment) Clone() Environment {
+	return e.clone()
 }
 
 func (e *environment) clone() *environment {
