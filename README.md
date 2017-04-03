@@ -3,6 +3,8 @@ goruby
 
 GoRuby, an implementation of Ruby written in Go
 
+[![Build Status](https://travis-ci.org/goruby/goruby.svg?branch=master)](https://travis-ci.org/goruby/goruby)
+
 ## Contribution
 
 If anyone wants to help to get the project to the real implementation please ping me or fork it and send a pull request.
