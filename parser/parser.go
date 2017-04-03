@@ -124,7 +124,11 @@ func (p *Parser) registerInfix(tokenType token.Type, fn infixParseFn) {
 
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
-	p.peekToken = p.l.NextToken()
+	if p.l.HasNext() {
+		p.peekToken = p.l.NextToken()
+	} else {
+		p.peekToken = token.NewToken(token.EOF, "", -1)
+	}
 }
 
 // Errors returns all errors which happened during the parsing of the input.
@@ -162,6 +166,10 @@ func (p *Parser) ParseProgram() (*ast.Program, error) {
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
+	case token.ILLEGAL:
+		msg := fmt.Errorf("%s", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
 	case token.EOF:
 		err := &unexpectedTokenError{
 			expectedTokens: []token.Type{token.NEWLINE},
