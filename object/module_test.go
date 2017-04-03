@@ -31,6 +31,35 @@ func TestModuleAncestors(t *testing.T) {
 			t.Fail()
 		}
 	})
+	t.Run("class with mixed in modules", func(t *testing.T) {
+		context := mixin(
+			&class{name: "BasicObjectAsParent", superClass: basicObjectClass},
+			kernelModule,
+		)
+
+		result := moduleAncestors(context)
+
+		array, ok := result.(*Array)
+		if !ok {
+			t.Logf("Expected result to be an Array, got %T", result)
+			t.FailNow()
+		}
+
+		expectedAncestors := 3
+
+		if len(array.Elements) != expectedAncestors {
+			t.Logf("Expected %d ancestors, got %d", expectedAncestors, len(array.Elements))
+			t.Fail()
+		}
+
+		expected := fmt.Sprintf("[%s]", strings.Join([]string{"BasicObjectAsParent", "Kernel", "BasicObject"}, ", "))
+		actual := fmt.Sprintf("%s", array.Inspect())
+
+		if expected != actual {
+			t.Logf("Expected ancestors to equal %s, got %s", expected, actual)
+			t.Fail()
+		}
+	})
 	t.Run("core class hierarchies", func(t *testing.T) {
 		tests := []struct {
 			class             RubyClassObject

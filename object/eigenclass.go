@@ -1,6 +1,6 @@
 package object
 
-func newEigenclass(wrappedClass RubyClass, methods map[string]RubyMethod) RubyClassObject {
+func newEigenclass(wrappedClass RubyClass, methods map[string]RubyMethod) *eigenclass {
 	return &eigenclass{methods: methods, wrappedClass: wrappedClass}
 }
 
@@ -28,4 +28,7 @@ func (e *eigenclass) SuperClass() RubyClass {
 		return e.wrappedClass
 	}
 	return objectClass
+}
+func (e *eigenclass) addMethod(name string, method RubyMethod) {
+	e.methods[name] = method
 }
