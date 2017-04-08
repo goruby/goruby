@@ -642,7 +642,8 @@ func testEval(input string, context ...object.Environment) object.RubyObject {
 	if err != nil {
 		return object.NewSyntaxError(err.Error())
 	}
-	return Eval(program, env)
+	evaluated, err := Eval(program, env)
+	return evaluated
 }
 
 func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool {

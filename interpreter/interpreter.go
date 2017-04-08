@@ -1,8 +1,6 @@
 package interpreter
 
 import (
-	"fmt"
-
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/evaluator"
 	"github.com/goruby/goruby/lexer"
@@ -31,9 +29,9 @@ func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
 	if err != nil {
 		return nil, err
 	}
-	evaluated := evaluator.Eval(node, i.environment)
+	evaluated, err := evaluator.Eval(node, i.environment)
 	if evaluator.IsError(evaluated) {
-		return nil, fmt.Errorf(evaluated.Inspect())
+		return nil, err
 	}
 	return evaluated, nil
 }
