@@ -1,7 +1,7 @@
 package object
 
 // Send sends message method with args to context and returns its result
-func Send(context RubyObject, method string, args ...RubyObject) RubyObject {
+func Send(context RubyObject, method string, args ...RubyObject) (RubyObject, error) {
 	class := context.Class()
 
 	// search for the method in the ancestry tree
@@ -13,7 +13,7 @@ func Send(context RubyObject, method string, args ...RubyObject) RubyObject {
 		}
 
 		if fn.Visibility() == PRIVATE_METHOD && context.Type() != SELF {
-			return NewPrivateNoMethodError(context, method)
+			return nil, NewPrivateNoMethodError(context, method)
 		}
 
 		return fn.Call(context, args...)
@@ -49,7 +49,7 @@ func AddMethod(context RubyObject, methodName string, method *Function) RubyObje
 	return extended
 }
 
-func methodMissing(context RubyObject, args ...RubyObject) RubyObject {
+func methodMissing(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	class := context.Class()
 
 	// search for method_missing in the ancestry tree
@@ -61,5 +61,5 @@ func methodMissing(context RubyObject, args ...RubyObject) RubyObject {
 		}
 		return fn.Call(context, args...)
 	}
-	return NewNoMethodError(context, args[0].(*Symbol).Value)
+	return nil, NewNoMethodError(context, args[0].(*Symbol).Value)
 }

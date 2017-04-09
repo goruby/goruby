@@ -86,13 +86,9 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			return nil, err
 		}
 		if function, ok := env.Get(node.Function.Value); ok {
-			return applyFunction(function, args), nil
+			return applyFunction(function, args)
 		}
-		result := object.Send(context, node.Function.Value, args...)
-		if err, ok := result.(error); ok {
-			return nil, err
-		}
-		return result, nil
+		return object.Send(context, node.Function.Value, args...)
 	case *ast.IndexExpression:
 		left, err := Eval(node.Left, env)
 		if err != nil {
@@ -353,31 +349,34 @@ func evalIdentifier(node *ast.Identifier, env object.Environment) (object.RubyOb
 			if len(fn.Parameters) != 0 {
 				return val, nil
 			}
-			return applyFunction(fn, []object.RubyObject{}), nil
+			return applyFunction(fn, []object.RubyObject{})
 		}
 		return val, nil
 	}
 	self, _ := env.Get("self")
-	val = object.Send(self, node.Value)
-	if IsError(val) {
+	val, err := object.Send(self, node.Value)
+	if err != nil {
 		return nil, object.NewNameError(self, node.Value)
 	}
 	return val, nil
 }
 
-func applyFunction(fn object.RubyObject, args []object.RubyObject) object.RubyObject {
+func applyFunction(fn object.RubyObject, args []object.RubyObject) (object.RubyObject, error) {
 	switch fn := fn.(type) {
 	case *object.Function:
 		if len(args) != len(fn.Parameters) {
-			return object.NewWrongNumberOfArgumentsError(len(fn.Parameters), len(args))
+			return nil, object.NewWrongNumberOfArgumentsError(len(fn.Parameters), len(args))
 		}
 		extendedEnv := extendFunctionEnv(fn, args)
-		evaluated, _ := Eval(fn.Body, extendedEnv)
-		return unwrapReturnValue(evaluated)
+		evaluated, err := Eval(fn.Body, extendedEnv)
+		if err != nil {
+			return nil, err
+		}
+		return unwrapReturnValue(evaluated), nil
 	case *object.Builtin:
-		return fn.Fn(args...)
+		return fn.Fn(args...), nil
 	default:
-		return object.NewSyntaxError(fmt.Sprintf("not a function: %s", fn.Type()))
+		return nil, object.NewSyntaxError(fmt.Sprintf("not a function: %s", fn.Type()))
 	}
 }
 

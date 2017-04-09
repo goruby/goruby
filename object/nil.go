@@ -22,6 +22,6 @@ var nilMethods = map[string]RubyMethod{
 	"nil?": withArity(0, publicMethod(nilIsNil)),
 }
 
-func nilIsNil(context RubyObject, args ...RubyObject) RubyObject {
-	return TRUE
+func nilIsNil(context RubyObject, args ...RubyObject) (RubyObject, error) {
+	return TRUE, nil
 }

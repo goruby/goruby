@@ -104,7 +104,7 @@ type Function struct {
 	Parameters       []*ast.Identifier
 	Body             *ast.BlockStatement
 	Env              Environment
-	CallFn           func(context RubyObject, args []RubyObject) RubyObject
+	CallFn           func(context RubyObject, args []RubyObject) (RubyObject, error)
 	MethodVisibility MethodVisibility
 }
 
@@ -131,7 +131,7 @@ func (f *Function) Inspect() string {
 func (f *Function) Class() RubyClass { return nil }
 
 // Call implements the RubyMethod interface. It calls f.CallFn
-func (f *Function) Call(context RubyObject, args ...RubyObject) RubyObject {
+func (f *Function) Call(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	return f.CallFn(f, args)
 }
 

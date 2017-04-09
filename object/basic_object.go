@@ -19,8 +19,8 @@ func (b *basicObject) Type() Type { return BASIC_OBJECT_OBJ }
 func (b *basicObject) Class() RubyClass { return basicObjectClass }
 
 var basicObjectClassMethods = map[string]RubyMethod{
-	"new": publicMethod(func(context RubyObject, args ...RubyObject) RubyObject {
-		return &basicObject{}
+	"new": publicMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+		return &basicObject{}, nil
 	}),
 }
 
@@ -28,15 +28,13 @@ var basicObjectMethods = map[string]RubyMethod{
 	"method_missing": privateMethod(basicObjectMethodMissing),
 }
 
-func basicObjectMethodMissing(context RubyObject, args ...RubyObject) RubyObject {
+func basicObjectMethodMissing(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	if len(args) < 1 {
-		// TODO: can we protect against this
-		panic("wrong number of call arguments for method_missing")
+		return nil, NewWrongNumberOfArgumentsError(1, 0)
 	}
 	method, ok := args[0].(*Symbol)
 	if !ok {
-		// TODO: can we protect against this?
-		panic("wrong call argument for method_missing")
+		return nil, NewImplicitConversionTypeError(method, args[0])
 	}
-	return NewNoMethodError(context, method.Value)
+	return nil, NewNoMethodError(context, method.Value)
 }

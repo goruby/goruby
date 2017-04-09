@@ -1,17 +1,15 @@
 package object
 
 import (
-	"reflect"
 	"testing"
 )
 
 func TestBasicObjectMethodMissing(t *testing.T) {
-	result := basicObjectMethodMissing(NIL, &Symbol{"foo"})
+	result, err := basicObjectMethodMissing(NIL, &Symbol{"foo"})
+
+	checkResult(t, result, nil)
 
 	expected := NewNoMethodError(NIL, "foo")
 
-	if !reflect.DeepEqual(expected, result) {
-		t.Logf("Expected result to equal\n%+#v\n\tgot\n%+#v\n", expected, result)
-		t.Fail()
-	}
+	checkError(t, err, expected)
 }
