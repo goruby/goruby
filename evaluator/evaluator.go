@@ -23,8 +23,8 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return Eval(node.Expression, env)
 	case *ast.ReturnStatement:
 		val, err := Eval(node.ReturnValue, env)
-		if IsError(val) {
-			return val, err
+		if err != nil {
+			return nil, err
 		}
 		return &object.ReturnValue{Value: val}, nil
 	case *ast.BlockStatement:
@@ -62,58 +62,62 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return function, nil
 	case *ast.ArrayLiteral:
 		elements, err := evalExpressions(node.Elements, env)
-		if len(elements) == 1 && IsError(elements[0]) {
-			return elements[0], err
+		if err != nil {
+			return nil, err
 		}
 		return &object.Array{Elements: elements}, nil
 	case *ast.VariableAssignment:
 		val, err := Eval(node.Value, env)
-		if IsError(val) {
-			return val, err
+		if err != nil {
+			return nil, err
 		}
 		env.Set(node.Name.Value, val)
 		return val, nil
 	case *ast.ContextCallExpression:
 		context, err := Eval(node.Context, env)
-		if IsError(context) {
-			return context, err
+		if err != nil {
+			return nil, err
 		}
 		if context == nil {
 			context, _ = env.Get("self")
 		}
 		args, err := evalExpressions(node.Arguments, env)
-		if len(args) == 1 && IsError(args[0]) {
-			return args[0], err
+		if err != nil {
+			return nil, err
 		}
 		if function, ok := env.Get(node.Function.Value); ok {
 			return applyFunction(function, args), nil
 		}
-		return object.Send(context, node.Function.Value, args...), nil
+		result := object.Send(context, node.Function.Value, args...)
+		if err, ok := result.(error); ok {
+			return nil, err
+		}
+		return result, nil
 	case *ast.IndexExpression:
 		left, err := Eval(node.Left, env)
-		if IsError(left) {
-			return left, err
+		if err != nil {
+			return nil, err
 		}
 		index, err := Eval(node.Index, env)
-		if IsError(index) {
-			return index, err
+		if err != nil {
+			return nil, err
 		}
 		return evalIndexExpression(left, index)
 	case *ast.PrefixExpression:
 		right, err := Eval(node.Right, env)
-		if IsError(right) {
-			return right, err
+		if err != nil {
+			return nil, err
 		}
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
 		left, err := Eval(node.Left, env)
-		if IsError(left) {
-			return left, err
+		if err != nil {
+			return nil, err
 		}
 
 		right, err := Eval(node.Right, env)
-		if IsError(right) {
-			return right, err
+		if err != nil {
+			return nil, err
 		}
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.IfExpression:
@@ -124,7 +128,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return nil, nil
 	default:
 		err := object.NewException("Unknown AST: %T", node)
-		return err, err
+		return nil, err
 	}
 
 }
@@ -135,6 +139,10 @@ func evalProgram(stmts []ast.Statement, env object.Environment) (object.RubyObje
 	for _, statement := range stmts {
 		result, err = Eval(statement, env)
 
+		if err != nil {
+			return nil, err
+		}
+
 		switch result := result.(type) {
 		case *object.ReturnValue:
 			return result.Value, nil
@@ -142,9 +150,6 @@ func evalProgram(stmts []ast.Statement, env object.Environment) (object.RubyObje
 			return result.Fn(), nil
 		}
 
-		if IsError(result) {
-			return result, err
-		}
 	}
 	return result, nil
 }
@@ -154,8 +159,8 @@ func evalExpressions(exps []ast.Expression, env object.Environment) ([]object.Ru
 
 	for _, e := range exps {
 		evaluated, err := Eval(e, env)
-		if IsError(evaluated) {
-			return []object.RubyObject{evaluated}, err
+		if err != nil {
+			return nil, err
 		}
 		result = append(result, evaluated)
 	}
@@ -190,15 +195,13 @@ func evalRequireExpression(expr *ast.RequireExpression, env object.Environment) 
 	arr.Elements = append(arr.Elements, &object.String{Value: filename})
 	file, err := ioutil.ReadFile(filename)
 	if os.IsNotExist(err) {
-		errObj := object.NewLoadError(expr.Name.Value)
-		return errObj, errObj
+		return nil, object.NewLoadError(expr.Name.Value)
 	}
 	l := lexer.New(string(file))
 	p := parser.New(l)
 	prog, err := p.ParseProgram()
 	if err != nil {
-		errObj := object.NewSyntaxError(err.Error())
-		return errObj, errObj
+		return nil, object.NewSyntaxError(err.Error())
 	}
 	Eval(prog, env)
 	return object.TRUE, nil
@@ -211,8 +214,7 @@ func evalPrefixExpression(operator string, right object.RubyObject) (object.Ruby
 	case "-":
 		return evalMinusPrefixOperatorExpression(right)
 	default:
-		err := object.NewException("unknown operator: %s%s", operator, right.Type())
-		return err, err
+		return nil, object.NewException("unknown operator: %s%s", operator, right.Type())
 	}
 }
 
@@ -234,8 +236,7 @@ func evalMinusPrefixOperatorExpression(right object.RubyObject) (object.RubyObje
 	case *object.Integer:
 		return &object.Integer{Value: -right.Value}, nil
 	default:
-		err := object.NewException("unknown operator: -%s", right.Type())
-		return err, err
+		return nil, object.NewException("unknown operator: -%s", right.Type())
 	}
 }
 
@@ -250,11 +251,9 @@ func evalInfixExpression(operator string, left, right object.RubyObject) (object
 	case operator == "!=":
 		return nativeBoolToBooleanObject(left != right), nil
 	case left.Type() != right.Type():
-		err := object.NewException("type mismatch: %s %s %s", left.Type(), operator, right.Type())
-		return err, err
+		return nil, object.NewException("type mismatch: %s %s %s", left.Type(), operator, right.Type())
 	default:
-		err := object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
-		return err, err
+		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
@@ -279,8 +278,7 @@ func evalIntegerInfixExpression(operator string, left, right object.RubyObject) 
 	case "!=":
 		return nativeBoolToBooleanObject(leftVal != rightVal), nil
 	default:
-		err := object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
-		return err, err
+		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
@@ -289,8 +287,7 @@ func evalStringInfixExpression(
 	left, right object.RubyObject,
 ) (object.RubyObject, error) {
 	if operator != "+" {
-		err := object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
-		return err, err
+		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 	leftVal := left.(*object.String).Value
 	rightVal := right.(*object.String).Value
@@ -299,8 +296,8 @@ func evalStringInfixExpression(
 
 func evalIfExpression(ie *ast.IfExpression, env object.Environment) (object.RubyObject, error) {
 	condition, err := Eval(ie.Condition, env)
-	if IsError(condition) {
-		return condition, err
+	if err != nil {
+		return nil, err
 	}
 	if isTruthy(condition) {
 		return Eval(ie.Consequence, env)
@@ -316,8 +313,7 @@ func evalIndexExpression(left, index object.RubyObject) (object.RubyObject, erro
 	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
 		return evalArrayIndexExpression(left, index), nil
 	default:
-		err := object.NewException("index operator not supported: %s", left.Type())
-		return err, err
+		return nil, object.NewException("index operator not supported: %s", left.Type())
 	}
 }
 
@@ -336,10 +332,13 @@ func evalBlockStatement(block *ast.BlockStatement, env object.Environment) (obje
 	var err error
 	for _, statement := range block.Statements {
 		result, err = Eval(statement, env)
+		if err != nil {
+			return nil, err
+		}
 		if result != nil {
 			rt := result.Type()
-			if rt == object.RETURN_VALUE_OBJ || IsError(result) {
-				return result, err
+			if rt == object.RETURN_VALUE_OBJ {
+				return result, nil
 			}
 
 		}
@@ -361,8 +360,7 @@ func evalIdentifier(node *ast.Identifier, env object.Environment) (object.RubyOb
 	self, _ := env.Get("self")
 	val = object.Send(self, node.Value)
 	if IsError(val) {
-		err := object.NewNameError(self, node.Value)
-		return err, err
+		return nil, object.NewNameError(self, node.Value)
 	}
 	return val, nil
 }

@@ -32,7 +32,8 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated, err := testEval(tt.input)
+		checkError(t, err)
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
@@ -64,7 +65,8 @@ func TestEvalBooleanExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated, err := testEval(tt.input)
+		checkError(t, err)
 		testBooleanObject(t, evaluated, tt.expected)
 	}
 }
@@ -83,7 +85,8 @@ func TestBangOperator(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated, err := testEval(tt.input)
+		checkError(t, err)
 		testBooleanObject(t, evaluated, tt.expected)
 	}
 }
@@ -103,7 +106,8 @@ func TestIfElseExpressions(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated, err := testEval(tt.input)
+		checkError(t, err)
 		integer, ok := tt.expected.(int)
 		if ok {
 			testIntegerObject(t, evaluated, int64(integer))
@@ -131,7 +135,8 @@ func TestReturnStatements(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated, err := testEval(tt.input)
+		checkError(t, err)
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
@@ -206,24 +211,23 @@ end
 	for _, tt := range tests {
 		env := object.NewEnvironment()
 		env.Set("self", &object.Self{&object.Object{}})
-		evaluated := testEval(tt.input, env)
+		evaluated, err := testEval(tt.input, env)
 
-		ok := IsError(evaluated)
+		if err == nil {
+			t.Errorf(
+				"no error returned. got=%T(%+v)",
+				evaluated,
+				evaluated,
+			)
+		}
+
+		actual, ok := err.(object.RubyObject)
 		if !ok {
-			t.Errorf(
-				"no error object returned. got=%T(%+v)",
-				evaluated,
-				evaluated,
-			)
+			t.Logf("Error is not a RubyObject, got %T:%v\n", err, err)
+			t.FailNow()
 		}
 
-		if evaluated.Inspect() != tt.expectedMessage {
-			t.Errorf(
-				"wrong error message. expected=%q, got=%q",
-				tt.expectedMessage,
-				evaluated.Inspect(),
-			)
-		}
+		testExceptionObject(t, actual, tt.expectedMessage)
 	}
 }
 
@@ -239,7 +243,9 @@ func TestVariableAssignmentExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		testIntegerObject(t, testEval(tt.input), tt.expected)
+		evaluated, err := testEval(tt.input)
+		checkError(t, err)
+		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
 
@@ -271,7 +277,8 @@ func TestFunctionObject(t *testing.T) {
 	for _, tt := range tests {
 		env := object.NewEnvironment()
 		env.Set("self", &object.Self{&object.Object{}})
-		evaluated := testEval(tt.input, env)
+		evaluated, err := testEval(tt.input, env)
+		checkError(t, err)
 		fn, ok := evaluated.(*object.Function)
 		if !ok {
 			t.Fatalf("object is not Function. got=%T (%+v)", evaluated, evaluated)
@@ -314,14 +321,17 @@ func TestFunctionApplication(t *testing.T) {
 	for _, tt := range tests {
 		env := object.NewEnvironment()
 		env.Set("self", &object.Self{&object.Object{}})
-		testIntegerObject(t, testEval(tt.input, env), tt.expected)
+		evaluated, err := testEval(tt.input, env)
+		checkError(t, err)
+		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
 
 func TestStringLiteral(t *testing.T) {
 	input := `"Hello World!"`
 
-	evaluated := testEval(input)
+	evaluated, err := testEval(input)
+	checkError(t, err)
 	str, ok := evaluated.(*object.String)
 	if !ok {
 		t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
@@ -335,7 +345,8 @@ func TestStringLiteral(t *testing.T) {
 func TestStringConcatenation(t *testing.T) {
 	input := `"Hello" + " " + "World!"`
 
-	evaluated := testEval(input)
+	evaluated, err := testEval(input)
+	checkError(t, err)
 	str, ok := evaluated.(*object.String)
 	if !ok {
 		t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
@@ -349,7 +360,8 @@ func TestStringConcatenation(t *testing.T) {
 func TestSymbolLiteral(t *testing.T) {
 	input := `:foobar;`
 
-	evaluated := testEval(input)
+	evaluated, err := testEval(input)
+	checkError(t, err)
 	sym, ok := evaluated.(*object.Symbol)
 	if !ok {
 		t.Fatalf("object is not Symbol. got=%T (%+v)", evaluated, evaluated)
@@ -370,7 +382,8 @@ func TestBuiltinFunctions(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input, object.NewMainEnvironment())
+		evaluated, err := testEval(tt.input, object.NewMainEnvironment())
+		checkError(t, err)
 
 		switch expected := tt.expected.(type) {
 		case int:
@@ -395,9 +408,9 @@ func TestBuiltinFunctions(t *testing.T) {
 func TestMethodCalls(t *testing.T) {
 	input := "x = 2; x.foo :bar"
 
-	evaluated := testEval(input)
+	evaluated, err := testEval(input)
 
-	if !IsError(evaluated) {
+	if err == nil {
 		t.Logf("Expected error, got %T:%s\n", evaluated, evaluated)
 		t.Fail()
 	}
@@ -405,7 +418,9 @@ func TestMethodCalls(t *testing.T) {
 
 func TestArrayLiterals(t *testing.T) {
 	input := "[1, 2 * 2, 3 + 3]"
-	evaluated := testEval(input)
+	evaluated, err := testEval(input)
+	checkError(t, err)
+
 	result, ok := evaluated.(*object.Array)
 	if !ok {
 		t.Fatalf("object is not Array. got=%T (%+v)", evaluated, evaluated)
@@ -467,8 +482,10 @@ func TestArrayIndexExpressions(t *testing.T) {
 			nil,
 		},
 	}
+
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated, err := testEval(tt.input)
+		checkError(t, err)
 		integer, ok := tt.expected.(int)
 		if ok {
 			testIntegerObject(t, evaluated, int64(integer))
@@ -480,7 +497,8 @@ func TestArrayIndexExpressions(t *testing.T) {
 
 func TestNilExpression(t *testing.T) {
 	input := "nil"
-	evaluated := testEval(input)
+	evaluated, err := testEval(input)
+	checkError(t, err)
 	testNilObject(t, evaluated)
 }
 
@@ -489,7 +507,8 @@ func TestSelfExpression(t *testing.T) {
 
 	env := object.NewMainEnvironment()
 	env.Set("self", &object.Self{&object.Integer{Value: 3}})
-	evaluated := testEval(input, env)
+	evaluated, err := testEval(input, env)
+	checkError(t, err)
 
 	self, ok := evaluated.(*object.Self)
 	if !ok {
@@ -506,7 +525,8 @@ func TestRequireExpression(t *testing.T) {
 		x + 2
 		`
 
-		evaluated := testEval(input)
+		evaluated, err := testEval(input)
+		checkError(t, err)
 
 		testIntegerObject(t, evaluated, int64(7))
 	})
@@ -515,7 +535,8 @@ func TestRequireExpression(t *testing.T) {
 		x + 2
 		`
 
-		evaluated := testEval(input)
+		evaluated, err := testEval(input)
+		checkError(t, err)
 
 		testIntegerObject(t, evaluated, int64(7))
 	})
@@ -523,7 +544,8 @@ func TestRequireExpression(t *testing.T) {
 		input := `require "testfile.rb"
 		`
 
-		evaluated := testEval(input)
+		evaluated, err := testEval(input)
+		checkError(t, err)
 
 		testBooleanObject(t, evaluated, true)
 	})
@@ -532,7 +554,8 @@ func TestRequireExpression(t *testing.T) {
 		`
 
 		env := object.NewEnvironment()
-		testEval(input, env)
+		_, err := testEval(input, env)
+		checkError(t, err)
 
 		loadedFeatures, ok := env.Get("$LOADED_FEATURES")
 		if !ok {
@@ -567,7 +590,8 @@ func TestRequireExpression(t *testing.T) {
 			x
 		`
 
-		evaluated := testEval(input)
+		evaluated, err := testEval(input)
+		checkError(t, err)
 
 		testIntegerObject(t, evaluated, int64(7))
 	})
@@ -576,7 +600,8 @@ func TestRequireExpression(t *testing.T) {
 			require "testfile"
 		`
 
-		evaluated := testEval(input)
+		evaluated, err := testEval(input)
+		checkError(t, err)
 
 		testBooleanObject(t, evaluated, false)
 	})
@@ -585,7 +610,8 @@ func TestRequireExpression(t *testing.T) {
 		x + 2
 		`
 
-		evaluated := testEval(input)
+		evaluated, err := testEval(input)
+		checkError(t, err)
 
 		testIntegerObject(t, evaluated, int64(7))
 	})
@@ -593,19 +619,46 @@ func TestRequireExpression(t *testing.T) {
 		input := `require "testfile_syntax_error.rb"
 		`
 
-		evaluated := testEval(input)
+		evaluated, err := testEval(input)
+		if err == nil {
+			t.Errorf(
+				"no error returned. got=%T(%+v)",
+				evaluated,
+				evaluated,
+			)
+		}
+
+		actual, ok := err.(object.RubyObject)
+		if !ok {
+			t.Logf("Error is not a RubyObject, got %T:%v\n", err, err)
+			t.FailNow()
+		}
 
 		expected := "SyntaxError: syntax error, Parsing errors:\n\texpected next token to be of type [END], got EOF instead\n"
-		testExceptionObject(t, evaluated, expected)
+		testExceptionObject(t, actual, expected)
 	})
 	t.Run("file not found", func(t *testing.T) {
 		input := `require "this/file/does/not/exist"
 		`
 
-		evaluated := testEval(input)
+		evaluated, err := testEval(input)
+
+		if err == nil {
+			t.Errorf(
+				"no error returned. got=%T(%+v)",
+				evaluated,
+				evaluated,
+			)
+		}
+
+		actual, ok := err.(object.RubyObject)
+		if !ok {
+			t.Logf("Error is not a RubyObject, got %T:%v\n", err, err)
+			t.FailNow()
+		}
 
 		expected := "LoadError: no such file to load -- this/file/does/not/exist"
-		testExceptionObject(t, evaluated, expected)
+		testExceptionObject(t, actual, expected)
 	})
 }
 
@@ -631,7 +684,7 @@ func testNilObject(t *testing.T, obj object.RubyObject) bool {
 	return true
 }
 
-func testEval(input string, context ...object.Environment) object.RubyObject {
+func testEval(input string, context ...object.Environment) (object.RubyObject, error) {
 	env := object.NewEnvironment()
 	for _, e := range context {
 		env = object.NewEnclosedEnvironment(e)
@@ -640,10 +693,16 @@ func testEval(input string, context ...object.Environment) object.RubyObject {
 	p := parser.New(l)
 	program, err := p.ParseProgram()
 	if err != nil {
-		return object.NewSyntaxError(err.Error())
+		return nil, object.NewSyntaxError(err.Error())
 	}
-	evaluated, err := Eval(program, env)
-	return evaluated
+	return Eval(program, env)
+}
+
+func checkError(t *testing.T, err error) {
+	if err != nil {
+		t.Logf("Expected no error, got %T:%v\n", err, err)
+		t.Fail()
+	}
 }
 
 func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool {
