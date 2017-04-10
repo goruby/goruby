@@ -48,14 +48,14 @@ var classMethods = map[string]RubyMethod{
 	"superclass": withArity(0, publicMethod(classSuperclass)),
 }
 
-func classSuperclass(context RubyObject, args ...RubyObject) RubyObject {
+func classSuperclass(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	class := context.(RubyClass)
 	superclass := class.SuperClass()
 	if superclass == nil {
-		return NIL
+		return NIL, nil
 	}
 	if mixin, ok := superclass.(*methodSet); ok {
-		return mixin.RubyClassObject
+		return mixin.RubyClassObject, nil
 	}
-	return superclass.(RubyObject)
+	return superclass.(RubyObject), nil
 }

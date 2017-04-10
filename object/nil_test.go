@@ -3,7 +3,9 @@ package object
 import "testing"
 
 func TestNilIsNil(t *testing.T) {
-	result := nilIsNil(NIL)
+	result, err := nilIsNil(NIL)
+
+	checkError(t, err, nil)
 
 	boolean, ok := result.(*Boolean)
 	if !ok {

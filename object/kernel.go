@@ -27,16 +27,16 @@ var kernelMethodSet = map[string]RubyMethod{
 	"puts":    privateMethod(kernelPuts),
 }
 
-func kernelPuts(context RubyObject, args ...RubyObject) RubyObject {
+func kernelPuts(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	out := ""
 	for _, arg := range args {
 		out += arg.Inspect()
 	}
 	fmt.Println(out)
-	return NIL
+	return NIL, nil
 }
 
-func kernelMethods(context RubyObject, args ...RubyObject) RubyObject {
+func kernelMethods(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	var methodSymbols []RubyObject
 	class := context.Class()
 	for class != nil {
@@ -49,18 +49,18 @@ func kernelMethods(context RubyObject, args ...RubyObject) RubyObject {
 		class = class.SuperClass()
 	}
 
-	return &Array{Elements: methodSymbols}
+	return &Array{Elements: methodSymbols}, nil
 }
 
-func kernelIsNil(context RubyObject, args ...RubyObject) RubyObject {
-	return FALSE
+func kernelIsNil(context RubyObject, args ...RubyObject) (RubyObject, error) {
+	return FALSE, nil
 }
 
-func kernelClass(context RubyObject, args ...RubyObject) RubyObject {
+func kernelClass(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	class := context.Class()
 	if eigenClass, ok := class.(*eigenclass); ok {
 		class = eigenClass.Class()
 	}
 	classObj := class.(RubyClassObject)
-	return classObj
+	return classObj, nil
 }

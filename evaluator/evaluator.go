@@ -13,7 +13,7 @@ import (
 )
 
 // Eval evaluates the given node and traverses recursive over its children
-func Eval(node ast.Node, env object.Environment) object.RubyObject {
+func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 	switch node := node.(type) {
 
 	// Statements
@@ -22,11 +22,11 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
 	case *ast.ReturnStatement:
-		val := Eval(node.ReturnValue, env)
-		if IsError(val) {
-			return val
+		val, err := Eval(node.ReturnValue, env)
+		if err != nil {
+			return nil, err
 		}
-		return &object.ReturnValue{Value: val}
+		return &object.ReturnValue{Value: val}, nil
 	case *ast.BlockStatement:
 		return evalBlockStatement(node, env)
 
@@ -34,20 +34,20 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 
 	// Literals
 	case (*ast.IntegerLiteral):
-		return object.NewInteger(node.Value)
+		return object.NewInteger(node.Value), nil
 	case (*ast.Boolean):
-		return nativeBoolToBooleanObject(node.Value)
+		return nativeBoolToBooleanObject(node.Value), nil
 	case (*ast.Nil):
-		return object.NIL
+		return object.NIL, nil
 	case (*ast.Self):
 		self, _ := env.Get("self")
-		return self
+		return self, nil
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 	case *ast.StringLiteral:
-		return &object.String{Value: node.Value}
+		return &object.String{Value: node.Value}, nil
 	case *ast.SymbolLiteral:
-		return &object.Symbol{Value: node.Value}
+		return &object.Symbol{Value: node.Value}, nil
 	case *ast.FunctionLiteral:
 		params := node.Parameters
 		body := node.Body
@@ -59,61 +59,61 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 			CallFn:     applyFunction,
 		}
 		object.AddMethod(context, node.Name.Value, function)
-		return function
+		return function, nil
 	case *ast.ArrayLiteral:
-		elements := evalExpressions(node.Elements, env)
-		if len(elements) == 1 && IsError(elements[0]) {
-			return elements[0]
+		elements, err := evalExpressions(node.Elements, env)
+		if err != nil {
+			return nil, err
 		}
-		return &object.Array{Elements: elements}
+		return &object.Array{Elements: elements}, nil
 	case *ast.VariableAssignment:
-		val := Eval(node.Value, env)
-		if IsError(val) {
-			return val
+		val, err := Eval(node.Value, env)
+		if err != nil {
+			return nil, err
 		}
 		env.Set(node.Name.Value, val)
-		return val
+		return val, nil
 	case *ast.ContextCallExpression:
-		context := Eval(node.Context, env)
-		if IsError(context) {
-			return context
+		context, err := Eval(node.Context, env)
+		if err != nil {
+			return nil, err
 		}
 		if context == nil {
 			context, _ = env.Get("self")
 		}
-		args := evalExpressions(node.Arguments, env)
-		if len(args) == 1 && IsError(args[0]) {
-			return args[0]
+		args, err := evalExpressions(node.Arguments, env)
+		if err != nil {
+			return nil, err
 		}
 		if function, ok := env.Get(node.Function.Value); ok {
 			return applyFunction(function, args)
 		}
 		return object.Send(context, node.Function.Value, args...)
 	case *ast.IndexExpression:
-		left := Eval(node.Left, env)
-		if IsError(left) {
-			return left
+		left, err := Eval(node.Left, env)
+		if err != nil {
+			return nil, err
 		}
-		index := Eval(node.Index, env)
-		if IsError(index) {
-			return index
+		index, err := Eval(node.Index, env)
+		if err != nil {
+			return nil, err
 		}
 		return evalIndexExpression(left, index)
 	case *ast.PrefixExpression:
-		right := Eval(node.Right, env)
-		if IsError(right) {
-			return right
+		right, err := Eval(node.Right, env)
+		if err != nil {
+			return nil, err
 		}
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
-		left := Eval(node.Left, env)
-		if IsError(left) {
-			return left
+		left, err := Eval(node.Left, env)
+		if err != nil {
+			return nil, err
 		}
 
-		right := Eval(node.Right, env)
-		if IsError(right) {
-			return right
+		right, err := Eval(node.Right, env)
+		if err != nil {
+			return nil, err
 		}
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.IfExpression:
@@ -121,46 +121,49 @@ func Eval(node ast.Node, env object.Environment) object.RubyObject {
 	case *ast.RequireExpression:
 		return evalRequireExpression(node, env)
 	case nil:
-		return nil
+		return nil, nil
 	default:
-		return object.NewException("Unknown AST: %T", node)
+		err := object.NewException("Unknown AST: %T", node)
+		return nil, err
 	}
 
 }
 
-func evalProgram(stmts []ast.Statement, env object.Environment) object.RubyObject {
+func evalProgram(stmts []ast.Statement, env object.Environment) (object.RubyObject, error) {
 	var result object.RubyObject
+	var err error
 	for _, statement := range stmts {
-		result = Eval(statement, env)
+		result, err = Eval(statement, env)
+
+		if err != nil {
+			return nil, err
+		}
 
 		switch result := result.(type) {
 		case *object.ReturnValue:
-			return result.Value
+			return result.Value, nil
 		case *object.Builtin:
-			return result.Fn()
+			return result.Fn(), nil
 		}
 
-		if IsError(result) {
-			return result
-		}
 	}
-	return result
+	return result, nil
 }
 
-func evalExpressions(exps []ast.Expression, env object.Environment) []object.RubyObject {
+func evalExpressions(exps []ast.Expression, env object.Environment) ([]object.RubyObject, error) {
 	var result []object.RubyObject
 
 	for _, e := range exps {
-		evaluated := Eval(e, env)
-		if IsError(evaluated) {
-			return []object.RubyObject{evaluated}
+		evaluated, err := Eval(e, env)
+		if err != nil {
+			return nil, err
 		}
 		result = append(result, evaluated)
 	}
-	return result
+	return result, nil
 }
 
-func evalRequireExpression(expr *ast.RequireExpression, env object.Environment) object.RubyObject {
+func evalRequireExpression(expr *ast.RequireExpression, env object.Environment) (object.RubyObject, error) {
 	filename := expr.Name.Value
 	if !strings.HasSuffix(filename, "rb") {
 		filename += ".rb"
@@ -182,32 +185,32 @@ func evalRequireExpression(expr *ast.RequireExpression, env object.Environment) 
 		}
 	}
 	if loaded {
-		return object.FALSE
+		return object.FALSE, nil
 	}
 
 	arr.Elements = append(arr.Elements, &object.String{Value: filename})
 	file, err := ioutil.ReadFile(filename)
 	if os.IsNotExist(err) {
-		return object.NewLoadError(expr.Name.Value)
+		return nil, object.NewLoadError(expr.Name.Value)
 	}
 	l := lexer.New(string(file))
 	p := parser.New(l)
 	prog, err := p.ParseProgram()
 	if err != nil {
-		return object.NewSyntaxError(err.Error())
+		return nil, object.NewSyntaxError(err.Error())
 	}
 	Eval(prog, env)
-	return object.TRUE
+	return object.TRUE, nil
 }
 
-func evalPrefixExpression(operator string, right object.RubyObject) object.RubyObject {
+func evalPrefixExpression(operator string, right object.RubyObject) (object.RubyObject, error) {
 	switch operator {
 	case "!":
-		return evalBangOperatorExpression(right)
+		return evalBangOperatorExpression(right), nil
 	case "-":
 		return evalMinusPrefixOperatorExpression(right)
 	default:
-		return object.NewException("unknown operator: %s%s", operator, right.Type())
+		return nil, object.NewException("unknown operator: %s%s", operator, right.Type())
 	}
 }
 
@@ -224,88 +227,89 @@ func evalBangOperatorExpression(right object.RubyObject) object.RubyObject {
 	}
 }
 
-func evalMinusPrefixOperatorExpression(right object.RubyObject) object.RubyObject {
+func evalMinusPrefixOperatorExpression(right object.RubyObject) (object.RubyObject, error) {
 	switch right := right.(type) {
 	case *object.Integer:
-		return &object.Integer{Value: -right.Value}
+		return &object.Integer{Value: -right.Value}, nil
 	default:
-		return object.NewException("unknown operator: -%s", right.Type())
+		return nil, object.NewException("unknown operator: -%s", right.Type())
 	}
 }
 
-func evalInfixExpression(operator string, left, right object.RubyObject) object.RubyObject {
+func evalInfixExpression(operator string, left, right object.RubyObject) (object.RubyObject, error) {
 	switch {
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		return evalIntegerInfixExpression(operator, left, right)
 	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
 		return evalStringInfixExpression(operator, left, right)
 	case operator == "==":
-		return nativeBoolToBooleanObject(left == right)
+		return nativeBoolToBooleanObject(left == right), nil
 	case operator == "!=":
-		return nativeBoolToBooleanObject(left != right)
+		return nativeBoolToBooleanObject(left != right), nil
 	case left.Type() != right.Type():
-		return object.NewException("type mismatch: %s %s %s", left.Type(), operator, right.Type())
+		return nil, object.NewException("type mismatch: %s %s %s", left.Type(), operator, right.Type())
 	default:
-		return object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
+		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
-func evalIntegerInfixExpression(operator string, left, right object.RubyObject) object.RubyObject {
+func evalIntegerInfixExpression(operator string, left, right object.RubyObject) (object.RubyObject, error) {
 	leftVal := left.(*object.Integer).Value
 	rightVal := right.(*object.Integer).Value
 	switch operator {
 	case "+":
-		return &object.Integer{Value: leftVal + rightVal}
+		return &object.Integer{Value: leftVal + rightVal}, nil
 	case "-":
-		return &object.Integer{Value: leftVal - rightVal}
+		return &object.Integer{Value: leftVal - rightVal}, nil
 	case "*":
-		return &object.Integer{Value: leftVal * rightVal}
+		return &object.Integer{Value: leftVal * rightVal}, nil
 	case "/":
-		return &object.Integer{Value: leftVal / rightVal}
+		return &object.Integer{Value: leftVal / rightVal}, nil
 	case "<":
-		return nativeBoolToBooleanObject(leftVal < rightVal)
+		return nativeBoolToBooleanObject(leftVal < rightVal), nil
 	case ">":
-		return nativeBoolToBooleanObject(leftVal > rightVal)
+		return nativeBoolToBooleanObject(leftVal > rightVal), nil
 	case "==":
-		return nativeBoolToBooleanObject(leftVal == rightVal)
+		return nativeBoolToBooleanObject(leftVal == rightVal), nil
 	case "!=":
-		return nativeBoolToBooleanObject(leftVal != rightVal)
+		return nativeBoolToBooleanObject(leftVal != rightVal), nil
 	default:
-		return object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
+		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 
 func evalStringInfixExpression(
 	operator string,
-	left, right object.RubyObject) object.RubyObject {
+	left, right object.RubyObject,
+) (object.RubyObject, error) {
 	if operator != "+" {
-		return object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
+		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 	leftVal := left.(*object.String).Value
 	rightVal := right.(*object.String).Value
-	return &object.String{Value: leftVal + rightVal}
+	return &object.String{Value: leftVal + rightVal}, nil
 }
 
-func evalIfExpression(ie *ast.IfExpression, env object.Environment) object.RubyObject {
-	condition := Eval(ie.Condition, env)
-	if IsError(condition) {
-		return condition
+func evalIfExpression(ie *ast.IfExpression, env object.Environment) (object.RubyObject, error) {
+	condition, err := Eval(ie.Condition, env)
+	if err != nil {
+		return nil, err
 	}
 	if isTruthy(condition) {
 		return Eval(ie.Consequence, env)
 	} else if ie.Alternative != nil {
 		return Eval(ie.Alternative, env)
 	} else {
-		return object.NIL
+		return object.NIL, nil
 	}
 }
 
-func evalIndexExpression(left, index object.RubyObject) object.RubyObject {
+func evalIndexExpression(left, index object.RubyObject) (object.RubyObject, error) {
 	switch {
 	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
-		return evalArrayIndexExpression(left, index)
+		return evalArrayIndexExpression(left, index), nil
 	default:
-		return object.NewException("index operator not supported: %s", left.Type())
+		return nil, object.NewException("index operator not supported: %s", left.Type())
 	}
 }
 
@@ -319,53 +323,60 @@ func evalArrayIndexExpression(array, index object.RubyObject) object.RubyObject 
 	return arrayObject.Elements[idx]
 }
 
-func evalBlockStatement(block *ast.BlockStatement, env object.Environment) object.RubyObject {
+func evalBlockStatement(block *ast.BlockStatement, env object.Environment) (object.RubyObject, error) {
 	var result object.RubyObject
+	var err error
 	for _, statement := range block.Statements {
-		result = Eval(statement, env)
+		result, err = Eval(statement, env)
+		if err != nil {
+			return nil, err
+		}
 		if result != nil {
 			rt := result.Type()
-			if rt == object.RETURN_VALUE_OBJ || IsError(result) {
-				return result
+			if rt == object.RETURN_VALUE_OBJ {
+				return result, nil
 			}
 
 		}
 	}
-	return result
+	return result, nil
 }
 
-func evalIdentifier(node *ast.Identifier, env object.Environment) object.RubyObject {
+func evalIdentifier(node *ast.Identifier, env object.Environment) (object.RubyObject, error) {
 	val, ok := env.Get(node.Value)
 	if ok {
 		if fn, ok := val.(*object.Function); ok {
 			if len(fn.Parameters) != 0 {
-				return val
+				return val, nil
 			}
 			return applyFunction(fn, []object.RubyObject{})
 		}
-		return val
+		return val, nil
 	}
 	self, _ := env.Get("self")
-	val = object.Send(self, node.Value)
-	if IsError(val) {
-		return object.NewNameError(self, node.Value)
+	val, err := object.Send(self, node.Value)
+	if err != nil {
+		return nil, object.NewNameError(self, node.Value)
 	}
-	return val
+	return val, nil
 }
 
-func applyFunction(fn object.RubyObject, args []object.RubyObject) object.RubyObject {
+func applyFunction(fn object.RubyObject, args []object.RubyObject) (object.RubyObject, error) {
 	switch fn := fn.(type) {
 	case *object.Function:
 		if len(args) != len(fn.Parameters) {
-			return object.NewWrongNumberOfArgumentsError(len(fn.Parameters), len(args))
+			return nil, object.NewWrongNumberOfArgumentsError(len(fn.Parameters), len(args))
 		}
 		extendedEnv := extendFunctionEnv(fn, args)
-		evaluated := Eval(fn.Body, extendedEnv)
-		return unwrapReturnValue(evaluated)
+		evaluated, err := Eval(fn.Body, extendedEnv)
+		if err != nil {
+			return nil, err
+		}
+		return unwrapReturnValue(evaluated), nil
 	case *object.Builtin:
-		return fn.Fn(args...)
+		return fn.Fn(args...), nil
 	default:
-		return object.NewSyntaxError(fmt.Sprintf("not a function: %s", fn.Type()))
+		return nil, object.NewSyntaxError(fmt.Sprintf("not a function: %s", fn.Type()))
 	}
 }
 

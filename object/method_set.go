@@ -18,15 +18,15 @@ const (
 
 // RubyMethod defines a Ruby method
 type RubyMethod interface {
-	Call(context RubyObject, args ...RubyObject) RubyObject
+	Call(context RubyObject, args ...RubyObject) (RubyObject, error)
 	Visibility() MethodVisibility
 }
 
 func withArity(arity int, fn RubyMethod) RubyMethod {
 	return &method{
-		fn: func(context RubyObject, args ...RubyObject) RubyObject {
+		fn: func(context RubyObject, args ...RubyObject) (RubyObject, error) {
 			if len(args) != arity {
-				return NewWrongNumberOfArgumentsError(arity, len(args))
+				return nil, NewWrongNumberOfArgumentsError(arity, len(args))
 			}
 			return fn.Call(context, args...)
 		},
@@ -34,15 +34,15 @@ func withArity(arity int, fn RubyMethod) RubyMethod {
 	}
 }
 
-func publicMethod(fn func(context RubyObject, args ...RubyObject) RubyObject) RubyMethod {
+func publicMethod(fn func(context RubyObject, args ...RubyObject) (RubyObject, error)) RubyMethod {
 	return &method{visibility: PUBLIC_METHOD, fn: fn}
 }
 
-func protectedMethod(fn func(context RubyObject, args ...RubyObject) RubyObject) RubyMethod {
+func protectedMethod(fn func(context RubyObject, args ...RubyObject) (RubyObject, error)) RubyMethod {
 	return &method{visibility: PROTECTED_METHOD, fn: fn}
 }
 
-func privateMethod(fn func(context RubyObject, args ...RubyObject) RubyObject) RubyMethod {
+func privateMethod(fn func(context RubyObject, args ...RubyObject) (RubyObject, error)) RubyMethod {
 	return &method{visibility: PRIVATE_METHOD, fn: fn}
 }
 
@@ -55,10 +55,10 @@ func (m publicMethodX) Visibility() MethodVisibility { return PUBLIC_METHOD }
 
 type method struct {
 	visibility MethodVisibility
-	fn         func(context RubyObject, args ...RubyObject) RubyObject
+	fn         func(context RubyObject, args ...RubyObject) (RubyObject, error)
 }
 
-func (m *method) Call(context RubyObject, args ...RubyObject) RubyObject {
+func (m *method) Call(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	return m.fn(context, args...)
 }
 func (m *method) Visibility() MethodVisibility { return m.visibility }

@@ -95,7 +95,11 @@ func TestClassSuperclass(t *testing.T) {
 	t.Run("anything else than BasicObject", func(t *testing.T) {
 		context := &class{superClass: objectClass}
 
-		result := classSuperclass(context)
+		result, err := classSuperclass(context)
+		if err != nil {
+			t.Logf("Expected no error, got %T:%v\n", err, err)
+			t.Fail()
+		}
 
 		_, ok := result.(*class)
 		if !ok {
@@ -106,7 +110,11 @@ func TestClassSuperclass(t *testing.T) {
 	t.Run("BasicObject", func(t *testing.T) {
 		context := basicObjectClass
 
-		result := classSuperclass(context)
+		result, err := classSuperclass(context)
+		if err != nil {
+			t.Logf("Expected no error, got %T:%v\n", err, err)
+			t.Fail()
+		}
 
 		_, ok := result.(*nilObject)
 		if !ok {
@@ -117,7 +125,11 @@ func TestClassSuperclass(t *testing.T) {
 	t.Run("Eigenclass", func(t *testing.T) {
 		context := &class{superClass: newEigenclass(objectClass, nil)}
 
-		result := classSuperclass(context)
+		result, err := classSuperclass(context)
+		if err != nil {
+			t.Logf("Expected no error, got %T:%v\n", err, err)
+			t.Fail()
+		}
 
 		_, ok := result.(*eigenclass)
 		if !ok {

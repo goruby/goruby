@@ -19,7 +19,9 @@ func TestKernelMethods(t *testing.T) {
 			},
 		}
 
-		result := kernelMethods(context)
+		result, err := kernelMethods(context)
+
+		checkError(t, err, nil)
 
 		array, ok := result.(*Array)
 		if !ok {
@@ -76,7 +78,9 @@ func TestKernelMethods(t *testing.T) {
 			},
 		}
 
-		result := kernelMethods(context)
+		result, err := kernelMethods(context)
+
+		checkError(t, err, nil)
 
 		array, ok := result.(*Array)
 		if !ok {
@@ -127,7 +131,9 @@ func TestKernelMethods(t *testing.T) {
 			},
 		}
 
-		result := kernelMethods(context)
+		result, err := kernelMethods(context)
+
+		checkError(t, err, nil)
 
 		array, ok := result.(*Array)
 		if !ok {
@@ -168,7 +174,9 @@ func TestKernelMethods(t *testing.T) {
 }
 
 func TestKernelIsNil(t *testing.T) {
-	result := kernelIsNil(TRUE)
+	result, err := kernelIsNil(TRUE)
+
+	checkError(t, err, nil)
 
 	boolean, ok := result.(*Boolean)
 	if !ok {
@@ -186,7 +194,9 @@ func TestKernelClass(t *testing.T) {
 	t.Run("regular object", func(t *testing.T) {
 		context := &Integer{1}
 
-		result := kernelClass(context)
+		result, err := kernelClass(context)
+
+		checkError(t, err, nil)
 
 		cl, ok := result.(*class)
 		if !ok {
@@ -204,7 +214,9 @@ func TestKernelClass(t *testing.T) {
 	t.Run("class object", func(t *testing.T) {
 		context := stringClass
 
-		result := kernelClass(context)
+		result, err := kernelClass(context)
+
+		checkError(t, err, nil)
 
 		cl, ok := result.(*class)
 		if !ok {
@@ -222,7 +234,9 @@ func TestKernelClass(t *testing.T) {
 	t.Run("class class", func(t *testing.T) {
 		context := classClass
 
-		result := kernelClass(context)
+		result, err := kernelClass(context)
+
+		checkError(t, err, nil)
 
 		cl, ok := result.(*class)
 		if !ok {

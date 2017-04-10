@@ -35,7 +35,7 @@ var moduleMethods = map[string]RubyMethod{
 	"ancestors": withArity(0, publicMethod(moduleAncestors)),
 }
 
-func moduleAncestors(context RubyObject, args ...RubyObject) RubyObject {
+func moduleAncestors(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	class := context.(RubyClassObject)
 	var ancestors []RubyObject
 	ancestors = append(ancestors, &String{class.Inspect()})
@@ -47,13 +47,16 @@ func moduleAncestors(context RubyObject, args ...RubyObject) RubyObject {
 	}
 	superClass := class.SuperClass()
 	if superClass != nil {
-		superAncestors := moduleAncestors(superClass.(RubyObject))
+		superAncestors, err := moduleAncestors(superClass.(RubyObject))
+		if err != nil {
+			return nil, err
+		}
 		ancestors = append(ancestors, superAncestors.(*Array).Elements...)
 	}
-	return &Array{ancestors}
+	return &Array{ancestors}, nil
 }
 
-func moduleIncludedModules(context RubyObject, args ...RubyObject) RubyObject {
+func moduleIncludedModules(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	class := context.(RubyClassObject)
 	var includedModules []RubyObject
 
@@ -65,9 +68,12 @@ func moduleIncludedModules(context RubyObject, args ...RubyObject) RubyObject {
 
 	superClass := class.SuperClass()
 	if superClass != nil {
-		superIncludedModules := moduleIncludedModules(superClass.(RubyObject))
+		superIncludedModules, err := moduleIncludedModules(superClass.(RubyObject))
+		if err != nil {
+			return nil, err
+		}
 		includedModules = append(includedModules, superIncludedModules.(*Array).Elements...)
 	}
 
-	return &Array{includedModules}
+	return &Array{includedModules}, nil
 }
