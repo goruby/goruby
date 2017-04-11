@@ -2,14 +2,9 @@ package evaluator
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
 
 	"github.com/goruby/goruby/ast"
-	"github.com/goruby/goruby/lexer"
 	"github.com/goruby/goruby/object"
-	"github.com/goruby/goruby/parser"
 )
 
 type callContext struct {
@@ -124,7 +119,9 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 	case *ast.IfExpression:
 		return evalIfExpression(node, env)
 	case *ast.RequireExpression:
-		return evalRequireExpression(node, env)
+		context, _ := env.Get("self")
+		callContext := &callContext{object.NewCallContext(env, context)}
+		return object.Send(callContext, "require", &object.String{node.Name.Value})
 	case nil:
 		return nil, nil
 	default:
@@ -164,46 +161,6 @@ func evalExpressions(exps []ast.Expression, env object.Environment) ([]object.Ru
 		result = append(result, evaluated)
 	}
 	return result, nil
-}
-
-func evalRequireExpression(expr *ast.RequireExpression, env object.Environment) (object.RubyObject, error) {
-	filename := expr.Name.Value
-	if !strings.HasSuffix(filename, "rb") {
-		filename += ".rb"
-	}
-	loadedFeatures, ok := env.Get("$LOADED_FEATURES")
-	if !ok {
-		loadedFeatures = object.NewArray()
-		env.SetGlobal("$LOADED_FEATURES", loadedFeatures)
-	}
-	arr, ok := loadedFeatures.(*object.Array)
-	if !ok {
-		arr = object.NewArray()
-	}
-	loaded := false
-	for _, feat := range arr.Elements {
-		if feat.Inspect() == filename {
-			loaded = true
-			break
-		}
-	}
-	if loaded {
-		return object.FALSE, nil
-	}
-
-	arr.Elements = append(arr.Elements, &object.String{Value: filename})
-	file, err := ioutil.ReadFile(filename)
-	if os.IsNotExist(err) {
-		return nil, object.NewLoadError(expr.Name.Value)
-	}
-	l := lexer.New(string(file))
-	p := parser.New(l)
-	prog, err := p.ParseProgram()
-	if err != nil {
-		return nil, object.NewSyntaxError(err)
-	}
-	Eval(prog, env)
-	return object.TRUE, nil
 }
 
 func evalPrefixExpression(operator string, right object.RubyObject) (object.RubyObject, error) {
