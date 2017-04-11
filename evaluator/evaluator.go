@@ -64,7 +64,6 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			Parameters: params,
 			Env:        env,
 			Body:       body,
-			CallFn:     applyFunction,
 		}
 		object.AddMethod(context, node.Name.Value, function)
 		return function, nil
@@ -349,15 +348,9 @@ func evalBlockStatement(block *ast.BlockStatement, env object.Environment) (obje
 func evalIdentifier(node *ast.Identifier, env object.Environment) (object.RubyObject, error) {
 	val, ok := env.Get(node.Value)
 	if ok {
-		if fn, ok := val.(*object.Function); ok {
-			if len(fn.Parameters) != 0 {
-				return val, nil
-			}
-			context := &callContext{object.NewCallContext(env, fn)}
-			return applyFunction(context, []object.RubyObject{})
-		}
 		return val, nil
 	}
+
 	self, _ := env.Get("self")
 	context := &callContext{object.NewCallContext(env, self)}
 	val, err := object.Send(context, node.Value)
