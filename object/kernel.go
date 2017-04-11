@@ -1,6 +1,8 @@
 package object
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var kernelModule = newModule("Kernel", kernelMethodSet)
 
@@ -15,7 +17,7 @@ var kernelMethodSet = map[string]RubyMethod{
 	"puts":    privateMethod(kernelPuts),
 }
 
-func kernelPuts(context RubyObject, args ...RubyObject) (RubyObject, error) {
+func kernelPuts(context CallContext, args ...RubyObject) (RubyObject, error) {
 	out := ""
 	for _, arg := range args {
 		out += arg.Inspect()
@@ -24,9 +26,9 @@ func kernelPuts(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	return NIL, nil
 }
 
-func kernelMethods(context RubyObject, args ...RubyObject) (RubyObject, error) {
+func kernelMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
 	var methodSymbols []RubyObject
-	class := context.Class()
+	class := context.Receiver().Class()
 	for class != nil {
 		methods := class.Methods()
 		for meth, fn := range methods {
@@ -40,12 +42,12 @@ func kernelMethods(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	return &Array{Elements: methodSymbols}, nil
 }
 
-func kernelIsNil(context RubyObject, args ...RubyObject) (RubyObject, error) {
+func kernelIsNil(context CallContext, args ...RubyObject) (RubyObject, error) {
 	return FALSE, nil
 }
 
-func kernelClass(context RubyObject, args ...RubyObject) (RubyObject, error) {
-	class := context.Class()
+func kernelClass(context CallContext, args ...RubyObject) (RubyObject, error) {
+	class := context.Receiver().Class()
 	if eigenClass, ok := class.(*eigenclass); ok {
 		class = eigenClass.Class()
 	}

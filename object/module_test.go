@@ -8,7 +8,9 @@ import (
 
 func TestModuleAncestors(t *testing.T) {
 	t.Run("class extending from BasicObject", func(t *testing.T) {
-		context := &class{name: "BasicObjectAsParent", superClass: basicObjectClass}
+		context := &callContext{
+			receiver: &class{name: "BasicObjectAsParent", superClass: basicObjectClass},
+		}
 
 		result, err := moduleAncestors(context)
 
@@ -34,10 +36,12 @@ func TestModuleAncestors(t *testing.T) {
 		}
 	})
 	t.Run("class with mixed in modules", func(t *testing.T) {
-		context := mixin(
-			&class{name: "BasicObjectAsParent", superClass: basicObjectClass},
-			kernelModule,
-		)
+		context := &callContext{
+			receiver: mixin(
+				&class{name: "BasicObjectAsParent", superClass: basicObjectClass},
+				kernelModule,
+			),
+		}
 
 		result, err := moduleAncestors(context)
 
@@ -81,7 +85,8 @@ func TestModuleAncestors(t *testing.T) {
 
 		for _, testCase := range tests {
 			t.Run(testCase.class.Inspect(), func(t *testing.T) {
-				result, err := moduleAncestors(testCase.class)
+				context := &callContext{receiver: testCase.class}
+				result, err := moduleAncestors(context)
 
 				checkError(t, err, nil)
 
@@ -113,8 +118,10 @@ func TestModuleAncestors(t *testing.T) {
 }
 
 func TestModuleIncludedModules(t *testing.T) {
-	context := &class{
-		superClass: mixin(basicObjectClass, kernelModule),
+	context := &callContext{
+		receiver: &class{
+			superClass: mixin(basicObjectClass, kernelModule),
+		},
 	}
 
 	result, err := moduleIncludedModules(context)

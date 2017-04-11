@@ -35,8 +35,8 @@ var moduleMethods = map[string]RubyMethod{
 	"ancestors": withArity(0, publicMethod(moduleAncestors)),
 }
 
-func moduleAncestors(context RubyObject, args ...RubyObject) (RubyObject, error) {
-	class := context.(RubyClassObject)
+func moduleAncestors(context CallContext, args ...RubyObject) (RubyObject, error) {
+	class := context.Receiver().(RubyClassObject)
 	var ancestors []RubyObject
 	ancestors = append(ancestors, &String{class.Inspect()})
 
@@ -47,7 +47,8 @@ func moduleAncestors(context RubyObject, args ...RubyObject) (RubyObject, error)
 	}
 	superClass := class.SuperClass()
 	if superClass != nil {
-		superAncestors, err := moduleAncestors(superClass.(RubyObject))
+		callContext := NewCallContext(context.Env(), superClass.(RubyObject))
+		superAncestors, err := moduleAncestors(callContext)
 		if err != nil {
 			return nil, err
 		}
@@ -56,8 +57,8 @@ func moduleAncestors(context RubyObject, args ...RubyObject) (RubyObject, error)
 	return &Array{ancestors}, nil
 }
 
-func moduleIncludedModules(context RubyObject, args ...RubyObject) (RubyObject, error) {
-	class := context.(RubyClassObject)
+func moduleIncludedModules(context CallContext, args ...RubyObject) (RubyObject, error) {
+	class := context.Receiver().(RubyClassObject)
 	var includedModules []RubyObject
 
 	if mixin, ok := class.(*methodSet); ok {
@@ -68,7 +69,8 @@ func moduleIncludedModules(context RubyObject, args ...RubyObject) (RubyObject, 
 
 	superClass := class.SuperClass()
 	if superClass != nil {
-		superIncludedModules, err := moduleIncludedModules(superClass.(RubyObject))
+		callContext := NewCallContext(context.Env(), superClass.(RubyObject))
+		superIncludedModules, err := moduleIncludedModules(callContext)
 		if err != nil {
 			return nil, err
 		}

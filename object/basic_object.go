@@ -19,7 +19,7 @@ func (b *basicObject) Type() Type { return BASIC_OBJECT_OBJ }
 func (b *basicObject) Class() RubyClass { return basicObjectClass }
 
 var basicObjectClassMethods = map[string]RubyMethod{
-	"new": publicMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+	"new": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
 		return &basicObject{}, nil
 	}),
 }
@@ -28,7 +28,7 @@ var basicObjectMethods = map[string]RubyMethod{
 	"method_missing": privateMethod(basicObjectMethodMissing),
 }
 
-func basicObjectMethodMissing(context RubyObject, args ...RubyObject) (RubyObject, error) {
+func basicObjectMethodMissing(context CallContext, args ...RubyObject) (RubyObject, error) {
 	if len(args) < 1 {
 		return nil, NewWrongNumberOfArgumentsError(1, 0)
 	}
@@ -36,5 +36,5 @@ func basicObjectMethodMissing(context RubyObject, args ...RubyObject) (RubyObjec
 	if !ok {
 		return nil, NewImplicitConversionTypeError(method, args[0])
 	}
-	return nil, NewNoMethodError(context, method.Value)
+	return nil, NewNoMethodError(context.Receiver(), method.Value)
 }

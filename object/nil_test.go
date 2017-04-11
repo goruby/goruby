@@ -3,7 +3,9 @@ package object
 import "testing"
 
 func TestNilIsNil(t *testing.T) {
-	result, err := nilIsNil(NIL)
+	context := &callContext{receiver: NIL}
+
+	result, err := nilIsNil(context)
 
 	checkError(t, err, nil)
 

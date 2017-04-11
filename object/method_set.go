@@ -18,13 +18,13 @@ const (
 
 // RubyMethod defines a Ruby method
 type RubyMethod interface {
-	Call(context RubyObject, args ...RubyObject) (RubyObject, error)
+	Call(context CallContext, args ...RubyObject) (RubyObject, error)
 	Visibility() MethodVisibility
 }
 
 func withArity(arity int, fn RubyMethod) RubyMethod {
 	return &method{
-		fn: func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+		fn: func(context CallContext, args ...RubyObject) (RubyObject, error) {
 			if len(args) != arity {
 				return nil, NewWrongNumberOfArgumentsError(arity, len(args))
 			}
@@ -34,31 +34,24 @@ func withArity(arity int, fn RubyMethod) RubyMethod {
 	}
 }
 
-func publicMethod(fn func(context RubyObject, args ...RubyObject) (RubyObject, error)) RubyMethod {
+func publicMethod(fn func(context CallContext, args ...RubyObject) (RubyObject, error)) RubyMethod {
 	return &method{visibility: PUBLIC_METHOD, fn: fn}
 }
 
-func protectedMethod(fn func(context RubyObject, args ...RubyObject) (RubyObject, error)) RubyMethod {
+func protectedMethod(fn func(context CallContext, args ...RubyObject) (RubyObject, error)) RubyMethod {
 	return &method{visibility: PROTECTED_METHOD, fn: fn}
 }
 
-func privateMethod(fn func(context RubyObject, args ...RubyObject) (RubyObject, error)) RubyMethod {
+func privateMethod(fn func(context CallContext, args ...RubyObject) (RubyObject, error)) RubyMethod {
 	return &method{visibility: PRIVATE_METHOD, fn: fn}
 }
 
-type publicMethodX func(context RubyObject, args ...RubyObject) RubyObject
-
-func (m publicMethodX) Call(context RubyObject, args ...RubyObject) RubyObject {
-	return m(context, args...)
-}
-func (m publicMethodX) Visibility() MethodVisibility { return PUBLIC_METHOD }
-
 type method struct {
 	visibility MethodVisibility
-	fn         func(context RubyObject, args ...RubyObject) (RubyObject, error)
+	fn         func(context CallContext, args ...RubyObject) (RubyObject, error)
 }
 
-func (m *method) Call(context RubyObject, args ...RubyObject) (RubyObject, error) {
+func (m *method) Call(context CallContext, args ...RubyObject) (RubyObject, error) {
 	return m.fn(context, args...)
 }
 func (m *method) Visibility() MethodVisibility { return m.visibility }

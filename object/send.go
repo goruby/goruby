@@ -1,8 +1,48 @@
 package object
 
+import (
+	"fmt"
+
+	"github.com/goruby/goruby/ast"
+)
+
+// CallContext represents the context information when sending a message to an
+// object.
+type CallContext interface {
+	// Env returns the current environment at call time
+	Env() Environment
+	// Eval represents an evalualtion method suitable to eval arbitrary Ruby
+	// AST Nodes and transform them into a resulting Ruby object or an error.
+	Eval(ast.Node, Environment) (RubyObject, error)
+	// Receiver returns the Ruby object the message is sent to
+	Receiver() RubyObject
+}
+
+// NewCallContext returns a new CallContext with a stubbed eval function
+func NewCallContext(env Environment, receiver RubyObject) CallContext {
+	return &callContext{
+		env:      env,
+		eval:     func(node ast.Node, env Environment) (RubyObject, error) { return nil, fmt.Errorf("No eval present") },
+		receiver: receiver,
+	}
+}
+
+type callContext struct {
+	env      Environment
+	eval     func(node ast.Node, env Environment) (RubyObject, error)
+	receiver RubyObject
+}
+
+func (c *callContext) Env() Environment { return c.env }
+func (c *callContext) Eval(node ast.Node, env Environment) (RubyObject, error) {
+	return c.eval(node, env)
+}
+func (c *callContext) Receiver() RubyObject { return c.receiver }
+
 // Send sends message method with args to context and returns its result
-func Send(context RubyObject, method string, args ...RubyObject) (RubyObject, error) {
-	class := context.Class()
+func Send(context CallContext, method string, args ...RubyObject) (RubyObject, error) {
+	receiver := context.Receiver()
+	class := receiver.Class()
 
 	// search for the method in the ancestry tree
 	for class != nil {
@@ -12,8 +52,8 @@ func Send(context RubyObject, method string, args ...RubyObject) (RubyObject, er
 			continue
 		}
 
-		if fn.Visibility() == PRIVATE_METHOD && context.Type() != SELF {
-			return nil, NewPrivateNoMethodError(context, method)
+		if fn.Visibility() == PRIVATE_METHOD && receiver.Type() != SELF {
+			return nil, NewPrivateNoMethodError(receiver, method)
 		}
 
 		return fn.Call(context, args...)
@@ -49,8 +89,8 @@ func AddMethod(context RubyObject, methodName string, method *Function) RubyObje
 	return extended
 }
 
-func methodMissing(context RubyObject, args ...RubyObject) (RubyObject, error) {
-	class := context.Class()
+func methodMissing(context CallContext, args ...RubyObject) (RubyObject, error) {
+	class := context.Receiver().Class()
 
 	// search for method_missing in the ancestry tree
 	for class != nil {
@@ -61,5 +101,5 @@ func methodMissing(context RubyObject, args ...RubyObject) (RubyObject, error) {
 		}
 		return fn.Call(context, args...)
 	}
-	return nil, NewNoMethodError(context, args[0].(*Symbol).Value)
+	return nil, NewNoMethodError(context.Receiver(), args[0].(*Symbol).Value)
 }

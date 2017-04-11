@@ -12,10 +12,12 @@ func TestKernelMethods(t *testing.T) {
 			"foo": publicMethod(nil),
 			"bar": publicMethod(nil),
 		}
-		context := &testRubyObject{
-			class: &class{
-				instanceMethods: contextMethods,
-				superClass:      nil,
+		context := &callContext{
+			receiver: &testRubyObject{
+				class: &class{
+					instanceMethods: contextMethods,
+					superClass:      nil,
+				},
 			},
 		}
 
@@ -68,12 +70,14 @@ func TestKernelMethods(t *testing.T) {
 			"foo": publicMethod(nil),
 			"bar": publicMethod(nil),
 		}
-		context := &testRubyObject{
-			class: &class{
-				instanceMethods: contextMethods,
-				superClass: &class{
-					instanceMethods: superClassMethods,
-					superClass:      nil,
+		context := &callContext{
+			receiver: &testRubyObject{
+				class: &class{
+					instanceMethods: contextMethods,
+					superClass: &class{
+						instanceMethods: superClassMethods,
+						superClass:      nil,
+					},
 				},
 			},
 		}
@@ -124,10 +128,12 @@ func TestKernelMethods(t *testing.T) {
 			"bar":         publicMethod(nil),
 			"private_foo": privateMethod(nil),
 		}
-		context := &testRubyObject{
-			class: &class{
-				instanceMethods: contextMethods,
-				superClass:      nil,
+		context := &callContext{
+			receiver: &testRubyObject{
+				class: &class{
+					instanceMethods: contextMethods,
+					superClass:      nil,
+				},
 			},
 		}
 
@@ -174,7 +180,8 @@ func TestKernelMethods(t *testing.T) {
 }
 
 func TestKernelIsNil(t *testing.T) {
-	result, err := kernelIsNil(TRUE)
+	context := &callContext{receiver: TRUE}
+	result, err := kernelIsNil(context)
 
 	checkError(t, err, nil)
 
@@ -192,7 +199,7 @@ func TestKernelIsNil(t *testing.T) {
 
 func TestKernelClass(t *testing.T) {
 	t.Run("regular object", func(t *testing.T) {
-		context := &Integer{1}
+		context := &callContext{receiver: &Integer{1}}
 
 		result, err := kernelClass(context)
 
@@ -212,7 +219,7 @@ func TestKernelClass(t *testing.T) {
 		}
 	})
 	t.Run("class object", func(t *testing.T) {
-		context := stringClass
+		context := &callContext{receiver: stringClass}
 
 		result, err := kernelClass(context)
 
@@ -232,7 +239,7 @@ func TestKernelClass(t *testing.T) {
 		}
 	})
 	t.Run("class class", func(t *testing.T) {
-		context := classClass
+		context := &callContext{receiver: classClass}
 
 		result, err := kernelClass(context)
 
