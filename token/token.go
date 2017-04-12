@@ -46,7 +46,6 @@ const (
 	// Keywords
 
 	DEF
-	REQUIRE
 	SELF
 	END
 	IF
@@ -59,17 +58,16 @@ const (
 )
 
 var keywords = map[string]Type{
-	"def":     DEF,
-	"end":     END,
-	"if":      IF,
-	"then":    THEN,
-	"else":    ELSE,
-	"true":    TRUE,
-	"false":   FALSE,
-	"nil":     NIL,
-	"return":  RETURN,
-	"require": REQUIRE,
-	"self":    SELF,
+	"def":    DEF,
+	"end":    END,
+	"if":     IF,
+	"then":   THEN,
+	"else":   ELSE,
+	"true":   TRUE,
+	"false":  FALSE,
+	"nil":    NIL,
+	"return": RETURN,
+	"self":   SELF,
 }
 
 // LookupIdent returns a keyword TokenType if ident is a keyword or IDENT

@@ -1581,39 +1581,6 @@ func TestParsingIndexExpressions(t *testing.T) {
 	}
 }
 
-func TestRequireExpression(t *testing.T) {
-	input := `require "foo";`
-	l := lexer.New(input)
-	p := New(l)
-	program, err := p.ParseProgram()
-	checkParserErrors(t, err)
-
-	if len(program.Statements) != 1 {
-		t.Fatalf(
-			"program.Statements does not contain 1 statements. got=%d",
-			len(program.Statements),
-		)
-	}
-
-	stmt := program.Statements[0].(*ast.ExpressionStatement)
-	requireStmt, ok := stmt.Expression.(*ast.RequireExpression)
-	if !ok {
-		t.Fatalf("stmt not *ast.RequireExpression. got=%T", stmt)
-	}
-	if requireStmt.TokenLiteral() != "require" {
-		t.Fatalf(
-			"requireExpr.TokenLiteral not 'require', got %q",
-			requireStmt.TokenLiteral(),
-		)
-	}
-	if requireStmt.Name.Value != "foo" {
-		t.Fatalf(
-			"requireExpr.Name not 'foo', got %q",
-			requireStmt.Name.Value,
-		)
-	}
-}
-
 func testVariableExpression(t *testing.T, e ast.Expression, name string) bool {
 	variable, ok := e.(*ast.VariableAssignment)
 	if !ok {

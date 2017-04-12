@@ -40,7 +40,6 @@ def run!
 end
 [1, 2]
 nil
-require
 self
 `
 
@@ -152,8 +151,6 @@ self
 		{token.RBRACKET, "]"},
 		{token.NEWLINE, "\n"},
 		{token.NIL, "nil"},
-		{token.NEWLINE, "\n"},
-		{token.REQUIRE, "require"},
 		{token.NEWLINE, "\n"},
 		{token.SELF, "self"},
 		{token.NEWLINE, "\n"},
