@@ -29,11 +29,7 @@ func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
 	if err != nil {
 		return nil, err
 	}
-	evaluated, err := evaluator.Eval(node, i.environment)
-	if evaluator.IsError(evaluated) {
-		return nil, err
-	}
-	return evaluated, nil
+	return evaluator.Eval(node, i.environment)
 }
 
 func (i *interpreter) SetEnvironment(env object.Environment) {
