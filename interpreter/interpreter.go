@@ -27,7 +27,7 @@ type interpreter struct {
 func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
 	node, err := i.parse(input)
 	if err != nil {
-		return nil, object.NewSyntaxError(err.Error())
+		return nil, object.NewSyntaxError(err)
 	}
 	return evaluator.Eval(node, i.environment)
 }

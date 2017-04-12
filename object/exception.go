@@ -292,19 +292,21 @@ func (e *LoadError) Inspect() string { return formatException(e, e.Message) }
 func (e *LoadError) Class() RubyClass { return loadErrorClass }
 
 // NewSyntaxError returns a new SyntaxError with the default message
-func NewSyntaxError(syntaxError string) *SyntaxError {
+func NewSyntaxError(syntaxError error) *SyntaxError {
 	return &SyntaxError{
-		&exception{
+		exception: &exception{
 			Message: fmt.Sprintf(
 				"syntax error, %s",
-				syntaxError,
+				syntaxError.Error(),
 			),
 		},
+		err: syntaxError,
 	}
 }
 
 // SyntaxError represents a syntax error in the ruby scripts
 type SyntaxError struct {
+	err error
 	*exception
 }
 
@@ -316,6 +318,9 @@ func (e *SyntaxError) Inspect() string { return formatException(e, e.Message) }
 
 // Class returns syntaxErrorClass
 func (e *SyntaxError) Class() RubyClass { return syntaxErrorClass }
+
+// UnderlyingError returns the parser error wrapped by SyntaxError
+func (e *SyntaxError) UnderlyingError() error { return e.err }
 
 // NewNotImplementedError returns a NotImplementedError with the provided message
 func NewNotImplementedError(format string, args ...interface{}) *NotImplementedError {
