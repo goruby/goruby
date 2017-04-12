@@ -32,7 +32,7 @@ func Start(in io.Reader, out chan<- string) {
 		buffer += scanner.Text()
 		evaluated, err := interpreter.Interpret(buffer)
 		if err != nil {
-			if parser.IsEOFError(err) {
+			if isEOFError(err) {
 				buffer += "\n"
 				continue
 			}
@@ -46,4 +46,13 @@ func Start(in io.Reader, out chan<- string) {
 		}
 		buffer = ""
 	}
+}
+
+func isEOFError(err error) bool {
+	syntaxError, ok := err.(*object.SyntaxError)
+	if !ok {
+		return false
+	}
+	err = syntaxError.UnderlyingError()
+	return parser.IsEOFError(err)
 }
