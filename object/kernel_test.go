@@ -673,3 +673,55 @@ func TestKernelRequire(t *testing.T) {
 		}
 	})
 }
+
+func TestKernelExtend(t *testing.T) {
+	objectToExtend := &Object{}
+	env := NewEnvironment()
+	env.Set("foo", objectToExtend)
+	context := &callContext{
+		receiver: objectToExtend,
+		env:      env,
+	}
+
+	module := newModule("Ext", map[string]RubyMethod{
+		"foo": publicMethod(nil),
+	})
+
+	result, err := kernelExtend(context, module)
+
+	checkError(t, err, nil)
+
+	extended, ok := result.(*extendedObject)
+	if !ok {
+		t.Logf("Expected result to be an extendedObject, got %T", result)
+		t.Fail()
+	}
+
+	if !reflect.DeepEqual(objectToExtend, extended.RubyObject) {
+		t.Logf("Expected result to equal %+#v, got %+#v\n", objectToExtend, extended.RubyObject)
+		t.Fail()
+	}
+
+	expectedClass := &eigenclass{
+		map[string]RubyMethod{},
+		&methodSet{
+			objectToExtend.Class().(RubyClassObject),
+			[]*Module{module},
+		},
+	}
+
+	if !reflect.DeepEqual(expectedClass, extended.Class()) {
+		t.Logf("Expected wrapped class to equal\n%+#v\n\tgot\n%+#v\n", expectedClass, extended.Class())
+		t.Fail()
+	}
+
+	actual, ok := env.Get("foo")
+	if !ok {
+		panic("Not found in env")
+	}
+
+	if !reflect.DeepEqual(extended, actual) {
+		t.Logf("Expected context receiver to equal\n%+#v\n\tgot\n%+#v\n", extended, actual)
+		t.Fail()
+	}
+}
