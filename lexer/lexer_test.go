@@ -8,6 +8,7 @@ import (
 
 func TestLexerNextToken(t *testing.T) {
 	input := `five = 5
+fifty = 5_0
 ten = 10
 
 def add(x, y)
@@ -50,6 +51,10 @@ self
 		{token.IDENT, "five"},
 		{token.ASSIGN, "="},
 		{token.INT, "5"},
+		{token.NEWLINE, "\n"},
+		{token.IDENT, "fifty"},
+		{token.ASSIGN, "="},
+		{token.INT, "5_0"},
 		{token.NEWLINE, "\n"},
 		{token.IDENT, "ten"},
 		{token.ASSIGN, "="},

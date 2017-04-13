@@ -2,7 +2,7 @@
 
 _digit : '0'-'9' ;
 
-_integer : '1'-'9' {_digit} ;
+_integer : '1'-'9' {_digit} | '1'-'9' '_' {_digit} ;
 
 _float : _integer '.' _integer ;
 

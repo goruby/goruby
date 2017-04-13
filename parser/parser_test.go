@@ -17,6 +17,7 @@ func TestVariableExpression(t *testing.T) {
 		expectedValue      string
 	}{
 		{"x = 5;", "x", "5"},
+		{"x = 5_0;", "x", "5_0"},
 		{"y = true;", "y", "true"},
 		{"foobar = y;", "foobar", "y"},
 		{"foobar = (12 + 2 * bar) - x;", "foobar", "((12 + (2 * bar)) - x)"},

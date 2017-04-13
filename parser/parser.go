@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/lexer"
@@ -269,9 +270,11 @@ func (p *Parser) parseSelf() ast.Expression {
 	return self
 }
 
+var integerLiteralReplacer = strings.NewReplacer("_", "")
+
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	lit := &ast.IntegerLiteral{Token: p.curToken}
-	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+	value, err := strconv.ParseInt(integerLiteralReplacer.Replace(p.curToken.Literal), 0, 64)
 	if err != nil {
 		msg := fmt.Errorf("could not parse %q as integer", p.curToken.Literal)
 		p.errors = append(p.errors, msg)
