@@ -126,7 +126,7 @@ To run the command as one off run `go run main.go`.
 	- [ ] integers
 		- [x] integer arithmetics
 		- [x] integers `1234`
-		- [ ] integers with underscores `1_234`
+		- [x] integers with underscores `1_234`
 		- [ ] decimal numbers `0d170`, `0D170`
 		- [ ] octal numbers `0252`, `0o252`, `0O252`
 		- [ ] hexadecimal numbers `0xaa`, `0xAa`, `0xAA`, `0Xaa`, `0XAa`, `0XaA`

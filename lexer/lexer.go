@@ -218,7 +218,7 @@ func lexIdentifier(l *Lexer) StateFn {
 
 func lexDigit(l *Lexer) StateFn {
 	r := l.next()
-	for isDigit(r) {
+	for isDigitOrUnderscore(r) {
 		r = l.next()
 	}
 	l.backup()
@@ -262,4 +262,8 @@ func isLetter(r rune) bool {
 
 func isDigit(r rune) bool {
 	return '0' <= r && r <= '9'
+}
+
+func isDigitOrUnderscore(r rune) bool {
+	return isDigit(r) || r == '_'
 }
