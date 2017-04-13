@@ -136,6 +136,7 @@ To run the command as one off run `go run main.go`.
 		- [ ] `12.34`
 		- [ ] `1234e-2`
 		- [ ] `1.234E1`
+		- [ ] floats with underscores `2.2_22`
 - [x] booleans
 - [ ] strings
 	- [x] double quoted
