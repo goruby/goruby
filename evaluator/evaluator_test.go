@@ -253,6 +253,78 @@ func TestVariableAssignmentExpression(t *testing.T) {
 	}
 }
 
+func TestModuleObject(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedName    string
+		expectedMethods map[string]string
+		expectedReturn  object.RubyObject
+	}{
+		{
+			`module Foo
+				def a
+					"foo"
+				end
+			end`,
+			"Foo",
+			map[string]string{"a": "fn() {\nfoo\n}"},
+			&object.Symbol{"a"},
+		},
+		{
+			`module Foo
+				3
+			end`,
+			"Foo",
+			map[string]string{},
+			&object.Integer{3},
+		},
+		{
+			`module Foo
+			end`,
+			"Foo",
+			map[string]string{},
+			object.NIL,
+		},
+	}
+
+	for _, tt := range tests {
+		env := object.NewEnvironment()
+		env.Set("self", &object.Self{&object.Object{}})
+		evaluated, err := testEval(tt.input, env)
+		checkError(t, err)
+
+		if !reflect.DeepEqual(evaluated, tt.expectedReturn) {
+			t.Logf("Expected return object to equal\n%+#v\n\tgot\n%+#v\n", tt.expectedReturn, evaluated)
+			t.Fail()
+		}
+
+		module, ok := env.Get(tt.expectedName)
+		if !ok {
+			t.Logf("Expected module to exist in env")
+			t.Logf("Env: %+#v\n", env)
+			t.FailNow()
+		}
+
+		actualMethods := make(map[string]string)
+
+		methods := module.Class().Methods()
+		for name, method := range methods {
+			if function, ok := method.(*object.Function); ok {
+				actualMethods[name] = function.Inspect()
+			}
+		}
+
+		if !reflect.DeepEqual(tt.expectedMethods, actualMethods) {
+			t.Logf(
+				"Expected module methods to equal\n%+#v\n\tgot\n%+#v\n",
+				tt.expectedMethods,
+				actualMethods,
+			)
+			t.Fail()
+		}
+	}
+}
+
 func TestFunctionObject(t *testing.T) {
 	tests := []struct {
 		input              string
@@ -283,9 +355,25 @@ func TestFunctionObject(t *testing.T) {
 		env.Set("self", &object.Self{&object.Object{}})
 		evaluated, err := testEval(tt.input, env)
 		checkError(t, err)
-		fn, ok := evaluated.(*object.Function)
+		sym, ok := evaluated.(*object.Symbol)
 		if !ok {
-			t.Fatalf("object is not Function. got=%T (%+v)", evaluated, evaluated)
+			t.Fatalf("object is not Symbol. got=%T (%+v)", evaluated, evaluated)
+		}
+		if sym.Value != "foo" {
+			t.Logf("Expected returned symbol to have value %q, got %q", "foo", sym.Value)
+			t.Fail()
+		}
+
+		self, _ := env.Get("self")
+		method, ok := self.Class().Methods()["foo"]
+		if !ok {
+			t.Logf("Expected function to be added to self")
+			t.Fail()
+		}
+		fn, ok := method.(*object.Function)
+		if !ok {
+			t.Logf("self method is not Function, got=%T (%+v)", method, method)
+			t.Fail()
 		}
 
 		if len(fn.Parameters) != len(tt.expectedParameters) {

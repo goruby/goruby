@@ -35,6 +35,8 @@ type Environment interface {
 	// Set sets the RubyObject for the given key. If there is already an
 	// object with that key it will be overridden by object
 	Set(key string, object RubyObject) RubyObject
+	// Unset removes the entry for the given key. It returns the removed entry
+	Unset(key string) RubyObject
 	// SetGlobal sets val under name at the root of the environment
 	SetGlobal(name string, val RubyObject) RubyObject
 	// Outer returns the parent environment
@@ -113,6 +115,12 @@ func (e *environment) SetGlobal(name string, val RubyObject) RubyObject {
 		env = env.Outer()
 	}
 	env.Set(name, val)
+	return val
+}
+
+func (e *environment) Unset(key string) RubyObject {
+	val := e.store[key]
+	delete(e.store, key)
 	return val
 }
 

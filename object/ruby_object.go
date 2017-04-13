@@ -61,6 +61,15 @@ type RubyClassObject interface {
 	RubyClass
 }
 
+type extendable interface {
+	addMethod(name string, method RubyMethod)
+}
+
+type extendableRubyObject interface {
+	RubyObject
+	extendable
+}
+
 // ReturnValue represents a wrapper object for a return statement. It is no
 // real Ruby object and only used within the interpreter evaluation
 type ReturnValue struct {

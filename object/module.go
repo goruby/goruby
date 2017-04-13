@@ -7,14 +7,21 @@ func init() {
 	classes.Set("Module", moduleClass)
 }
 
-func newModule(name string, methods map[string]RubyMethod) *Module {
-	return &Module{name, newEigenclass(moduleClass, methods)}
+// NewModule returns a new module with the given name and adds methods to its method set.
+func NewModule(name string, methods map[string]RubyMethod) *Module {
+	if methods == nil {
+		methods = make(map[string]RubyMethod)
+	}
+	return &Module{
+		name:  name,
+		class: newEigenclass(moduleClass, methods),
+	}
 }
 
 // Module represents a module in Ruby
 type Module struct {
 	name  string
-	class RubyClass
+	class *eigenclass
 }
 
 // Inspect returns the name of the module
@@ -29,6 +36,10 @@ func (m *Module) Class() RubyClass {
 		return m.class
 	}
 	return moduleClass
+}
+
+func (m *Module) addMethod(name string, method RubyMethod) {
+	m.class.addMethod(name, method)
 }
 
 var moduleMethods = map[string]RubyMethod{
