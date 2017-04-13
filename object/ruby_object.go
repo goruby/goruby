@@ -35,7 +35,6 @@ const (
 	EXCEPTION_CLASS_OBJ    Type = "EXCEPTION_CLASS"
 	MODULE_OBJ             Type = "MODULE"
 	MODULE_CLASS_OBJ       Type = "MODULE_CLASS"
-	BUILTIN_OBJ            Type = "BUILTIN"
 	SELF                   Type = "SELF"
 )
 
@@ -61,28 +60,6 @@ type RubyClassObject interface {
 	RubyObject
 	RubyClass
 }
-
-// A BuiltinFunction represents a function
-type BuiltinFunction func(args ...RubyObject) RubyObject
-
-// Builtin represents a builtin within the interpreter. It holds a function
-// which can be called directly. It is no real Ruby object.
-//
-// Ruby does not have any builtin functions as everything is bound to an object.
-//
-// This object will go away soon. Don't depend on it.
-type Builtin struct {
-	Fn BuiltinFunction
-}
-
-// Type returns BUILTIN_OBJ
-func (b *Builtin) Type() Type { return BUILTIN_OBJ }
-
-// Inspect returns 'buitin function'
-func (b *Builtin) Inspect() string { return "builtin function" }
-
-// Class returns nil
-func (b *Builtin) Class() RubyClass { return nil }
 
 // ReturnValue represents a wrapper object for a return statement. It is no
 // real Ruby object and only used within the interpreter evaluation

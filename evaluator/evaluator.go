@@ -85,6 +85,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		if function, ok := env.Get(node.Function.Value); ok {
 			return applyFunction(function, args)
 		}
@@ -142,8 +143,6 @@ func evalProgram(stmts []ast.Statement, env object.Environment) (object.RubyObje
 		switch result := result.(type) {
 		case *object.ReturnValue:
 			return result.Value, nil
-		case *object.Builtin:
-			return result.Fn(), nil
 		}
 
 	}
@@ -373,8 +372,6 @@ func applyFunction(fn object.RubyObject, args []object.RubyObject) (object.RubyO
 			return nil, err
 		}
 		return unwrapReturnValue(evaluated), nil
-	case *object.Builtin:
-		return fn.Fn(args...), nil
 	default:
 		return nil, object.NewSyntaxError(fmt.Errorf("not a function: %s", fn.Type()))
 	}
