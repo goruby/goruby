@@ -693,7 +693,7 @@ func testEval(input string, context ...object.Environment) (object.RubyObject, e
 	p := parser.New(l)
 	program, err := p.ParseProgram()
 	if err != nil {
-		return nil, object.NewSyntaxError(err.Error())
+		return nil, object.NewSyntaxError(err)
 	}
 	return Eval(program, env)
 }

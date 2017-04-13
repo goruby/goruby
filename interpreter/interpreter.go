@@ -27,13 +27,9 @@ type interpreter struct {
 func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
 	node, err := i.parse(input)
 	if err != nil {
-		return nil, err
+		return nil, object.NewSyntaxError(err)
 	}
-	evaluated, err := evaluator.Eval(node, i.environment)
-	if evaluator.IsError(evaluated) {
-		return nil, err
-	}
-	return evaluated, nil
+	return evaluator.Eval(node, i.environment)
 }
 
 func (i *interpreter) SetEnvironment(env object.Environment) {

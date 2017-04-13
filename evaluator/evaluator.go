@@ -197,7 +197,7 @@ func evalRequireExpression(expr *ast.RequireExpression, env object.Environment) 
 	p := parser.New(l)
 	prog, err := p.ParseProgram()
 	if err != nil {
-		return nil, object.NewSyntaxError(err.Error())
+		return nil, object.NewSyntaxError(err)
 	}
 	Eval(prog, env)
 	return object.TRUE, nil
@@ -376,7 +376,7 @@ func applyFunction(fn object.RubyObject, args []object.RubyObject) (object.RubyO
 	case *object.Builtin:
 		return fn.Fn(args...), nil
 	default:
-		return nil, object.NewSyntaxError(fmt.Sprintf("not a function: %s", fn.Type()))
+		return nil, object.NewSyntaxError(fmt.Errorf("not a function: %s", fn.Type()))
 	}
 }
 
