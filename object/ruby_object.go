@@ -11,31 +11,22 @@ import (
 type Type string
 
 const (
-	EIGENCLASS_OBJ         Type = "EIGENCLASS"
-	FUNCTION_OBJ           Type = "FUNCTION"
-	RETURN_VALUE_OBJ       Type = "RETURN_VALUE"
-	BASIC_OBJECT_OBJ       Type = "BASIC_OBJECT"
-	BASIC_OBJECT_CLASS_OBJ Type = "BASIC_OBJECT_CLASS"
-	OBJECT_OBJ             Type = "OBJECT"
-	OBJECT_CLASS_OBJ       Type = "OBJECT_CLASS"
-	CLASS_OBJ              Type = "CLASS"
-	CLASS_CLASS_OBJ        Type = "CLASS_CLASS"
-	ARRAY_OBJ              Type = "ARRAY"
-	ARRAY_CLASS_OBJ        Type = "ARRAY_CLASS"
-	INTEGER_OBJ            Type = "INTEGER"
-	INTEGER_CLASS_OBJ      Type = "INTEGER_CLASS"
-	STRING_OBJ             Type = "STRING"
-	STRING_CLASS_OBJ       Type = "STRING_CLASS"
-	SYMBOL_OBJ             Type = "SYMBOL"
-	BOOLEAN_OBJ            Type = "BOOLEAN"
-	BOOLEAN_CLASS_OBJ      Type = "BOOLEAN_CLASS"
-	NIL_OBJ                Type = "NIL"
-	NIL_CLASS_OBJ          Type = "NIL_CLASS"
-	EXCEPTION_OBJ          Type = "EXCEPTION"
-	EXCEPTION_CLASS_OBJ    Type = "EXCEPTION_CLASS"
-	MODULE_OBJ             Type = "MODULE"
-	MODULE_CLASS_OBJ       Type = "MODULE_CLASS"
-	SELF                   Type = "SELF"
+	EIGENCLASS_OBJ   Type = "EIGENCLASS"
+	FUNCTION_OBJ     Type = "FUNCTION"
+	RETURN_VALUE_OBJ Type = "RETURN_VALUE"
+	BASIC_OBJECT_OBJ Type = "BASIC_OBJECT"
+	OBJECT_OBJ       Type = "OBJECT"
+	CLASS_OBJ        Type = "CLASS"
+	ARRAY_OBJ        Type = "ARRAY"
+	INTEGER_OBJ      Type = "INTEGER"
+	STRING_OBJ       Type = "STRING"
+	SYMBOL_OBJ       Type = "SYMBOL"
+	BOOLEAN_OBJ      Type = "BOOLEAN"
+	NIL_OBJ          Type = "NIL"
+	NIL_CLASS_OBJ    Type = "NIL_CLASS"
+	EXCEPTION_OBJ    Type = "EXCEPTION"
+	MODULE_OBJ       Type = "MODULE"
+	SELF             Type = "SELF"
 )
 
 type inspectable interface {
@@ -51,7 +42,7 @@ type RubyObject interface {
 
 // RubyClass represents a class in Ruby
 type RubyClass interface {
-	Methods() map[string]RubyMethod
+	Methods() MethodSet
 	SuperClass() RubyClass
 }
 

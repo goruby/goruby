@@ -39,7 +39,7 @@ func kernelMethods(context CallContext, args ...RubyObject) (RubyObject, error) 
 	var methodSymbols []RubyObject
 	class := context.Receiver().Class()
 	for class != nil {
-		methods := class.Methods()
+		methods := class.Methods().GetAll()
 		for meth, fn := range methods {
 			if fn.Visibility() == PUBLIC_METHOD {
 				methodSymbols = append(methodSymbols, &Symbol{meth})
@@ -130,7 +130,7 @@ func kernelExtend(context CallContext, args ...RubyObject) (RubyObject, error) {
 	extended := &extendedObject{
 		RubyObject: context.Receiver(),
 		class: newEigenclass(
-			mixin(context.Receiver().Class().(RubyClassObject), modules...),
+			newMixin(context.Receiver().Class().(RubyClassObject), modules...),
 			map[string]RubyMethod{},
 		),
 	}

@@ -1,6 +1,6 @@
 package object
 
-var moduleClass RubyClassObject = &class{name: "Module", instanceMethods: moduleMethods}
+var moduleClass RubyClassObject = &class{name: "Module", instanceMethods: NewMethodSet(moduleMethods)}
 
 func init() {
 	moduleClass.(*class).superClass = objectClass
@@ -51,7 +51,7 @@ func moduleAncestors(context CallContext, args ...RubyObject) (RubyObject, error
 	var ancestors []RubyObject
 	ancestors = append(ancestors, &String{class.Inspect()})
 
-	if mixin, ok := class.(*methodSet); ok {
+	if mixin, ok := class.(*mixin); ok {
 		for _, m := range mixin.modules {
 			ancestors = append(ancestors, &String{m.name})
 		}
@@ -72,7 +72,7 @@ func moduleIncludedModules(context CallContext, args ...RubyObject) (RubyObject,
 	class := context.Receiver().(RubyClassObject)
 	var includedModules []RubyObject
 
-	if mixin, ok := class.(*methodSet); ok {
+	if mixin, ok := class.(*mixin); ok {
 		for _, m := range mixin.modules {
 			includedModules = append(includedModules, &String{m.name})
 		}

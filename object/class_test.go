@@ -66,11 +66,11 @@ func TestClassMethods(t *testing.T) {
 		"a_method": nil,
 	}
 
-	context := &class{instanceMethods: contextMethods}
+	context := &class{instanceMethods: NewMethodSet(contextMethods)}
 
 	actual := context.Methods()
 
-	expected := contextMethods
+	expected := NewMethodSet(contextMethods)
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Logf("Expected Methods to equal %v, got %v", expected, actual)

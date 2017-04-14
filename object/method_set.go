@@ -56,25 +56,46 @@ func (m *method) Call(context CallContext, args ...RubyObject) (RubyObject, erro
 }
 func (m *method) Visibility() MethodVisibility { return m.visibility }
 
-func mixin(class RubyClassObject, modules ...*Module) RubyClassObject {
-	return &methodSet{class, modules}
+// MethodSet represents a set of methods
+type MethodSet interface {
+	// Get returns the method found for name. The boolean will return true if
+	// a method was found, false otherwise
+	Get(name string) (RubyMethod, bool)
+	// GetAll returns a map of name to methods representing the MethodSet.
+	GetAll() map[string]RubyMethod
+}
+
+// SettableMethodSet represents a MethodSet which can be mutated by setting
+// methods on it.
+type SettableMethodSet interface {
+	MethodSet
+	// Set will set method to key name. If there was a method prior defined
+	// under name it will be overridden.
+	Set(name string, method RubyMethod)
+}
+
+// NewMethodSet returns a new method set populated with the given methods
+func NewMethodSet(methods map[string]RubyMethod) SettableMethodSet {
+	return &methodSet{methods: methods}
 }
 
 type methodSet struct {
-	RubyClassObject
-	modules []*Module
+	methods map[string]RubyMethod
 }
 
-func (m *methodSet) Methods() map[string]RubyMethod {
-	var methods = make(map[string]RubyMethod)
-	for _, mod := range m.modules {
-		moduleMethods := mod.Class().Methods()
-		for k, v := range moduleMethods {
-			methods[k] = v
-		}
-	}
-	for k, v := range m.RubyClassObject.Methods() {
+func (m *methodSet) GetAll() map[string]RubyMethod {
+	methods := make(map[string]RubyMethod)
+	for k, v := range m.methods {
 		methods[k] = v
 	}
 	return methods
+}
+
+func (m *methodSet) Get(name string) (RubyMethod, bool) {
+	method, ok := m.methods[name]
+	return method, ok
+}
+
+func (m *methodSet) Set(name string, method RubyMethod) {
+	m.methods[name] = method
 }
