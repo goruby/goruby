@@ -81,7 +81,6 @@ type Function struct {
 	Parameters       []*ast.Identifier
 	Body             *ast.BlockStatement
 	Env              Environment
-	CallFn           func(context RubyObject, args []RubyObject) (RubyObject, error)
 	MethodVisibility MethodVisibility
 }
 
@@ -107,14 +106,37 @@ func (f *Function) Inspect() string {
 // Class returns nil
 func (f *Function) Class() RubyClass { return nil }
 
-// Call implements the RubyMethod interface. It calls f.CallFn
-func (f *Function) Call(context RubyObject, args ...RubyObject) (RubyObject, error) {
-	return f.CallFn(f, args)
+// Call implements the RubyMethod interface. It evaluates f.Body and returns its result
+func (f *Function) Call(context CallContext, args ...RubyObject) (RubyObject, error) {
+	if len(args) != len(f.Parameters) {
+		return nil, NewWrongNumberOfArgumentsError(len(f.Parameters), len(args))
+	}
+	extendedEnv := f.extendFunctionEnv(args)
+	evaluated, err := context.Eval(f.Body, extendedEnv)
+	if err != nil {
+		return nil, err
+	}
+	return f.unwrapReturnValue(evaluated), nil
 }
 
 // Visibility implements the RubyMethod interface. It returns f.MethodVisibility
 func (f *Function) Visibility() MethodVisibility {
 	return f.MethodVisibility
+}
+
+func (f *Function) extendFunctionEnv(args []RubyObject) Environment {
+	env := NewEnclosedEnvironment(f.Env)
+	for paramIdx, param := range f.Parameters {
+		env.Set(param.Value, args[paramIdx])
+	}
+	return env
+}
+
+func (f *Function) unwrapReturnValue(obj RubyObject) RubyObject {
+	if returnValue, ok := obj.(*ReturnValue); ok {
+		return returnValue.Value
+	}
+	return obj
 }
 
 // Self represents the value associated to `self`. It acts as a wrapper around

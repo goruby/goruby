@@ -35,8 +35,8 @@ var integerMethods = map[string]RubyMethod{
 	"*":   withArity(1, publicMethod(integerMul)),
 }
 
-func integerDiv(context RubyObject, args ...RubyObject) (RubyObject, error) {
-	i := context.(*Integer)
+func integerDiv(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
 	divisor, ok := args[0].(*Integer)
 	if !ok {
 		return nil, NewCoercionTypeError(args[0], i)
@@ -47,8 +47,8 @@ func integerDiv(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	return NewInteger(i.Value / divisor.Value), nil
 }
 
-func integerMul(context RubyObject, args ...RubyObject) (RubyObject, error) {
-	i := context.(*Integer)
+func integerMul(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
 	factor, ok := args[0].(*Integer)
 	if !ok {
 		return nil, NewCoercionTypeError(args[0], i)
@@ -56,8 +56,8 @@ func integerMul(context RubyObject, args ...RubyObject) (RubyObject, error) {
 	return NewInteger(i.Value * factor.Value), nil
 }
 
-func integerAdd(context RubyObject, args ...RubyObject) (RubyObject, error) {
-	i := context.(*Integer)
+func integerAdd(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
 	add, ok := args[0].(*Integer)
 	if !ok {
 		return nil, NewCoercionTypeError(args[0], i)

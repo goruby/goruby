@@ -400,17 +400,3 @@ func (oe *InfixExpression) String() string {
 	out.WriteString(")")
 	return out.String()
 }
-
-type RequireExpression struct {
-	Token token.Token // The require token
-	Name  *StringLiteral
-}
-
-func (re *RequireExpression) expressionNode()      {}
-func (re *RequireExpression) TokenLiteral() string { return re.Token.Literal }
-func (re *RequireExpression) String() string {
-	var out bytes.Buffer
-	out.WriteString(re.TokenLiteral() + " ")
-	out.WriteString(re.Name.String())
-	return out.String()
-}

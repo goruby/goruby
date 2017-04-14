@@ -21,14 +21,14 @@ func (s *String) Type() Type { return STRING_OBJ }
 func (s *String) Class() RubyClass { return stringClass }
 
 var stringClassMethods = map[string]RubyMethod{
-	"new": publicMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+	"new": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
 		switch len(args) {
 		case 0:
 			return &String{}, nil
 		case 1:
 			str, ok := args[0].(*String)
 			if !ok {
-				return nil, NewImplicitConversionTypeError(args[0], context)
+				return nil, NewImplicitConversionTypeError(str, args[0])
 			}
 			return &String{Value: str.Value}, nil
 		default:
@@ -41,7 +41,7 @@ var stringMethods = map[string]RubyMethod{
 	"to_s": withArity(0, publicMethod(stringToS)),
 }
 
-func stringToS(context RubyObject, args ...RubyObject) (RubyObject, error) {
-	str := context.(*String)
+func stringToS(context CallContext, args ...RubyObject) (RubyObject, error) {
+	str := context.Receiver().(*String)
 	return &String{str.Value}, nil
 }

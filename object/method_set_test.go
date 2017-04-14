@@ -5,7 +5,7 @@ import (
 )
 
 func TestWithArity(t *testing.T) {
-	wrappedMethod := publicMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+	wrappedMethod := publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
 		return NewInteger(1), nil
 	})
 
@@ -37,8 +37,9 @@ func TestWithArity(t *testing.T) {
 
 	for _, testCase := range tests {
 		fn := withArity(testCase.arity, wrappedMethod)
+		context := &callContext{receiver: NIL}
 
-		result, err := fn.Call(NIL, testCase.arguments...)
+		result, err := fn.Call(context, testCase.arguments...)
 
 		checkResult(t, result, testCase.result)
 

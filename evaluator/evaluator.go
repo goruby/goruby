@@ -2,15 +2,18 @@ package evaluator
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
 
 	"github.com/goruby/goruby/ast"
-	"github.com/goruby/goruby/lexer"
 	"github.com/goruby/goruby/object"
-	"github.com/goruby/goruby/parser"
 )
+
+type callContext struct {
+	object.CallContext
+}
+
+func (c *callContext) Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
+	return Eval(node, env)
+}
 
 // Eval evaluates the given node and traverses recursive over its children
 func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
@@ -56,7 +59,6 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			Parameters: params,
 			Env:        env,
 			Body:       body,
-			CallFn:     applyFunction,
 		}
 		object.AddMethod(context, node.Name.Value, function)
 		return function, nil
@@ -85,11 +87,8 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		if function, ok := env.Get(node.Function.Value); ok {
-			return applyFunction(function, args)
-		}
-		return object.Send(context, node.Function.Value, args...)
+		callContext := &callContext{object.NewCallContext(env, context)}
+		return object.Send(callContext, node.Function.Value, args...)
 	case *ast.IndexExpression:
 		left, err := Eval(node.Left, env)
 		if err != nil {
@@ -119,8 +118,6 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.IfExpression:
 		return evalIfExpression(node, env)
-	case *ast.RequireExpression:
-		return evalRequireExpression(node, env)
 	case nil:
 		return nil, nil
 	default:
@@ -160,46 +157,6 @@ func evalExpressions(exps []ast.Expression, env object.Environment) ([]object.Ru
 		result = append(result, evaluated)
 	}
 	return result, nil
-}
-
-func evalRequireExpression(expr *ast.RequireExpression, env object.Environment) (object.RubyObject, error) {
-	filename := expr.Name.Value
-	if !strings.HasSuffix(filename, "rb") {
-		filename += ".rb"
-	}
-	loadedFeatures, ok := env.Get("$LOADED_FEATURES")
-	if !ok {
-		loadedFeatures = object.NewArray()
-		env.SetGlobal("$LOADED_FEATURES", loadedFeatures)
-	}
-	arr, ok := loadedFeatures.(*object.Array)
-	if !ok {
-		arr = object.NewArray()
-	}
-	loaded := false
-	for _, feat := range arr.Elements {
-		if feat.Inspect() == filename {
-			loaded = true
-			break
-		}
-	}
-	if loaded {
-		return object.FALSE, nil
-	}
-
-	arr.Elements = append(arr.Elements, &object.String{Value: filename})
-	file, err := ioutil.ReadFile(filename)
-	if os.IsNotExist(err) {
-		return nil, object.NewLoadError(expr.Name.Value)
-	}
-	l := lexer.New(string(file))
-	p := parser.New(l)
-	prog, err := p.ParseProgram()
-	if err != nil {
-		return nil, object.NewSyntaxError(err)
-	}
-	Eval(prog, env)
-	return object.TRUE, nil
 }
 
 func evalPrefixExpression(operator string, right object.RubyObject) (object.RubyObject, error) {
@@ -344,24 +301,21 @@ func evalBlockStatement(block *ast.BlockStatement, env object.Environment) (obje
 func evalIdentifier(node *ast.Identifier, env object.Environment) (object.RubyObject, error) {
 	val, ok := env.Get(node.Value)
 	if ok {
-		if fn, ok := val.(*object.Function); ok {
-			if len(fn.Parameters) != 0 {
-				return val, nil
-			}
-			return applyFunction(fn, []object.RubyObject{})
-		}
 		return val, nil
 	}
+
 	self, _ := env.Get("self")
-	val, err := object.Send(self, node.Value)
+	context := &callContext{object.NewCallContext(env, self)}
+	val, err := object.Send(context, node.Value)
 	if err != nil {
 		return nil, object.NewNameError(self, node.Value)
 	}
 	return val, nil
 }
 
-func applyFunction(fn object.RubyObject, args []object.RubyObject) (object.RubyObject, error) {
-	switch fn := fn.(type) {
+func applyFunction(fn object.CallContext, args []object.RubyObject) (object.RubyObject, error) {
+	receiver := fn.Receiver()
+	switch fn := receiver.(type) {
 	case *object.Function:
 		if len(args) != len(fn.Parameters) {
 			return nil, object.NewWrongNumberOfArgumentsError(len(fn.Parameters), len(args))

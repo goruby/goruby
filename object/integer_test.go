@@ -29,7 +29,7 @@ func TestIntegerDiv(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
-		context := NewInteger(4)
+		context := &callContext{receiver: NewInteger(4)}
 
 		result, err := integerDiv(context, testCase.arguments...)
 
@@ -58,7 +58,7 @@ func TestIntegerMul(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
-		context := NewInteger(4)
+		context := &callContext{receiver: NewInteger(4)}
 
 		result, err := integerMul(context, testCase.arguments...)
 
@@ -87,7 +87,7 @@ func TestIntegerAdd(t *testing.T) {
 	}
 
 	for _, testCase := range tests {
-		context := NewInteger(2)
+		context := &callContext{receiver: NewInteger(2)}
 
 		result, err := integerAdd(context, testCase.arguments...)
 

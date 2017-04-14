@@ -22,33 +22,35 @@ func (t *testRubyObject) Class() RubyClass {
 
 func TestSend(t *testing.T) {
 	superMethods := map[string]RubyMethod{
-		"a_super_method": publicMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+		"a_super_method": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
 			return TRUE, nil
 		}),
-		"a_private_super_method": privateMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+		"a_private_super_method": privateMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
 			return FALSE, nil
 		}),
 	}
 	methods := map[string]RubyMethod{
-		"a_method": publicMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+		"a_method": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
 			return TRUE, nil
 		}),
-		"another_method": publicMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+		"another_method": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
 			return FALSE, nil
 		}),
-		"a_private_method": privateMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+		"a_private_method": privateMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
 			return FALSE, nil
 		}),
 	}
 	t.Run("normal object as context", func(t *testing.T) {
-		context := &testRubyObject{
-			class: &class{
-				name:            "base class",
-				instanceMethods: methods,
-				superClass: &class{
-					name:            "super class",
-					instanceMethods: superMethods,
-					superClass:      basicObjectClass,
+		context := &callContext{
+			receiver: &testRubyObject{
+				class: &class{
+					name:            "base class",
+					instanceMethods: methods,
+					superClass: &class{
+						name:            "super class",
+						instanceMethods: superMethods,
+						superClass:      basicObjectClass,
+					},
 				},
 			},
 		}
@@ -76,17 +78,17 @@ func TestSend(t *testing.T) {
 			{
 				"a_private_method",
 				nil,
-				NewPrivateNoMethodError(context, "a_private_method"),
+				NewPrivateNoMethodError(context.receiver, "a_private_method"),
 			},
 			{
 				"a_private_super_method",
 				nil,
-				NewPrivateNoMethodError(context, "a_private_super_method"),
+				NewPrivateNoMethodError(context.receiver, "a_private_super_method"),
 			},
 			{
 				"unknown_method",
 				nil,
-				NewNoMethodError(context, "unknown_method"),
+				NewNoMethodError(context.receiver, "unknown_method"),
 			},
 		}
 
@@ -99,15 +101,17 @@ func TestSend(t *testing.T) {
 		}
 	})
 	t.Run("self as context", func(t *testing.T) {
-		context := &Self{
-			&testRubyObject{
-				class: &class{
-					name:            "base class",
-					instanceMethods: methods,
-					superClass: &class{
-						name:            "super class",
-						instanceMethods: superMethods,
-						superClass:      basicObjectClass,
+		context := &callContext{
+			receiver: &Self{
+				&testRubyObject{
+					class: &class{
+						name:            "base class",
+						instanceMethods: methods,
+						superClass: &class{
+							name:            "super class",
+							instanceMethods: superMethods,
+							superClass:      basicObjectClass,
+						},
 					},
 				},
 			},
@@ -146,7 +150,7 @@ func TestSend(t *testing.T) {
 			{
 				"unknown_method",
 				nil,
-				NewNoMethodError(context, "unknown_method"),
+				NewNoMethodError(context.receiver, "unknown_method"),
 			},
 		}
 
@@ -193,20 +197,21 @@ func TestAddMethod(t *testing.T) {
 		}
 	})
 	t.Run("extended object", func(t *testing.T) {
-		context := &extendedObject{
-			RubyObject: &testRubyObject{
-				class: &class{
-					name:            "base class",
-					instanceMethods: map[string]RubyMethod{},
-					superClass:      objectClass,
+		context :=
+			&extendedObject{
+				RubyObject: &testRubyObject{
+					class: &class{
+						name:            "base class",
+						instanceMethods: map[string]RubyMethod{},
+						superClass:      objectClass,
+					},
 				},
-			},
-			class: newEigenclass(objectClass, map[string]RubyMethod{
-				"bar": publicMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
-					return NIL, nil
+				class: newEigenclass(objectClass, map[string]RubyMethod{
+					"bar": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
+						return NIL, nil
+					}),
 				}),
-			}),
-		}
+			}
 
 		fn := &Function{
 			Parameters: []*ast.Identifier{
@@ -282,7 +287,7 @@ func TestAddMethod(t *testing.T) {
 					},
 				},
 				class: newEigenclass(objectClass, map[string]RubyMethod{
-					"bar": publicMethod(func(context RubyObject, args ...RubyObject) (RubyObject, error) {
+					"bar": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
 						return NIL, nil
 					}),
 				}),

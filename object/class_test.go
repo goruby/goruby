@@ -93,7 +93,7 @@ func TestClassType(t *testing.T) {
 
 func TestClassSuperclass(t *testing.T) {
 	t.Run("anything else than BasicObject", func(t *testing.T) {
-		context := &class{superClass: objectClass}
+		context := &callContext{receiver: &class{superClass: objectClass}}
 
 		result, err := classSuperclass(context)
 		if err != nil {
@@ -108,7 +108,7 @@ func TestClassSuperclass(t *testing.T) {
 		}
 	})
 	t.Run("BasicObject", func(t *testing.T) {
-		context := basicObjectClass
+		context := &callContext{receiver: basicObjectClass}
 
 		result, err := classSuperclass(context)
 		if err != nil {
@@ -123,7 +123,7 @@ func TestClassSuperclass(t *testing.T) {
 		}
 	})
 	t.Run("Eigenclass", func(t *testing.T) {
-		context := &class{superClass: newEigenclass(objectClass, nil)}
+		context := &callContext{receiver: &class{superClass: newEigenclass(objectClass, nil)}}
 
 		result, err := classSuperclass(context)
 		if err != nil {
