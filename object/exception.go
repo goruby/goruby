@@ -136,8 +136,20 @@ func (e *ArgumentError) Inspect() string { return formatException(e, e.Message) 
 // Class returns argumentErrorClass
 func (e *ArgumentError) Class() RubyClass { return argumentErrorClass }
 
-// NewNameError returns a NameError with the default message for undefined names
-func NewNameError(context RubyObject, name string) *NameError {
+// NewUninitializedConstantNameError returns a NameError with the default message for uninitialized constants
+func NewUninitializedConstantNameError(name string) *NameError {
+	return &NameError{
+		&exception{
+			Message: fmt.Sprintf(
+				"uninitialized constant %s",
+				name,
+			),
+		},
+	}
+}
+
+// NewUndefinedLocalVariableOrMethodNameError returns a NameError with the default message for undefined names
+func NewUndefinedLocalVariableOrMethodNameError(context RubyObject, name string) *NameError {
 	return &NameError{
 		&exception{
 			Message: fmt.Sprintf(

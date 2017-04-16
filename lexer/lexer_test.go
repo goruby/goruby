@@ -41,6 +41,7 @@ end
 [1, 2]
 nil
 self
+Ten = 10
 `
 
 	tests := []struct {
@@ -153,6 +154,10 @@ self
 		{token.NIL, "nil"},
 		{token.NEWLINE, "\n"},
 		{token.SELF, "self"},
+		{token.NEWLINE, "\n"},
+		{token.CONST, "Ten"},
+		{token.ASSIGN, "="},
+		{token.INT, "10"},
 		{token.NEWLINE, "\n"},
 		{token.EOF, ""},
 	}
