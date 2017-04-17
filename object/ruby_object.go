@@ -153,10 +153,14 @@ func (f *Function) unwrapReturnValue(obj RubyObject) RubyObject {
 // self in the given context.
 type Self struct {
 	RubyObject
+	Name string
 }
 
 // Type returns SELF
 func (s *Self) Type() Type { return SELF }
+
+// Inspect returns the name of Self
+func (s *Self) Inspect() string { return s.Name }
 
 // extendedObject is a wrapper object for an object extended by methods.
 type extendedObject struct {

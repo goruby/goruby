@@ -114,6 +114,7 @@ func TestSend(t *testing.T) {
 						},
 					},
 				},
+				"main",
 			},
 		}
 
@@ -269,6 +270,7 @@ func TestAddMethod(t *testing.T) {
 				instanceMethods: map[string]RubyMethod{},
 				superClass:      objectClass,
 			},
+			Name: "main",
 		}
 		context := &Self{
 			RubyObject: vanillaObject,
@@ -331,6 +333,7 @@ func TestAddMethod(t *testing.T) {
 					}),
 				}),
 			},
+			Name: "main",
 		}
 
 		fn := &Function{
