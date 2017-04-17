@@ -400,6 +400,15 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	if !p.accept(token.END) {
 		return nil
 	}
+	inspect := func(n ast.Node) bool {
+		if x, ok := n.(*ast.VariableAssignment); ok {
+			if x.Name.IsConstant() {
+				p.errors = append(p.errors, fmt.Errorf("dynamic constant assignment"))
+			}
+		}
+		return true
+	}
+	ast.Inspect(lit.Body, inspect)
 	return lit
 }
 
