@@ -193,6 +193,9 @@ func startLexer(l *Lexer) StateFn {
 	case eof:
 		l.emit(token.EOF)
 		return startLexer
+	case '#':
+		return commentLexer
+
 	default:
 		if isLetter(r) {
 			return lexIdentifier
@@ -249,6 +252,16 @@ func lexSymbol(l *Lexer) StateFn {
 	}
 	l.backup()
 	l.emit(token.SYMBOL)
+	return startLexer
+}
+
+func commentLexer(l *Lexer) StateFn {
+	r := l.next()
+	for r != '\n' {
+		r = l.next()
+	}
+
+	l.ignore()
 	return startLexer
 }
 
