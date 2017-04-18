@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/goruby/goruby/ast"
 )
 
 func TestNewClass(t *testing.T) {
@@ -115,30 +117,29 @@ func TestNewClass(t *testing.T) {
 }
 
 func TestClassInspect(t *testing.T) {
-	t.Run("class Class", func(t *testing.T) {
-		context := &class{}
+	context := &class{name: "Foo"}
 
-		actual := context.Inspect()
+	actual := context.Inspect()
 
-		expected := fmt.Sprintf("#<Class:%p>", context)
+	expected := "Foo"
 
-		if expected != actual {
-			t.Logf("Expected Inspect to equal %q, got %q", expected, actual)
-			t.Fail()
-		}
-	})
-	t.Run("other class", func(t *testing.T) {
-		context := &class{name: "Foo"}
+	if expected != actual {
+		t.Logf("Expected Inspect to equal %q, got %q", expected, actual)
+		t.Fail()
+	}
+}
 
-		actual := context.Inspect()
+func TestClassInstanceInspect(t *testing.T) {
+	context := &classInstance{class: &class{name: "Foo"}}
 
-		expected := "Foo"
+	actual := context.Inspect()
 
-		if expected != actual {
-			t.Logf("Expected Inspect to equal %q, got %q", expected, actual)
-			t.Fail()
-		}
-	})
+	expected := fmt.Sprintf("#<Foo:%p>", context)
+
+	if expected != actual {
+		t.Logf("Expected Inspect to equal %q, got %q", expected, actual)
+		t.Fail()
+	}
 }
 
 func TestClassClass(t *testing.T) {
@@ -245,4 +246,111 @@ func TestClassSuperclass(t *testing.T) {
 			t.Fail()
 		}
 	})
+}
+
+func TestClassNew(t *testing.T) {
+	var initializeContext CallContext
+	var initializeArgs []RubyObject
+	callCount := 0
+	initializeStub := func(context CallContext, args ...RubyObject) (RubyObject, error) {
+		callCount++
+		initializeContext = context
+		initializeArgs = args
+		return context.Receiver(), nil
+	}
+	fooClass := NewClass("Foo", objectClass, map[string]RubyMethod{
+		"initialize": privateMethod(initializeStub),
+	}, nil)
+	env := NewEnvironment()
+	env.Set("Class", classClass)
+	env.Set("Foo", fooClass)
+	context := &callContext{
+		receiver: fooClass,
+		env:      env,
+		eval:     func(ast.Node, Environment) (RubyObject, error) { return nil, nil },
+	}
+
+	args := []RubyObject{&String{"foo"}, &Symbol{"bar"}, &Integer{7}}
+
+	result, err := classNew(context, args...)
+	if err != nil {
+		t.Logf("Expected no error, got %T:%v\n", err, err)
+		t.Fail()
+	}
+
+	instance, ok := result.(*classInstance)
+	if !ok {
+		t.Logf("Expected classInstance object, got %T\n", result)
+		t.Fail()
+	}
+
+	if !reflect.DeepEqual(instance.class, context.receiver) {
+		t.Logf(
+			"Expected instance.class to equal\n%+#v\n\tgot\n%+#v\n",
+			instance.class,
+			context.receiver,
+		)
+		t.Fail()
+	}
+	if callCount != 1 {
+		t.Logf("Expected `initialize` of Foo class to be called once, was %d", callCount)
+		t.Fail()
+	}
+
+	if !reflect.DeepEqual(args, initializeArgs) {
+		t.Logf(
+			"Expected initialize args to equal\n%+#v\n\tgot\n%+#v\n",
+			args,
+			initializeArgs,
+		)
+		t.Fail()
+	}
+
+	expectedReceiver := &Self{instance, "Foo"}
+	if !reflect.DeepEqual(expectedReceiver, initializeContext.Receiver()) {
+		t.Logf(
+			"Expected initialize context receiver to equal\n%+#v\n\tgot\n%+#v\n",
+			expectedReceiver,
+			initializeContext.Receiver(),
+		)
+		t.Fail()
+	}
+
+	if !reflect.DeepEqual(context.Env(), initializeContext.Env()) {
+		t.Logf(
+			"Expected initialize context env to equal\n%+#v\n\tgot\n%+#v\n",
+			context.Env(),
+			initializeContext.Env(),
+		)
+		t.Fail()
+	}
+}
+
+func TestClassInitialize(t *testing.T) {
+	env := NewEnvironment()
+	context := &callContext{
+		receiver: &classInstance{class: &class{name: "Foo"}},
+		env:      env,
+	}
+
+	result, err := classInitialize(context, &String{"foo"}, &Symbol{"bar"}, &Integer{7})
+	if err != nil {
+		t.Logf("Expected no error, got %T:%v\n", err, err)
+		t.Fail()
+	}
+
+	instance, ok := result.(*classInstance)
+	if !ok {
+		t.Logf("Expected classInstance object, got %T\n", result)
+		t.Fail()
+	}
+
+	if !reflect.DeepEqual(instance, context.receiver) {
+		t.Logf(
+			"Expected instance to equal\n%+#v\n\tgot\n%+#v\n",
+			instance,
+			context.receiver,
+		)
+		t.Fail()
+	}
 }

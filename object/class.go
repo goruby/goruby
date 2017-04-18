@@ -1,8 +1,10 @@
 package object
 
-import "fmt"
+import (
+	"fmt"
+)
 
-var classClass RubyClassObject = &class{name: "Class", superClass: moduleClass, instanceMethods: NewMethodSet(classMethods)}
+var classClass RubyClassObject = &class{name: "Class", superClass: moduleClass, instanceMethods: NewMethodSet(classInstanceMethods)}
 
 func init() {
 	classClass.(*class).class = classClass
@@ -34,10 +36,7 @@ type class struct {
 }
 
 func (c *class) Inspect() string {
-	if c.name != "" {
-		return c.name
-	}
-	return fmt.Sprintf("#<Class:%p>", c)
+	return c.name
 }
 func (c *class) Type() Type { return CLASS_OBJ }
 func (c *class) Class() RubyClass {
@@ -58,9 +57,19 @@ func (c *class) addMethod(name string, method RubyMethod) {
 
 var classClassMethods = map[string]RubyMethod{}
 
-var classMethods = map[string]RubyMethod{
+var classInstanceMethods = map[string]RubyMethod{
 	"superclass": withArity(0, publicMethod(classSuperclass)),
+	"new":        publicMethod(classNew),
+	"initialize": privateMethod(classInitialize),
 }
+
+type classInstance struct {
+	class RubyClassObject
+}
+
+func (o *classInstance) Inspect() string  { return fmt.Sprintf("#<%s:%p>", o.class.Inspect(), o) }
+func (o *classInstance) Class() RubyClass { return o.class }
+func (o *classInstance) Type() Type       { return CLASS_INSTANCE_OBJ }
 
 func classSuperclass(context CallContext, args ...RubyObject) (RubyObject, error) {
 	class := context.Receiver().(RubyClass)
@@ -72,4 +81,23 @@ func classSuperclass(context CallContext, args ...RubyObject) (RubyObject, error
 		return mixin.RubyClassObject, nil
 	}
 	return superclass.(RubyObject), nil
+}
+
+func classNew(context CallContext, args ...RubyObject) (RubyObject, error) {
+	classObject := context.Receiver().(RubyClassObject)
+	var instance = classInstance{class: classObject}
+	Send(
+		&callContext{
+			receiver: &Self{&instance, classObject.Inspect()},
+			env:      context.Env(),
+			eval:     context.Eval,
+		},
+		"initialize",
+		args...,
+	)
+	return &instance, nil
+}
+
+func classInitialize(context CallContext, args ...RubyObject) (RubyObject, error) {
+	return context.Receiver(), nil
 }
