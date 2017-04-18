@@ -2,7 +2,7 @@ package object
 
 import "strings"
 
-var arrayClass RubyClassObject = newClass("Array", objectClass, arrayMethods, arrayClassMethods)
+var arrayClass RubyClassObject = NewClass("Array", objectClass, arrayMethods, arrayClassMethods)
 
 func init() {
 	classes.Set("Array", arrayClass)

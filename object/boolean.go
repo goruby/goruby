@@ -3,8 +3,8 @@ package object
 import "fmt"
 
 var (
-	trueClass  RubyClassObject = newClass("TrueClass", objectClass, booleanTrueMethods, nil)
-	falseClass RubyClassObject = newClass("FalseClass", objectClass, booleanFalseMethods, nil)
+	trueClass  RubyClassObject = NewClass("TrueClass", objectClass, booleanTrueMethods, nil)
+	falseClass RubyClassObject = NewClass("FalseClass", objectClass, booleanFalseMethods, nil)
 	// TRUE represents the singleton object for the Boolean true
 	TRUE RubyObject = &Boolean{Value: true}
 	// FALSE represents the singleton object for the Boolean false

@@ -9,8 +9,8 @@ func init() {
 	classes.Set("Class", classClass)
 }
 
-// newClass returns a new Ruby Class
-func newClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod) *class {
+// NewClass returns a new Ruby Class
+func NewClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod) RubyClassObject {
 	return &class{name: name, superClass: superClass, instanceMethods: NewMethodSet(instanceMethods), class: newEigenclass(classClass, classMethods)}
 }
 
