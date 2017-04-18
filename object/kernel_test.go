@@ -683,7 +683,7 @@ func TestKernelExtend(t *testing.T) {
 		env:      env,
 	}
 
-	module := newModule("Ext", map[string]RubyMethod{
+	module := NewModule("Ext", map[string]RubyMethod{
 		"foo": publicMethod(nil),
 	})
 
