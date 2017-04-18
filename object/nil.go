@@ -1,7 +1,7 @@
 package object
 
 var (
-	nilClass RubyClassObject = newClass("NilClass", objectClass, nilMethods, nilClassMethods)
+	nilClass RubyClassObject = NewClass("NilClass", objectClass, nilMethods, nilClassMethods)
 	// NIL represents the singleton object nil
 	NIL RubyObject = &nilObject{}
 )

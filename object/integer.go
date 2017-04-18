@@ -2,7 +2,7 @@ package object
 
 import "fmt"
 
-var integerClass RubyClassObject = newClass("Integer", objectClass, integerMethods, integerClassMethods)
+var integerClass RubyClassObject = NewClass("Integer", objectClass, integerMethods, integerClassMethods)
 
 func init() {
 	classes.Set("Integer", integerClass)

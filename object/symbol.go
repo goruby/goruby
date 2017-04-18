@@ -1,6 +1,6 @@
 package object
 
-var symbolClass RubyClassObject = newClass("Symbol", objectClass, symbolMethods, symbolClassMethods)
+var symbolClass RubyClassObject = NewClass("Symbol", objectClass, symbolMethods, symbolClassMethods)
 
 func init() {
 	classes.Set("Symbol", symbolClass)

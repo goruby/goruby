@@ -1,6 +1,6 @@
 package object
 
-var objectClass = newMixin(newClass("Object", basicObjectClass, objectMethods, objectClassMethods), kernelModule)
+var objectClass = newMixin(NewClass("Object", basicObjectClass, objectMethods, objectClassMethods), kernelModule)
 
 func init() {
 	classes.Set("Object", objectClass)

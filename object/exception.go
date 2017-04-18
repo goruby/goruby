@@ -6,17 +6,17 @@ import (
 )
 
 var (
-	exceptionClass           RubyClassObject = newClass("Exception", objectClass, exceptionMethods, exceptionClassMethods)
-	standardErrorClass       RubyClassObject = newClass("StandardError", exceptionClass, nil, nil)
-	zeroDivisionErrorClass   RubyClassObject = newClass("ZeroDivisionError", standardErrorClass, nil, nil)
-	argumentErrorClass       RubyClassObject = newClass("ArgumentError", standardErrorClass, nil, nil)
-	nameErrorClass           RubyClassObject = newClass("NameError", standardErrorClass, nil, nil)
-	noMethodErrorClass       RubyClassObject = newClass("NoMethodError", nameErrorClass, nil, nil)
-	typeErrorClass           RubyClassObject = newClass("TypeError", standardErrorClass, nil, nil)
-	scriptErrorClass         RubyClassObject = newClass("ScriptError", exceptionClass, nil, nil)
-	loadErrorClass           RubyClassObject = newClass("LoadError", scriptErrorClass, nil, nil)
-	syntaxErrorClass         RubyClassObject = newClass("SyntaxError", scriptErrorClass, nil, nil)
-	notImplementedErrorClass RubyClassObject = newClass("NotImplementedError", scriptErrorClass, nil, nil)
+	exceptionClass           RubyClassObject = NewClass("Exception", objectClass, exceptionMethods, exceptionClassMethods)
+	standardErrorClass       RubyClassObject = NewClass("StandardError", exceptionClass, nil, nil)
+	zeroDivisionErrorClass   RubyClassObject = NewClass("ZeroDivisionError", standardErrorClass, nil, nil)
+	argumentErrorClass       RubyClassObject = NewClass("ArgumentError", standardErrorClass, nil, nil)
+	nameErrorClass           RubyClassObject = NewClass("NameError", standardErrorClass, nil, nil)
+	noMethodErrorClass       RubyClassObject = NewClass("NoMethodError", nameErrorClass, nil, nil)
+	typeErrorClass           RubyClassObject = NewClass("TypeError", standardErrorClass, nil, nil)
+	scriptErrorClass         RubyClassObject = NewClass("ScriptError", exceptionClass, nil, nil)
+	loadErrorClass           RubyClassObject = NewClass("LoadError", scriptErrorClass, nil, nil)
+	syntaxErrorClass         RubyClassObject = NewClass("SyntaxError", scriptErrorClass, nil, nil)
+	notImplementedErrorClass RubyClassObject = NewClass("NotImplementedError", scriptErrorClass, nil, nil)
 )
 
 func init() {
