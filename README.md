@@ -261,4 +261,5 @@ To run the command as one off run `go run main.go`.
 	- [ ] self defined classes with inheritance
 - [x] modules
 - [ ] object main
+- [x] comments '#'
 
