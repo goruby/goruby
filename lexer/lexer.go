@@ -125,6 +125,8 @@ func startLexer(l *Lexer) StateFn {
 	case '\n':
 		l.emit(token.NEWLINE)
 		return startLexer
+	case '\'':
+		return lexSingleQuoteString
 	case '"':
 		return lexString
 	case ':':
@@ -223,6 +225,20 @@ func lexDigit(l *Lexer) StateFn {
 	}
 	l.backup()
 	l.emit(token.INT)
+	return startLexer
+}
+
+func lexSingleQuoteString(l *Lexer) StateFn {
+	l.ignore()
+	r := l.next()
+
+	for r != '\'' {
+		r = l.next()
+	}
+	l.backup()
+	l.emit(token.STRING)
+	l.next()
+	l.ignore()
 	return startLexer
 }
 
