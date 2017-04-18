@@ -163,6 +163,9 @@ func (i *Identifier) String() string  { return i.Value }
 func (i *Identifier) expressionNode() {}
 func (i *Identifier) literalNode()    {}
 
+// IsConstant returns true if the Identifier represents a Constant, false otherwise
+func (i *Identifier) IsConstant() bool { return i.Token.Type == token.CONST }
+
 // TokenLiteral returns the literal of the token.IDENT token
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 

@@ -304,11 +304,15 @@ func evalIdentifier(node *ast.Identifier, env object.Environment) (object.RubyOb
 		return val, nil
 	}
 
+	if node.IsConstant() {
+		return nil, object.NewUninitializedConstantNameError(node.Value)
+	}
+
 	self, _ := env.Get("self")
 	context := &callContext{object.NewCallContext(env, self)}
 	val, err := object.Send(context, node.Value)
 	if err != nil {
-		return nil, object.NewNameError(self, node.Value)
+		return nil, object.NewUndefinedLocalVariableOrMethodNameError(self, node.Value)
 	}
 	return val, nil
 }

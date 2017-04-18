@@ -11,55 +11,86 @@ import (
 )
 
 func TestVariableExpression(t *testing.T) {
-	tests := []struct {
-		input              string
-		expectedIdentifier string
-		expectedValue      string
-	}{
-		{"x = 5;", "x", "5"},
-		{"x = 5_0;", "x", "5_0"},
-		{"y = true;", "y", "true"},
-		{"foobar = y;", "foobar", "y"},
-		{"foobar = (12 + 2 * bar) - x;", "foobar", "((12 + (2 * bar)) - x)"},
-	}
+	t.Run("valid variable expressions", func(t *testing.T) {
+		tests := []struct {
+			input              string
+			expectedIdentifier string
+			expectedValue      string
+		}{
+			{"x = 5;", "x", "5"},
+			{"x = 5_0;", "x", "5_0"},
+			{"y = true;", "y", "true"},
+			{"foobar = y;", "foobar", "y"},
+			{"foobar = (12 + 2 * bar) - x;", "foobar", "((12 + (2 * bar)) - x)"},
+		}
 
-	for _, tt := range tests {
-		l := lexer.New(tt.input)
+		for _, tt := range tests {
+			l := lexer.New(tt.input)
+			p := New(l)
+			program, err := p.ParseProgram()
+			checkParserErrors(t, err)
+
+			if len(program.Statements) != 1 {
+				t.Fatalf(
+					"program.Statements does not contain 1 statements. got=%d",
+					len(program.Statements),
+				)
+			}
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0],
+				)
+			}
+
+			variable, ok := stmt.Expression.(*ast.VariableAssignment)
+
+			if !testIdentifier(t, variable.Name, tt.expectedIdentifier) {
+				return
+			}
+
+			val := variable.Value.String()
+
+			if val != tt.expectedValue {
+				t.Logf(
+					"Expected variable value to equal %s, got %s\n",
+					tt.expectedValue,
+					val,
+				)
+				t.Fail()
+			}
+		}
+	})
+	t.Run("const assignment within function", func(t *testing.T) {
+		input := `
+		def foo
+			Ten = 10
+		end
+		`
+
+		l := lexer.New(input)
 		p := New(l)
-		program, err := p.ParseProgram()
-		checkParserErrors(t, err)
+		_, err := p.ParseProgram()
 
-		if len(program.Statements) != 1 {
-			t.Fatalf(
-				"program.Statements does not contain 1 statements. got=%d",
-				len(program.Statements),
-			)
-		}
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf(
-				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-				program.Statements[0],
-			)
+		if err == nil {
+			t.Logf("Expected error, got nil")
+			t.FailNow()
 		}
 
-		variable, ok := stmt.Expression.(*ast.VariableAssignment)
+		expected := fmt.Errorf("dynamic constant assignment")
 
-		if !testIdentifier(t, variable.Name, tt.expectedIdentifier) {
-			return
+		errors := err.(*Errors).errors
+		if len(errors) != 1 {
+			t.Logf("Exected one error, got %d", len(errors))
+			t.FailNow()
 		}
 
-		val := variable.Value.String()
-
-		if val != tt.expectedValue {
-			t.Logf(
-				"Expected variable value to equal %s, got %s\n",
-				tt.expectedValue,
-				val,
-			)
+		if !reflect.DeepEqual(errors[0], expected) {
+			t.Logf("Expected error to equal\n%v\n\tgot\n%v\n", expected, errors[0])
 			t.Fail()
 		}
-	}
+	})
 }
 
 func TestReturnStatements(t *testing.T) {
@@ -103,40 +134,78 @@ func TestReturnStatements(t *testing.T) {
 }
 
 func TestIdentifierExpression(t *testing.T) {
-	input := "foobar;"
+	t.Run("local variable", func(t *testing.T) {
+		input := "foobar;"
 
-	l := lexer.New(input)
-	p := New(l)
-	program, err := p.ParseProgram()
-	checkParserErrors(t, err)
+		l := lexer.New(input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
 
-	if len(program.Statements) != 1 {
-		t.Fatalf(
-			"program has not enough statements. got=%d",
-			len(program.Statements),
-		)
-	}
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf(
-			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-			program.Statements[0],
-		)
-	}
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program has not enough statements. got=%d",
+				len(program.Statements),
+			)
+		}
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
 
-	ident, ok := stmt.Expression.(*ast.Identifier)
-	if !ok {
-		t.Fatalf("expression not *ast.Identifier. got=%T", stmt.Expression)
-	}
-	if ident.Value != "foobar" {
-		t.Errorf("ident.Value not %s. got=%s", "foobar", ident.Value)
-	}
-	if ident.TokenLiteral() != "foobar" {
-		t.Errorf(
-			"ident.TokenLiteral not %s. got=%s", "foobar",
-			ident.TokenLiteral(),
-		)
-	}
+		ident, ok := stmt.Expression.(*ast.Identifier)
+		if !ok {
+			t.Fatalf("expression not *ast.Identifier. got=%T", stmt.Expression)
+		}
+		if ident.Value != "foobar" {
+			t.Errorf("ident.Value not %s. got=%s", "foobar", ident.Value)
+		}
+		if ident.TokenLiteral() != "foobar" {
+			t.Errorf(
+				"ident.TokenLiteral not %s. got=%s", "foobar",
+				ident.TokenLiteral(),
+			)
+		}
+	})
+	t.Run("constant", func(t *testing.T) {
+		input := "Foobar;"
+
+		l := lexer.New(input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program has not enough statements. got=%d",
+				len(program.Statements),
+			)
+		}
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		ident, ok := stmt.Expression.(*ast.Identifier)
+		if !ok {
+			t.Fatalf("expression not *ast.Identifier. got=%T", stmt.Expression)
+		}
+		if ident.Value != "Foobar" {
+			t.Errorf("ident.Value not %s. got=%s", "Foobar", ident.Value)
+		}
+		if ident.TokenLiteral() != "Foobar" {
+			t.Errorf(
+				"ident.TokenLiteral not %s. got=%s", "Foobar",
+				ident.TokenLiteral(),
+			)
+		}
+	})
 }
 
 func TestSelfExpression(t *testing.T) {

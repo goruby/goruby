@@ -182,7 +182,7 @@ To run the command as one off run `go run main.go`.
 	- [ ] implicit array assignment
 	- [ ] array of strings `%w{}`
 	- [ ] array of symbols `%i{}`
-- [ ] nil
+- [x] nil
 - [ ] hashes
 - [ ] symbols
 	- [x] `:symbol`
@@ -238,7 +238,7 @@ To run the command as one off run `go run main.go`.
 		- [ ] `||=`
 		- [ ] `&&=`
 - [ ] function blocks (procs)
-- [ ] constants
+- [x] constants
 - [ ] scope operator `::`
 - [ ] classes
 	- [x] class objects

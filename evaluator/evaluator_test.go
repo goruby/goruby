@@ -198,6 +198,10 @@ end
 			"NameError: undefined local variable or method `foobar' for :Object",
 		},
 		{
+			"Foobar",
+			"NameError: uninitialized constant Foobar",
+		},
+		{
 			`
 			def foo x, y
 			end
