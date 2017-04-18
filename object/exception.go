@@ -218,6 +218,18 @@ func (e *NoMethodError) Inspect() string { return formatException(e, e.Message) 
 // Class returns noMethodErrorClass
 func (e *NoMethodError) Class() RubyClass { return noMethodErrorClass }
 
+func NewWrongArgumentTypeError(expected, actual RubyObject) *TypeError {
+	return &TypeError{
+		&exception{
+			Message: fmt.Sprintf(
+				"wrong argument type %s (expected %s)",
+				reflect.TypeOf(actual).Elem().Name(),
+				reflect.TypeOf(expected).Elem().Name(),
+			),
+		},
+	}
+}
+
 // NewCoercionTypeError returns a TypeError with the default message for coercing errors
 func NewCoercionTypeError(expected, actual RubyObject) *TypeError {
 	return &TypeError{

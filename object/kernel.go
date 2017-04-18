@@ -23,6 +23,7 @@ var kernelMethodSet = map[string]RubyMethod{
 	"class":   withArity(0, publicMethod(kernelClass)),
 	"puts":    privateMethod(kernelPuts),
 	"require": withArity(1, privateMethod(kernelRequire)),
+	"extend":  publicMethod(kernelExtend),
 }
 
 func kernelPuts(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -112,4 +113,28 @@ func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) 
 	}
 	arr.Elements = append(arr.Elements, &String{Value: absolutePath})
 	return TRUE, nil
+}
+
+func kernelExtend(context CallContext, args ...RubyObject) (RubyObject, error) {
+	if len(args) == 0 {
+		return nil, NewWrongNumberOfArgumentsError(1, 0)
+	}
+	modules := make([]*Module, len(args))
+	for i, arg := range args {
+		module, ok := arg.(*Module)
+		if !ok {
+			return nil, NewWrongArgumentTypeError(module, arg)
+		}
+		modules[i] = module
+	}
+	extended := &extendedObject{
+		RubyObject: context.Receiver(),
+		class: newEigenclass(
+			mixin(context.Receiver().Class().(RubyClassObject), modules...),
+			map[string]RubyMethod{},
+		),
+	}
+	info, _ := EnvStat(context.Env(), context.Receiver())
+	info.Env().Set(info.Name(), extended)
+	return extended, nil
 }
