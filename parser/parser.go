@@ -81,6 +81,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.NIL, p.parseNilLiteral)
 	p.registerPrefix(token.SELF, p.parseSelf)
+	p.registerPrefix(token.MODULE, p.parseModule)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -381,6 +382,25 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	}
 	p.accept(token.END)
 	return expression
+}
+
+func (p *Parser) parseModule() ast.Expression {
+	expr := &ast.ModuleExpression{Token: p.curToken}
+	if !p.accept(token.CONST) {
+		return nil
+	}
+	expr.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if !p.acceptOneOf(token.NEWLINE, token.SEMICOLON) {
+		return nil
+	}
+
+	expr.Body = p.parseBlockStatement()
+
+	if !p.accept(token.END) {
+		return nil
+	}
+	return expr
 }
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {

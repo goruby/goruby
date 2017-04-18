@@ -11,7 +11,7 @@ import (
 	"github.com/goruby/goruby/parser"
 )
 
-var kernelModule = newModule("Kernel", kernelMethodSet)
+var kernelModule = NewModule("Kernel", kernelMethodSet)
 
 func init() {
 	classes.Set("Kernel", kernelModule)

@@ -362,6 +362,29 @@ func (ce *ContextCallExpression) String() string {
 	return out.String()
 }
 
+// ModuleExpression represents a module definition
+type ModuleExpression struct {
+	Token token.Token // The module keyword
+	Name  *Identifier // The module name, will always be a const
+	Body  *BlockStatement
+}
+
+func (m *ModuleExpression) expressionNode() {}
+
+// TokenLiteral returns the literal from token.MODULE
+func (m *ModuleExpression) TokenLiteral() string { return m.Token.Literal }
+func (m *ModuleExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(m.TokenLiteral())
+	out.WriteString(" ")
+	out.WriteString(m.Name.String())
+	out.WriteString("\n")
+	out.WriteString(m.Body.String())
+	out.WriteString("\n")
+	out.WriteString(" end")
+	return out.String()
+}
+
 // PrefixExpression represents a prefix operator
 type PrefixExpression struct {
 	Token    token.Token // The prefix token, e.g. !

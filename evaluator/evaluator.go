@@ -33,8 +33,6 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 	case *ast.BlockStatement:
 		return evalBlockStatement(node, env)
 
-	// Expressions
-
 	// Literals
 	case (*ast.IntegerLiteral):
 		return object.NewInteger(node.Value), nil
@@ -61,13 +59,15 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			Body:       body,
 		}
 		object.AddMethod(context, node.Name.Value, function)
-		return function, nil
+		return &object.Symbol{node.Name.Value}, nil
 	case *ast.ArrayLiteral:
 		elements, err := evalExpressions(node.Elements, env)
 		if err != nil {
 			return nil, err
 		}
 		return &object.Array{Elements: elements}, nil
+
+	// Expressions
 	case *ast.VariableAssignment:
 		val, err := Eval(node.Value, env)
 		if err != nil {
@@ -75,6 +75,18 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		}
 		env.Set(node.Name.Value, val)
 		return val, nil
+	case *ast.ModuleExpression:
+		module := object.NewModule(node.Name.Value, nil)
+		env.Set("self", &object.Self{module})
+		defer env.Unset("self")
+		bodyReturn, err := Eval(node.Body, env)
+		if err != nil {
+			return nil, err
+		}
+		selfObject, _ := env.Get("self")
+		self := selfObject.(*object.Self)
+		env.SetGlobal(node.Name.Value, self.RubyObject)
+		return bodyReturn, nil
 	case *ast.ContextCallExpression:
 		context, err := Eval(node.Context, env)
 		if err != nil {
@@ -294,6 +306,9 @@ func evalBlockStatement(block *ast.BlockStatement, env object.Environment) (obje
 			}
 
 		}
+	}
+	if result == nil {
+		return object.NIL, nil
 	}
 	return result, nil
 }

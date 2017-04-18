@@ -61,6 +61,7 @@ const (
 	FALSE
 	RETURN
 	NIL
+	MODULE
 )
 
 var keywords = map[string]Type{
@@ -74,6 +75,7 @@ var keywords = map[string]Type{
 	"nil":    NIL,
 	"return": RETURN,
 	"self":   SELF,
+	"module": MODULE,
 }
 
 // LookupIdent returns a keyword Type if ident is a keyword. If ident starts
