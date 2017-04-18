@@ -11,7 +11,18 @@ func init() {
 
 // NewClass returns a new Ruby Class
 func NewClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod) RubyClassObject {
-	return &class{name: name, superClass: superClass, instanceMethods: NewMethodSet(instanceMethods), class: newEigenclass(classClass, classMethods)}
+	if instanceMethods == nil {
+		instanceMethods = map[string]RubyMethod{}
+	}
+	if classMethods == nil {
+		classMethods = map[string]RubyMethod{}
+	}
+	return &class{
+		name:            name,
+		superClass:      superClass,
+		instanceMethods: NewMethodSet(instanceMethods),
+		class:           newEigenclass(classClass, classMethods),
+	}
 }
 
 // class represents a Ruby Class object

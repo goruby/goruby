@@ -6,6 +6,114 @@ import (
 	"testing"
 )
 
+func TestNewClass(t *testing.T) {
+	t.Run("full constructor use", func(t *testing.T) {
+		instanceMethods := map[string]RubyMethod{
+			"instance_foo": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
+				return TRUE, nil
+			}),
+		}
+		classMethods := map[string]RubyMethod{
+			"class_foo": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
+				return TRUE, nil
+			}),
+		}
+		superClass := arrayClass
+
+		classObject := NewClass("Abc", superClass, instanceMethods, classMethods)
+
+		class, ok := classObject.(*class)
+		if !ok {
+			t.Logf("Expected returned object to be a class, got %T", classObject)
+			t.Fail()
+		}
+
+		expectedInstanceMethodSet := NewMethodSet(instanceMethods)
+		if !reflect.DeepEqual(expectedInstanceMethodSet, class.instanceMethods) {
+			t.Logf(
+				"Expected class.instanceMethods to equal\n%+#v\n\tgot\n%+#v\n",
+				expectedInstanceMethodSet,
+				class.instanceMethods,
+			)
+			t.Fail()
+		}
+
+		if !reflect.DeepEqual(superClass, class.superClass) {
+			t.Logf(
+				"Expected class.superClass to equal\n%+#v\n\tgot\n%+#v\n",
+				superClass,
+				class.superClass,
+			)
+			t.Fail()
+		}
+
+		expectedClassMethodSet := NewMethodSet(classMethods)
+		actualClassMethods := class.class.Methods()
+		if !reflect.DeepEqual(expectedClassMethodSet, actualClassMethods) {
+			t.Logf(
+				"Expected class.class.Methods to equal\n%+#v\n\tgot\n%+#v\n",
+				expectedClassMethodSet,
+				actualClassMethods,
+			)
+			t.Fail()
+		}
+	})
+	t.Run("missing instanceMethods", func(t *testing.T) {
+		classMethods := map[string]RubyMethod{
+			"class_foo": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
+				return TRUE, nil
+			}),
+		}
+		superClass := arrayClass
+
+		classObject := NewClass("Abc", superClass, nil, classMethods)
+
+		class, ok := classObject.(*class)
+		if !ok {
+			t.Logf("Expected returned object to be a class, got %T", classObject)
+			t.Fail()
+		}
+
+		expectedInstanceMethodSet := NewMethodSet(map[string]RubyMethod{})
+		if !reflect.DeepEqual(expectedInstanceMethodSet, class.instanceMethods) {
+			t.Logf(
+				"Expected class.instanceMethods to equal\n%+#v\n\tgot\n%+#v\n",
+				expectedInstanceMethodSet,
+				class.instanceMethods,
+			)
+			t.Fail()
+		}
+	})
+	t.Run("missing instanceMethods", func(t *testing.T) {
+		instanceMethods := map[string]RubyMethod{
+			"class_foo": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
+				return TRUE, nil
+			}),
+		}
+		superClass := arrayClass
+
+		classObject := NewClass("Abc", superClass, instanceMethods, nil)
+
+		class, ok := classObject.(*class)
+		if !ok {
+			t.Logf("Expected returned object to be a class, got %T", classObject)
+			t.Fail()
+		}
+
+		expectedClassMethodSet := NewMethodSet(map[string]RubyMethod{})
+
+		actualClassMethods := class.class.Methods()
+		if !reflect.DeepEqual(expectedClassMethodSet, actualClassMethods) {
+			t.Logf(
+				"Expected class.class.Methods to equal\n%+#v\n\tgot\n%+#v\n",
+				expectedClassMethodSet,
+				actualClassMethods,
+			)
+			t.Fail()
+		}
+	})
+}
+
 func TestClassInspect(t *testing.T) {
 	t.Run("class Class", func(t *testing.T) {
 		context := &class{}
