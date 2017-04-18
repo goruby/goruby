@@ -8,6 +8,7 @@ import (
 
 func TestLexerNextToken(t *testing.T) {
 	input := `five = 5
+# just comment
 fifty = 5_0
 ten = 10
 
