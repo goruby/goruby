@@ -289,7 +289,7 @@ func TestModuleObject(t *testing.T) {
 
 	for _, tt := range tests {
 		env := object.NewEnvironment()
-		env.Set("self", &object.Self{&object.Object{}})
+		env.Set("self", &object.Self{&object.Object{}, "main"})
 		evaluated, err := testEval(tt.input, env)
 		checkError(t, err)
 

@@ -9,6 +9,7 @@ import (
 
 type testRubyObject struct {
 	class RubyClassObject
+	Name  string
 }
 
 func (t *testRubyObject) Type() Type      { return Type("TEST_OBJECT") }
