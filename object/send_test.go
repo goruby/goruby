@@ -226,6 +226,34 @@ func TestAddMethod(t *testing.T) {
 			t.Fail()
 		}
 	})
+	t.Run("class object", func(t *testing.T) {
+		context := &class{
+			name:            "A",
+			instanceMethods: NewMethodSet(map[string]RubyMethod{}),
+		}
+
+		fn := &Function{
+			Parameters: []*ast.Identifier{
+				&ast.Identifier{Value: "x"},
+			},
+			Env:  &environment{store: map[string]RubyObject{}},
+			Body: nil,
+		}
+
+		newContext := AddMethod(context, "foo", fn)
+
+		class, ok := newContext.(*class)
+		if !ok {
+			t.Logf("Expected returned object to be a class, got %T", newContext)
+			t.FailNow()
+		}
+
+		_, ok = class.Methods().Get("foo")
+		if !ok {
+			t.Logf("Expected object to have method foo")
+			t.Fail()
+		}
+	})
 	t.Run("extended object", func(t *testing.T) {
 		context := &extendedObject{
 			RubyObject: &testRubyObject{

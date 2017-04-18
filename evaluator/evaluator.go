@@ -87,6 +87,22 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		self := selfObject.(*object.Self)
 		env.SetGlobal(node.Name.Value, self.RubyObject)
 		return bodyReturn, nil
+	case *ast.ClassExpression:
+		objectClass, ok := env.Get("Object")
+		if !ok {
+			return nil, object.NewUninitializedConstantNameError("Object")
+		}
+		class := object.NewClass(node.Name.Value, objectClass.(object.RubyClassObject), nil, nil)
+		env.Set("self", &object.Self{class, node.Name.Value})
+		defer env.Unset("self")
+		bodyReturn, err := Eval(node.Body, env)
+		if err != nil {
+			return nil, err
+		}
+		selfObject, _ := env.Get("self")
+		self := selfObject.(*object.Self)
+		env.SetGlobal(node.Name.Value, self.RubyObject)
+		return bodyReturn, nil
 	case *ast.ContextCallExpression:
 		context, err := Eval(node.Context, env)
 		if err != nil {

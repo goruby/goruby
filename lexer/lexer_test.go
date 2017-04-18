@@ -47,6 +47,8 @@ self
 Ten = 10
 module Abc
 end
+class Abc
+end
 `
 
 	tests := []struct {
@@ -169,6 +171,11 @@ end
 		{token.INT, "10"},
 		{token.NEWLINE, "\n"},
 		{token.MODULE, "module"},
+		{token.CONST, "Abc"},
+		{token.NEWLINE, "\n"},
+		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.CLASS, "class"},
 		{token.CONST, "Abc"},
 		{token.NEWLINE, "\n"},
 		{token.END, "end"},

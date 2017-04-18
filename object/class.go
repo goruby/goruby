@@ -52,6 +52,9 @@ func (c *class) SuperClass() RubyClass {
 func (c *class) Methods() MethodSet {
 	return c.instanceMethods
 }
+func (c *class) addMethod(name string, method RubyMethod) {
+	c.instanceMethods.Set(name, method)
+}
 
 var classClassMethods = map[string]RubyMethod{}
 
