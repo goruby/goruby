@@ -140,7 +140,7 @@ To run the command as one off run `go run main.go`.
 - [x] booleans
 - [ ] strings
 	- [x] double quoted
-	- [ ] single quoted
+	- [x] single quoted
 	- [ ] `%q{}`
 	- [ ] `%Q{}`
 	- [ ] heredoc

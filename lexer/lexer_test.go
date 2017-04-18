@@ -30,7 +30,9 @@ end
 10 != 9
 ""
 "foobar"
+'foobar'
 "foo bar"
+'foo bar'
 :sym
 .
 
@@ -129,6 +131,10 @@ end
 		{token.STRING, ""},
 		{token.NEWLINE, "\n"},
 		{token.STRING, "foobar"},
+		{token.NEWLINE, "\n"},
+		{token.STRING, "foobar"},
+		{token.NEWLINE, "\n"},
+		{token.STRING, "foo bar"},
 		{token.NEWLINE, "\n"},
 		{token.STRING, "foo bar"},
 		{token.NEWLINE, "\n"},
