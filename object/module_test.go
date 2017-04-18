@@ -37,7 +37,7 @@ func TestModuleAncestors(t *testing.T) {
 	})
 	t.Run("class with mixed in modules", func(t *testing.T) {
 		context := &callContext{
-			receiver: mixin(
+			receiver: newMixin(
 				&class{name: "BasicObjectAsParent", superClass: basicObjectClass},
 				kernelModule,
 			),
@@ -120,7 +120,7 @@ func TestModuleAncestors(t *testing.T) {
 func TestModuleIncludedModules(t *testing.T) {
 	context := &callContext{
 		receiver: &class{
-			superClass: mixin(basicObjectClass, kernelModule),
+			superClass: newMixin(basicObjectClass, kernelModule),
 		},
 	}
 

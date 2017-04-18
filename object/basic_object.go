@@ -1,5 +1,7 @@
 package object
 
+import "fmt"
+
 var basicObjectClass RubyClassObject = newClass("BasicObject", nil, basicObjectMethods, basicObjectClassMethods)
 
 func init() {
@@ -10,7 +12,10 @@ func init() {
 type basicObject struct{}
 
 // Inspect returns empty string. BasicObjects do not have an `inspect` method.
-func (b *basicObject) Inspect() string { return "" }
+func (b *basicObject) Inspect() string {
+	fmt.Println("(Object doesn't support #inspect)")
+	return ""
+}
 
 // Type returns the ObjectType of the array
 func (b *basicObject) Type() Type { return BASIC_OBJECT_OBJ }

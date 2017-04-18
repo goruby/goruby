@@ -2,7 +2,7 @@ package object
 
 import "fmt"
 
-var classClass RubyClassObject = &class{name: "Class", superClass: moduleClass, instanceMethods: classMethods}
+var classClass RubyClassObject = &class{name: "Class", superClass: moduleClass, instanceMethods: NewMethodSet(classMethods)}
 
 func init() {
 	classClass.(*class).class = classClass
@@ -11,7 +11,7 @@ func init() {
 
 // newClass returns a new Ruby Class
 func newClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod) *class {
-	return &class{name: name, superClass: superClass, instanceMethods: instanceMethods, class: newEigenclass(classClass, classMethods)}
+	return &class{name: name, superClass: superClass, instanceMethods: NewMethodSet(instanceMethods), class: newEigenclass(classClass, classMethods)}
 }
 
 // class represents a Ruby Class object
@@ -19,7 +19,7 @@ type class struct {
 	name            string
 	superClass      RubyClass
 	class           RubyClass
-	instanceMethods map[string]RubyMethod
+	instanceMethods SettableMethodSet
 }
 
 func (c *class) Inspect() string {
@@ -38,7 +38,7 @@ func (c *class) Class() RubyClass {
 func (c *class) SuperClass() RubyClass {
 	return c.superClass
 }
-func (c *class) Methods() map[string]RubyMethod {
+func (c *class) Methods() MethodSet {
 	return c.instanceMethods
 }
 
@@ -54,7 +54,7 @@ func classSuperclass(context CallContext, args ...RubyObject) (RubyObject, error
 	if superclass == nil {
 		return NIL, nil
 	}
-	if mixin, ok := superclass.(*methodSet); ok {
+	if mixin, ok := superclass.(*mixin); ok {
 		return mixin.RubyClassObject, nil
 	}
 	return superclass.(RubyObject), nil

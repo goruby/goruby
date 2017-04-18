@@ -307,7 +307,7 @@ func TestModuleObject(t *testing.T) {
 
 		actualMethods := make(map[string]string)
 
-		methods := module.Class().Methods()
+		methods := module.Class().Methods().GetAll()
 		for name, method := range methods {
 			if function, ok := method.(*object.Function); ok {
 				actualMethods[name] = function.Inspect()
@@ -365,7 +365,7 @@ func TestFunctionObject(t *testing.T) {
 		}
 
 		self, _ := env.Get("self")
-		method, ok := self.Class().Methods()["foo"]
+		method, ok := self.Class().Methods().Get("foo")
 		if !ok {
 			t.Logf("Expected function to be added to self")
 			t.Fail()

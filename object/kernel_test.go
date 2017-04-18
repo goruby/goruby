@@ -18,7 +18,7 @@ func TestKernelMethods(t *testing.T) {
 		context := &callContext{
 			receiver: &testRubyObject{
 				class: &class{
-					instanceMethods: contextMethods,
+					instanceMethods: NewMethodSet(contextMethods),
 					superClass:      nil,
 				},
 			},
@@ -76,9 +76,9 @@ func TestKernelMethods(t *testing.T) {
 		context := &callContext{
 			receiver: &testRubyObject{
 				class: &class{
-					instanceMethods: contextMethods,
+					instanceMethods: NewMethodSet(contextMethods),
 					superClass: &class{
-						instanceMethods: superClassMethods,
+						instanceMethods: NewMethodSet(superClassMethods),
 						superClass:      nil,
 					},
 				},
@@ -134,7 +134,7 @@ func TestKernelMethods(t *testing.T) {
 		context := &callContext{
 			receiver: &testRubyObject{
 				class: &class{
-					instanceMethods: contextMethods,
+					instanceMethods: NewMethodSet(contextMethods),
 					superClass:      nil,
 				},
 			},
@@ -703,8 +703,8 @@ func TestKernelExtend(t *testing.T) {
 	}
 
 	expectedClass := &eigenclass{
-		map[string]RubyMethod{},
-		&methodSet{
+		&methodSet{map[string]RubyMethod{}},
+		&mixin{
 			objectToExtend.Class().(RubyClassObject),
 			[]*Module{module},
 		},
