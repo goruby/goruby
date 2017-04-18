@@ -9,6 +9,7 @@ import (
 
 type testRubyObject struct {
 	class RubyClassObject
+	Name  string
 }
 
 func (t *testRubyObject) Type() Type      { return Type("TEST_OBJECT") }
@@ -114,6 +115,7 @@ func TestSend(t *testing.T) {
 						},
 					},
 				},
+				"main",
 			},
 		}
 
@@ -269,6 +271,7 @@ func TestAddMethod(t *testing.T) {
 				instanceMethods: map[string]RubyMethod{},
 				superClass:      objectClass,
 			},
+			Name: "main",
 		}
 		context := &Self{
 			RubyObject: vanillaObject,
@@ -331,6 +334,7 @@ func TestAddMethod(t *testing.T) {
 					}),
 				}),
 			},
+			Name: "main",
 		}
 
 		fn := &Function{

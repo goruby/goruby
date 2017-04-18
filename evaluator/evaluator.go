@@ -77,7 +77,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return val, nil
 	case *ast.ModuleExpression:
 		module := object.NewModule(node.Name.Value, nil)
-		env.Set("self", &object.Self{module})
+		env.Set("self", &object.Self{module, node.Name.Value})
 		defer env.Unset("self")
 		bodyReturn, err := Eval(node.Body, env)
 		if err != nil {
