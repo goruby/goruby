@@ -1666,6 +1666,22 @@ func TestParsingModuleExpressions(t *testing.T) {
 	}
 }
 
+func TestParsingClassExpressions(t *testing.T) {
+	input := "class A\n3\nend\n"
+
+	l := lexer.New(input)
+	p := New(l)
+	program, err := p.ParseProgram()
+	fmt.Printf("Program: %s\n", program)
+	checkParserErrors(t, err)
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	_, ok = stmt.Expression.(*ast.ClassExpression)
+	if !ok {
+		t.Fatalf("exp not *ast.ClassExpression. got=%T", stmt.Expression)
+	}
+}
+
 func testVariableExpression(t *testing.T, e ast.Expression, name string) bool {
 	variable, ok := e.(*ast.VariableAssignment)
 	if !ok {

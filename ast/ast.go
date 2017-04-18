@@ -385,6 +385,29 @@ func (m *ModuleExpression) String() string {
 	return out.String()
 }
 
+// ClassExpression represents a module definition
+type ClassExpression struct {
+	Token token.Token // The class keyword
+	Name  *Identifier // The class name, will always be a const
+	Body  *BlockStatement
+}
+
+func (m *ClassExpression) expressionNode() {}
+
+// TokenLiteral returns the literal from token.CLASS
+func (m *ClassExpression) TokenLiteral() string { return m.Token.Literal }
+func (m *ClassExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(m.TokenLiteral())
+	out.WriteString(" ")
+	out.WriteString(m.Name.String())
+	out.WriteString("\n")
+	out.WriteString(m.Body.String())
+	out.WriteString("\n")
+	out.WriteString(" end")
+	return out.String()
+}
+
 // PrefixExpression represents a prefix operator
 type PrefixExpression struct {
 	Token    token.Token // The prefix token, e.g. !

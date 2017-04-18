@@ -357,6 +357,83 @@ func TestModuleObject(t *testing.T) {
 	})
 }
 
+func TestClassObject(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedName    string
+		expectedMethods map[string]string
+		expectedReturn  object.RubyObject
+	}{
+		{
+			`class Foo
+				def a
+					"foo"
+				end
+			end`,
+			"Foo",
+			map[string]string{"a": "fn() {\nfoo\n}"},
+			&object.Symbol{"a"},
+		},
+		{
+			`class Foo
+				3
+			end`,
+			"Foo",
+			map[string]string{},
+			&object.Integer{3},
+		},
+		{
+			`class Foo
+			end`,
+			"Foo",
+			map[string]string{},
+			object.NIL,
+		},
+	}
+
+	for _, tt := range tests {
+		env := object.NewMainEnvironment()
+		evaluated, err := testEval(tt.input, env)
+		checkError(t, err)
+
+		if !reflect.DeepEqual(evaluated, tt.expectedReturn) {
+			t.Logf("Expected return object to equal\n%+#v\n\tgot\n%+#v\n", tt.expectedReturn, evaluated)
+			t.Fail()
+		}
+
+		class, ok := env.Get(tt.expectedName)
+		if !ok {
+			t.Logf("Expected class to exist in env")
+			t.Logf("Env: %+#v\n", env)
+			t.FailNow()
+		}
+
+		classClass, ok := class.(object.RubyClassObject)
+		if !ok {
+			t.Logf("Expected class to be a object.RubyClassObject, got %T", classClass)
+			t.FailNow()
+		}
+
+		actualMethods := make(map[string]string)
+
+		methods := classClass.Methods().GetAll()
+		for name, method := range methods {
+			if function, ok := method.(*object.Function); ok {
+				actualMethods[name] = function.Inspect()
+			}
+		}
+
+		if !reflect.DeepEqual(tt.expectedMethods, actualMethods) {
+			t.Logf(
+				"Expected class methods to equal\n%+#v\n\tgot\n%+#v\n",
+				tt.expectedMethods,
+				actualMethods,
+			)
+			t.Fail()
+		}
+	}
+}
+
 func TestFunctionObject(t *testing.T) {
 	tests := []struct {
 		input              string
