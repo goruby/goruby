@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/goruby/goruby/object"
@@ -72,4 +73,57 @@ func TestInterpreterInterpret(t *testing.T) {
 			t.Fail()
 		}
 	})
+}
+
+func TestSelfAfterModuleDefinition(t *testing.T) {
+	input := `
+		module Foo
+		end
+
+		self
+	`
+	interpreter := New()
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Logf("Expected no panic, got %T:%v\n", r, r)
+			t.Fail()
+		}
+	}()
+	evaluated, err := interpreter.Interpret(input)
+
+	if err != nil {
+		t.Logf("Expected no error, got %T:%v", err, err)
+		t.Fail()
+	}
+
+	expected := &object.Self{&object.Object{}, "main"}
+	if !reflect.DeepEqual(expected, evaluated) {
+		t.Logf("Expected self to equal\n%+#v\n\tgot\n%+#v\n", expected, evaluated)
+		t.Fail()
+	}
+}
+
+func TestModuleInEnv(t *testing.T) {
+	input := `
+		module Foo
+			def foo
+				3
+			end
+		end
+		Foo
+	`
+	interpreter := New()
+
+	evaluated, err := interpreter.Interpret(input)
+	if err != nil {
+		t.Logf("Expected no error, got %T:%v", err, err)
+		t.Fail()
+	}
+
+	_, ok := evaluated.(*object.Module)
+	if !ok {
+		t.Logf("Expected evaluated return to be a object.Module, got %T", evaluated)
+		t.Fail()
+	}
 }
