@@ -711,8 +711,8 @@ func testNilObject(t *testing.T, obj object.RubyObject) bool {
 
 func testEval(input string, context ...object.Environment) (object.RubyObject, error) {
 	env := object.NewEnvironment()
-	for _, e := range context {
-		env = object.NewEnclosedEnvironment(e)
+	if len(context) > 0 {
+		env = context[0]
 	}
 	l := lexer.New(input)
 	p := parser.New(l)

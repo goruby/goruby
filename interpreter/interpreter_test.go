@@ -231,4 +231,69 @@ func TestInterpretClasses(t *testing.T) {
 			t.Fail()
 		}
 	})
+	t.Run("nested class definitions", func(t *testing.T) {
+		input := `
+		class Foo
+			def foo
+				3
+			end
+
+			class Bar
+				def bar
+					"bar"
+				end
+			end
+			Bar
+		end
+		`
+
+		i := New()
+
+		evaluated, err := i.Interpret(input)
+		if err != nil {
+			t.Logf("Expected no error, got %T:%v", err, err)
+			t.FailNow()
+		}
+
+		classObject, ok := evaluated.(object.RubyClassObject)
+		if !ok {
+			t.Logf("Expected class object, got %T", evaluated)
+			t.FailNow()
+		}
+
+		if classObject.Inspect() != "Bar" {
+			t.Logf("Expected class object to stringify to 'Bar', got %q", classObject.Inspect())
+			t.Fail()
+		}
+
+		_, ok = classObject.Methods().Get("bar")
+		if !ok {
+			t.Logf("Expected class object to have method bar")
+			t.Fail()
+		}
+	})
+	t.Run("nested class definitions are scoped to the inner class", func(t *testing.T) {
+		input := `
+		class Foo
+			class Bar
+			end
+		end
+		Bar
+		`
+
+		i := New()
+
+		_, err := i.Interpret(input)
+		if err == nil {
+			t.Logf("Expected error, got nil")
+			t.FailNow()
+		}
+
+		expected := object.NewUninitializedConstantNameError("Bar")
+
+		if err.Error() != expected.Error() {
+			t.Logf("Expected error to equal %T:%v, got %T:%v", expected, expected.Error(), err, err)
+			t.Fail()
+		}
+	})
 }
