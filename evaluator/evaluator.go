@@ -104,7 +104,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		}
 		selfObject, _ := classEnv.Get("self")
 		self := selfObject.(*object.Self)
-		env.SetGlobal(node.Name.Value, self.RubyObject)
+		env.Set(node.Name.Value, self.RubyObject)
 		return bodyReturn, nil
 	case *ast.ContextCallExpression:
 		context, err := Eval(node.Context, env)
