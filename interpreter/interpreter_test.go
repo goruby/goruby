@@ -188,4 +188,47 @@ func TestInterpretClasses(t *testing.T) {
 			t.Fail()
 		}
 	})
+	t.Run("class definitions do not overwrite but add", func(t *testing.T) {
+		input := `
+		class Foo
+			def foo
+				3
+			end
+		end
+
+		class Foo
+			def bar
+				"bar"
+			end
+		end
+
+		Foo
+		`
+
+		i := New()
+
+		evaluated, err := i.Interpret(input)
+		if err != nil {
+			t.Logf("Expected no error, got %T:%v", err, err)
+			t.FailNow()
+		}
+
+		classObject, ok := evaluated.(object.RubyClassObject)
+		if !ok {
+			t.Logf("Expected class object, got %T", evaluated)
+			t.FailNow()
+		}
+
+		_, ok = classObject.Methods().Get("foo")
+		if !ok {
+			t.Logf("Expected class object to have method foo")
+			t.Fail()
+		}
+
+		_, ok = classObject.Methods().Get("bar")
+		if !ok {
+			t.Logf("Expected class object to have method bar")
+			t.Fail()
+		}
+	})
 }
