@@ -92,7 +92,10 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if !ok {
 			return nil, object.NewUninitializedConstantNameError("Object")
 		}
-		class := object.NewClass(node.Name.Value, objectClass.(object.RubyClassObject), nil, nil)
+		class, ok := env.Get(node.Name.Value)
+		if !ok {
+			class = object.NewClass(node.Name.Value, objectClass.(object.RubyClassObject), nil, nil)
+		}
 		classEnv := object.NewEnclosedEnvironment(env)
 		classEnv.Set("self", &object.Self{class, node.Name.Value})
 		bodyReturn, err := Eval(node.Body, classEnv)
