@@ -93,13 +93,13 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			return nil, object.NewUninitializedConstantNameError("Object")
 		}
 		class := object.NewClass(node.Name.Value, objectClass.(object.RubyClassObject), nil, nil)
-		env.Set("self", &object.Self{class, node.Name.Value})
-		defer env.Unset("self")
-		bodyReturn, err := Eval(node.Body, env)
+		classEnv := object.NewEnclosedEnvironment(env)
+		classEnv.Set("self", &object.Self{class, node.Name.Value})
+		bodyReturn, err := Eval(node.Body, classEnv)
 		if err != nil {
 			return nil, err
 		}
-		selfObject, _ := env.Get("self")
+		selfObject, _ := classEnv.Get("self")
 		self := selfObject.(*object.Self)
 		env.SetGlobal(node.Name.Value, self.RubyObject)
 		return bodyReturn, nil
