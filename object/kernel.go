@@ -19,7 +19,7 @@ func init() {
 
 var kernelMethodSet = map[string]RubyMethod{
 	"nil?":    withArity(0, publicMethod(kernelIsNil)),
-	"methods": withArity(0, publicMethod(kernelMethods)),
+	"methods": publicMethod(kernelMethods),
 	"class":   withArity(0, publicMethod(kernelClass)),
 	"puts":    privateMethod(kernelPuts),
 	"require": withArity(1, privateMethod(kernelRequire)),
@@ -36,19 +36,16 @@ func kernelPuts(context CallContext, args ...RubyObject) (RubyObject, error) {
 }
 
 func kernelMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
-	var methodSymbols []RubyObject
-	class := context.Receiver().Class()
-	for class != nil {
-		methods := class.Methods().GetAll()
-		for meth, fn := range methods {
-			if fn.Visibility() == PUBLIC_METHOD {
-				methodSymbols = append(methodSymbols, &Symbol{meth})
-			}
+	showSuperClassMethods := true
+	if len(args) == 1 {
+		boolean, ok := args[0].(*Boolean)
+		if !ok {
+			boolean = TRUE.(*Boolean)
 		}
-		class = class.SuperClass()
+		showSuperClassMethods = boolean.Value
 	}
-
-	return &Array{Elements: methodSymbols}, nil
+	class := context.Receiver().Class()
+	return getMethods(class, PUBLIC_METHOD, showSuperClassMethods), nil
 }
 
 func kernelIsNil(context CallContext, args ...RubyObject) (RubyObject, error) {
