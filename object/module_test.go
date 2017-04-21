@@ -2,6 +2,8 @@ package object
 
 import (
 	"fmt"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -152,4 +154,218 @@ func TestModuleIncludedModules(t *testing.T) {
 		t.Logf("Expected modules to equal %s, got %s", expected, actual)
 		t.Fail()
 	}
+}
+
+func TestModuleInstanceMethods(t *testing.T) {
+	superClassMethods := map[string]RubyMethod{
+		"super_foo":         publicMethod(nil),
+		"super_bar":         publicMethod(nil),
+		"private_super_foo": privateMethod(nil),
+	}
+	contextMethods := map[string]RubyMethod{
+		"foo":         publicMethod(nil),
+		"bar":         publicMethod(nil),
+		"private_foo": privateMethod(nil),
+	}
+	t.Run("without superclass", func(t *testing.T) {
+		context := &callContext{
+			receiver: &class{
+				instanceMethods: NewMethodSet(contextMethods),
+				superClass:      nil,
+			},
+		}
+
+		result, err := moduleInstanceMethods(context)
+
+		checkError(t, err, nil)
+
+		array, ok := result.(*Array)
+		if !ok {
+			t.Logf("Expected array, got %T", result)
+			t.FailNow()
+		}
+
+		var methods []string
+		for i, elem := range array.Elements {
+			sym, ok := elem.(*Symbol)
+			if !ok {
+				t.Logf("Expected all elements to be symbols, got %T at index %d", elem, i)
+				t.Fail()
+			} else {
+				methods = append(methods, sym.Inspect())
+			}
+		}
+
+		var expectedMethods = []string{
+			":foo", ":bar",
+		}
+
+		expectedLen := len(expectedMethods)
+
+		if len(array.Elements) != expectedLen {
+			t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
+			t.Fail()
+		}
+
+		sort.Strings(expectedMethods)
+		sort.Strings(methods)
+
+		if !reflect.DeepEqual(expectedMethods, methods) {
+			t.Logf("Expected methods to equal\n%s\n\tgot\n%s\n", expectedMethods, methods)
+			t.Fail()
+		}
+	})
+	t.Run("with superclass", func(t *testing.T) {
+		context := &callContext{
+			receiver: &class{
+				instanceMethods: NewMethodSet(contextMethods),
+				superClass: &class{
+					instanceMethods: NewMethodSet(superClassMethods),
+					superClass:      nil,
+				},
+			},
+		}
+
+		result, err := moduleInstanceMethods(context)
+
+		checkError(t, err, nil)
+
+		array, ok := result.(*Array)
+		if !ok {
+			t.Logf("Expected array, got %T", result)
+			t.FailNow()
+		}
+
+		var methods []string
+		for i, elem := range array.Elements {
+			sym, ok := elem.(*Symbol)
+			if !ok {
+				t.Logf("Expected all elements to be symbols, got %T at index %d", elem, i)
+				t.Fail()
+			} else {
+				methods = append(methods, sym.Inspect())
+			}
+		}
+
+		var expectedMethods = []string{
+			":foo", ":bar", ":super_foo", ":super_bar",
+		}
+
+		expectedLen := len(expectedMethods)
+
+		if len(array.Elements) != expectedLen {
+			t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
+			t.Fail()
+		}
+
+		sort.Strings(expectedMethods)
+		sort.Strings(methods)
+
+		if !reflect.DeepEqual(expectedMethods, methods) {
+			t.Logf("Expected methods to equal\n%s\n\tgot\n%s\n", expectedMethods, methods)
+			t.Fail()
+		}
+	})
+	t.Run("with superclass but boolean arg false", func(t *testing.T) {
+		context := &callContext{
+			receiver: &class{
+				instanceMethods: NewMethodSet(contextMethods),
+				superClass: &class{
+					instanceMethods: NewMethodSet(superClassMethods),
+					superClass:      nil,
+				},
+			},
+		}
+
+		result, err := moduleInstanceMethods(context, FALSE)
+
+		checkError(t, err, nil)
+
+		array, ok := result.(*Array)
+		if !ok {
+			t.Logf("Expected array, got %T", result)
+			t.FailNow()
+		}
+
+		var methods []string
+		for i, elem := range array.Elements {
+			sym, ok := elem.(*Symbol)
+			if !ok {
+				t.Logf("Expected all elements to be symbols, got %T at index %d", elem, i)
+				t.Fail()
+			} else {
+				methods = append(methods, sym.Inspect())
+			}
+		}
+
+		var expectedMethods = []string{
+			":foo", ":bar",
+		}
+
+		expectedLen := len(expectedMethods)
+
+		if len(array.Elements) != expectedLen {
+			t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
+			t.Fail()
+		}
+
+		sort.Strings(expectedMethods)
+		sort.Strings(methods)
+
+		if !reflect.DeepEqual(expectedMethods, methods) {
+			t.Logf("Expected methods to equal\n%s\n\tgot\n%s\n", expectedMethods, methods)
+			t.Fail()
+		}
+	})
+	t.Run("with superclass and boolean arg true", func(t *testing.T) {
+		context := &callContext{
+			receiver: &class{
+				instanceMethods: NewMethodSet(contextMethods),
+				superClass: &class{
+					instanceMethods: NewMethodSet(superClassMethods),
+					superClass:      nil,
+				},
+			},
+		}
+
+		result, err := moduleInstanceMethods(context, TRUE)
+
+		checkError(t, err, nil)
+
+		array, ok := result.(*Array)
+		if !ok {
+			t.Logf("Expected array, got %T", result)
+			t.FailNow()
+		}
+
+		var methods []string
+		for i, elem := range array.Elements {
+			sym, ok := elem.(*Symbol)
+			if !ok {
+				t.Logf("Expected all elements to be symbols, got %T at index %d", elem, i)
+				t.Fail()
+			} else {
+				methods = append(methods, sym.Inspect())
+			}
+		}
+
+		var expectedMethods = []string{
+			":foo", ":bar", ":super_foo", ":super_bar",
+		}
+
+		expectedLen := len(expectedMethods)
+
+		if len(array.Elements) != expectedLen {
+			t.Logf("Expected %d items, got %d", expectedLen, len(array.Elements))
+			t.Fail()
+		}
+
+		sort.Strings(expectedMethods)
+		sort.Strings(methods)
+
+		if !reflect.DeepEqual(expectedMethods, methods) {
+			t.Logf("Expected methods to equal\n%s\n\tgot\n%s\n", expectedMethods, methods)
+			t.Fail()
+		}
+	})
 }

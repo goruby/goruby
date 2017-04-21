@@ -43,7 +43,12 @@ func (m *Module) addMethod(name string, method RubyMethod) {
 }
 
 var moduleMethods = map[string]RubyMethod{
-	"ancestors": withArity(0, publicMethod(moduleAncestors)),
+	"ancestors":                  withArity(0, publicMethod(moduleAncestors)),
+	"included_modules":           withArity(0, publicMethod(moduleIncludedModules)),
+	"instance_methods":           publicMethod(moduleInstanceMethods),
+	"public_instance_methods":    publicMethod(moduleInstanceMethods),
+	"protected_instance_methods": publicMethod(moduleProtectedInstanceMethods),
+	"private_instance_methods":   publicMethod(modulePrivateInstanceMethods),
 }
 
 func moduleAncestors(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -89,4 +94,46 @@ func moduleIncludedModules(context CallContext, args ...RubyObject) (RubyObject,
 	}
 
 	return &Array{includedModules}, nil
+}
+
+func moduleInstanceMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
+	showSuperClassInstanceMethods := true
+	if len(args) == 1 {
+		boolean, ok := args[0].(*Boolean)
+		if !ok {
+			boolean = TRUE.(*Boolean)
+		}
+		showSuperClassInstanceMethods = boolean.Value
+	}
+	class := context.Receiver().(RubyClass)
+
+	return getMethods(class, PUBLIC_METHOD, showSuperClassInstanceMethods), nil
+}
+
+func moduleProtectedInstanceMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
+	showSuperClassInstanceMethods := true
+	if len(args) == 1 {
+		boolean, ok := args[0].(*Boolean)
+		if !ok {
+			boolean = TRUE.(*Boolean)
+		}
+		showSuperClassInstanceMethods = boolean.Value
+	}
+	class := context.Receiver().(RubyClass)
+
+	return getMethods(class, PROTECTED_METHOD, showSuperClassInstanceMethods), nil
+}
+
+func modulePrivateInstanceMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
+	showSuperClassInstanceMethods := true
+	if len(args) == 1 {
+		boolean, ok := args[0].(*Boolean)
+		if !ok {
+			boolean = TRUE.(*Boolean)
+		}
+		showSuperClassInstanceMethods = boolean.Value
+	}
+	class := context.Receiver().(RubyClass)
+
+	return getMethods(class, PRIVATE_METHOD, showSuperClassInstanceMethods), nil
 }
