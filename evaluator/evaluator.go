@@ -59,7 +59,16 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			Body:       body,
 		}
 		object.AddMethod(context, node.Name.Value, function)
-		return &object.Symbol{node.Name.Value}, nil
+		return &object.Symbol{Value: node.Name.Value}, nil
+	case *ast.BlockExpression:
+		params := node.Parameters
+		body := node.Body
+		block := &object.Proc{
+			Parameters: params,
+			Body:       body,
+			Env:        env,
+		}
+		return block, nil
 	case *ast.ArrayLiteral:
 		elements, err := evalExpressions(node.Elements, env)
 		if err != nil {
@@ -118,8 +127,30 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err != nil {
 			return nil, err
 		}
+		if node.Block != nil {
+			block, err := Eval(node.Block, env)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, block)
+		}
 		callContext := &callContext{object.NewCallContext(env, context)}
 		return object.Send(callContext, node.Function.Value, args...)
+	case *ast.YieldExpression:
+		context, ok := env.Get("__BLOCK__")
+		if !ok {
+			return nil, object.NewNoBlockGivenLocalJumpError()
+		}
+		block, ok := context.(*object.Proc)
+		if !ok {
+			return nil, object.NewNoBlockGivenLocalJumpError()
+		}
+		args, err := evalExpressions(node.Arguments, env)
+		if err != nil {
+			return nil, err
+		}
+		callContext := &callContext{object.NewCallContext(env, context)}
+		return block.Call(callContext, args...)
 	case *ast.IndexExpression:
 		left, err := Eval(node.Left, env)
 		if err != nil {

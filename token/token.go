@@ -65,6 +65,7 @@ const (
 	MODULE
 	CLASS
 	DO
+	YIELD
 )
 
 var keywords = map[string]Type{
@@ -81,6 +82,7 @@ var keywords = map[string]Type{
 	"module": MODULE,
 	"class":  CLASS,
 	"do":     DO,
+	"yield":  YIELD,
 }
 
 // LookupIdent returns a keyword Type if ident is a keyword. If ident starts

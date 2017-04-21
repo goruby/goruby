@@ -89,6 +89,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.CLASS, p.parseClass)
 	p.registerPrefix(token.LBRACE, p.parseBlock)
 	p.registerPrefix(token.DO, p.parseBlock)
+	p.registerPrefix(token.YIELD, p.parseYield)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -276,6 +277,19 @@ func (p *Parser) parseSelf() ast.Expression {
 		return nil
 	}
 	return self
+}
+
+func (p *Parser) parseYield() ast.Expression {
+	yield := &ast.YieldExpression{Token: p.curToken}
+	p.nextToken()
+	if p.currentTokenIs(token.LPAREN) {
+		p.nextToken()
+		yield.Arguments = p.parseExpressionList(token.RPAREN)
+		p.nextToken()
+		return yield
+	}
+	yield.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE)
+	return yield
 }
 
 var integerLiteralReplacer = strings.NewReplacer("_", "")

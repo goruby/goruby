@@ -52,6 +52,7 @@ end
 add { |x| x }
 add do |x|
 end
+yield
 `
 
 	tests := []struct {
@@ -198,6 +199,8 @@ end
 		{token.PIPE, "|"},
 		{token.NEWLINE, "\n"},
 		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.YIELD, "yield"},
 		{token.NEWLINE, "\n"},
 		{token.EOF, ""},
 	}

@@ -150,8 +150,32 @@ func (s *Self) String() string  { return s.Token.Literal }
 func (s *Self) expressionNode() {}
 func (s *Self) literalNode()    {}
 
-// TokenLiteral returns the literal of the token.IDENT token
+// TokenLiteral returns the literal of the token.SELF token
 func (s *Self) TokenLiteral() string { return s.Token.Literal }
+
+// YieldExpression represents self in the current context in the program
+type YieldExpression struct {
+	Token     token.Token  // the token.YIELD token
+	Arguments []Expression // The arguments to yield
+}
+
+func (y *YieldExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(y.Token.Literal)
+	if len(y.Arguments) != 0 {
+		args := []string{}
+		for _, a := range y.Arguments {
+			args = append(args, a.String())
+		}
+		out.WriteString(" ")
+		out.WriteString(strings.Join(args, ", "))
+	}
+	return out.String()
+}
+func (y *YieldExpression) expressionNode() {}
+
+// TokenLiteral returns the literal of the token.YIELD token
+func (y *YieldExpression) TokenLiteral() string { return y.Token.Literal }
 
 // An Identifier represents an identifier in the program
 type Identifier struct {
