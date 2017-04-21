@@ -175,7 +175,7 @@ func TestModuleInstanceMethods(t *testing.T) {
 			},
 		}
 
-		result, err := moduleInstanceMethods(context)
+		result, err := modulePublicInstanceMethods(context)
 
 		checkError(t, err, nil)
 
@@ -226,7 +226,7 @@ func TestModuleInstanceMethods(t *testing.T) {
 			},
 		}
 
-		result, err := moduleInstanceMethods(context)
+		result, err := modulePublicInstanceMethods(context)
 
 		checkError(t, err, nil)
 
@@ -277,7 +277,7 @@ func TestModuleInstanceMethods(t *testing.T) {
 			},
 		}
 
-		result, err := moduleInstanceMethods(context, FALSE)
+		result, err := modulePublicInstanceMethods(context, FALSE)
 
 		checkError(t, err, nil)
 
@@ -328,7 +328,7 @@ func TestModuleInstanceMethods(t *testing.T) {
 			},
 		}
 
-		result, err := moduleInstanceMethods(context, TRUE)
+		result, err := modulePublicInstanceMethods(context, TRUE)
 
 		checkError(t, err, nil)
 

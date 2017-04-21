@@ -45,8 +45,8 @@ func (m *Module) addMethod(name string, method RubyMethod) {
 var moduleMethods = map[string]RubyMethod{
 	"ancestors":                  withArity(0, publicMethod(moduleAncestors)),
 	"included_modules":           withArity(0, publicMethod(moduleIncludedModules)),
-	"instance_methods":           publicMethod(moduleInstanceMethods),
-	"public_instance_methods":    publicMethod(moduleInstanceMethods),
+	"instance_methods":           publicMethod(modulePublicInstanceMethods),
+	"public_instance_methods":    publicMethod(modulePublicInstanceMethods),
 	"protected_instance_methods": publicMethod(moduleProtectedInstanceMethods),
 	"private_instance_methods":   publicMethod(modulePrivateInstanceMethods),
 }
@@ -96,7 +96,7 @@ func moduleIncludedModules(context CallContext, args ...RubyObject) (RubyObject,
 	return &Array{includedModules}, nil
 }
 
-func moduleInstanceMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
+func modulePublicInstanceMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
 	showSuperClassInstanceMethods := true
 	if len(args) == 1 {
 		boolean, ok := args[0].(*Boolean)

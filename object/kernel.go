@@ -18,12 +18,15 @@ func init() {
 }
 
 var kernelMethodSet = map[string]RubyMethod{
-	"nil?":    withArity(0, publicMethod(kernelIsNil)),
-	"methods": publicMethod(kernelMethods),
-	"class":   withArity(0, publicMethod(kernelClass)),
-	"puts":    privateMethod(kernelPuts),
-	"require": withArity(1, privateMethod(kernelRequire)),
-	"extend":  publicMethod(kernelExtend),
+	"nil?":              withArity(0, publicMethod(kernelIsNil)),
+	"methods":           publicMethod(kernelPublicMethods),
+	"public_methods":    publicMethod(kernelPublicMethods),
+	"protected_methods": publicMethod(kernelProtectedMethods),
+	"private_methods":   publicMethod(kernelPrivateMethods),
+	"class":             withArity(0, publicMethod(kernelClass)),
+	"puts":              privateMethod(kernelPuts),
+	"require":           withArity(1, privateMethod(kernelRequire)),
+	"extend":            publicMethod(kernelExtend),
 }
 
 func kernelPuts(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -35,7 +38,7 @@ func kernelPuts(context CallContext, args ...RubyObject) (RubyObject, error) {
 	return NIL, nil
 }
 
-func kernelMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
+func kernelPublicMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
 	showSuperClassMethods := true
 	if len(args) == 1 {
 		boolean, ok := args[0].(*Boolean)
@@ -46,6 +49,32 @@ func kernelMethods(context CallContext, args ...RubyObject) (RubyObject, error) 
 	}
 	class := context.Receiver().Class()
 	return getMethods(class, PUBLIC_METHOD, showSuperClassMethods), nil
+}
+
+func kernelProtectedMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
+	showSuperClassMethods := true
+	if len(args) == 1 {
+		boolean, ok := args[0].(*Boolean)
+		if !ok {
+			boolean = TRUE.(*Boolean)
+		}
+		showSuperClassMethods = boolean.Value
+	}
+	class := context.Receiver().Class()
+	return getMethods(class, PROTECTED_METHOD, showSuperClassMethods), nil
+}
+
+func kernelPrivateMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
+	showSuperClassMethods := true
+	if len(args) == 1 {
+		boolean, ok := args[0].(*Boolean)
+		if !ok {
+			boolean = TRUE.(*Boolean)
+		}
+		showSuperClassMethods = boolean.Value
+	}
+	class := context.Receiver().Class()
+	return getMethods(class, PRIVATE_METHOD, showSuperClassMethods), nil
 }
 
 func kernelIsNil(context CallContext, args ...RubyObject) (RubyObject, error) {
