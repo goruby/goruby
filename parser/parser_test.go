@@ -537,6 +537,112 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
+func TestBlockExpression(t *testing.T) {
+	tests := []struct {
+		input             string
+		expectedArguments []ast.Expression
+		expectedBody      string
+	}{
+		{
+			"{ x }",
+			nil,
+			"x",
+		},
+		{
+			"{ |x| x }",
+			[]ast.Expression{&ast.Identifier{Value: "x"}},
+			"x",
+		},
+		{
+			"do; x; end",
+			nil,
+			"x",
+		},
+		{
+			`
+			do
+				x
+			end`,
+			nil,
+			"x",
+		},
+		{
+			"do |x| x; end",
+			[]ast.Expression{&ast.Identifier{Value: "x"}},
+			"x",
+		},
+		{
+			`do |x|
+				x
+			end`,
+			[]ast.Expression{&ast.Identifier{Value: "x"}},
+			"x",
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program has not enough statements. got=%d",
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		block, ok := stmt.Expression.(*ast.BlockExpression)
+		if !ok {
+			t.Fatalf("exp not *ast.BlockExpression. got=%T", stmt.Expression)
+		}
+
+		if len(block.Parameters) != len(tt.expectedArguments) {
+			t.Logf("Expected %d parameters, got %d", len(tt.expectedArguments), len(block.Parameters))
+			t.Fail()
+		}
+
+		for i, arg := range block.Parameters {
+			expected := tt.expectedArguments[i]
+			expectedType := reflect.TypeOf(expected).Name()
+			actualType := reflect.TypeOf(arg).Name()
+			if expectedType != actualType {
+				t.Logf("Expected arg %d to equal %s, got %s", i, expectedType, actualType)
+				t.Fail()
+			}
+
+			expectedArg := expected.String()
+			actualArg := arg.String()
+
+			if expectedArg != actualArg {
+				t.Logf(
+					"Expected block argument %d to equal\n%s\n\tgot\n%s\n",
+					i,
+					expectedArg,
+					actualArg,
+				)
+				t.Fail()
+			}
+		}
+
+		body := block.Body.String()
+		expectedBody := tt.expectedBody
+		if expectedBody != body {
+			t.Logf("Expected body to equal\n%s\n\tgot\n%s\n", expectedBody, body)
+			t.Fail()
+		}
+	}
+}
+
 func TestBooleanExpression(t *testing.T) {
 	tests := []struct {
 		input           string

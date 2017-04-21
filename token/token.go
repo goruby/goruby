@@ -48,6 +48,7 @@ const (
 	RBRACE   // }
 	LBRACKET // [
 	RBRACKET // ]
+	PIPE     // |
 
 	// Keywords
 
@@ -63,6 +64,7 @@ const (
 	NIL
 	MODULE
 	CLASS
+	DO
 )
 
 var keywords = map[string]Type{
@@ -78,6 +80,7 @@ var keywords = map[string]Type{
 	"self":   SELF,
 	"module": MODULE,
 	"class":  CLASS,
+	"do":     DO,
 }
 
 // LookupIdent returns a keyword Type if ident is a keyword. If ident starts

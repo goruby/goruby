@@ -362,6 +362,42 @@ func (ce *ContextCallExpression) String() string {
 	return out.String()
 }
 
+// A BlockExpression represents a Ruby block
+type BlockExpression struct {
+	Token      token.Token     // token.DO or token.LBRACE
+	Parameters []*Identifier   // the block parameters
+	Body       *BlockStatement // the block body
+}
+
+func (b *BlockExpression) expressionNode() {}
+
+// TokenLiteral returns the literal from the Token
+func (b *BlockExpression) TokenLiteral() string { return b.Token.Literal }
+
+// String returns a string representation of the block statement
+func (b *BlockExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(b.Token.Literal)
+	if len(b.Parameters) != 0 {
+		args := []string{}
+		for _, a := range b.Parameters {
+			args = append(args, a.String())
+		}
+		out.WriteString("|")
+		out.WriteString(strings.Join(args, ", "))
+		out.WriteString("|")
+		out.WriteString("\n")
+	}
+	out.WriteString(b.Body.String())
+	out.WriteString("\n")
+	if b.Token.Type == token.LBRACE {
+		out.WriteString("}")
+	} else {
+		out.WriteString("end")
+	}
+	return out.String()
+}
+
 // ModuleExpression represents a module definition
 type ModuleExpression struct {
 	Token token.Token // The module keyword
@@ -381,7 +417,7 @@ func (m *ModuleExpression) String() string {
 	out.WriteString("\n")
 	out.WriteString(m.Body.String())
 	out.WriteString("\n")
-	out.WriteString(" end")
+	out.WriteString("end")
 	return out.String()
 }
 

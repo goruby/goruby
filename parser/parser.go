@@ -15,6 +15,8 @@ import (
 const (
 	_ int = iota
 	LOWEST
+	BLOCKDO     // do
+	BLOCKBRACES // { |x| }
 	EQUALS      // ==
 	LESSGREATER // > or <
 	ASSIGNMENT  // x = 5
@@ -43,6 +45,8 @@ var precedences = map[token.Type]int{
 	token.SYMBOL:   CALL,
 	token.DOT:      CONTEXT,
 	token.LBRACKET: INDEX,
+	token.LBRACE:   BLOCKBRACES,
+	token.DO:       BLOCKDO,
 }
 
 type (
@@ -83,6 +87,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.SELF, p.parseSelf)
 	p.registerPrefix(token.MODULE, p.parseModule)
 	p.registerPrefix(token.CLASS, p.parseClass)
+	p.registerPrefix(token.LBRACE, p.parseBlock)
+	p.registerPrefix(token.DO, p.parseBlock)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -307,6 +313,26 @@ func (p *Parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: p.curToken, Value: p.currentTokenIs(token.TRUE)}
 }
 
+func (p *Parser) parseBlock() ast.Expression {
+	block := &ast.BlockExpression{Token: p.curToken}
+	if p.peekTokenIs(token.PIPE) {
+		block.Parameters = p.parseParameters(token.PIPE, token.PIPE)
+	}
+
+	if p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON, token.PIPE) {
+		p.acceptOneOf(token.NEWLINE, token.SEMICOLON, token.PIPE)
+	}
+
+	endToken := token.RBRACE
+	if block.Token.Type == token.DO {
+		endToken = token.END
+	}
+
+	block.Body = p.parseBlockStatement(endToken)
+	p.nextToken()
+	return block
+}
+
 func (p *Parser) parsePrefixExpression() ast.Expression {
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
@@ -431,7 +457,7 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	}
 	lit.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
-	lit.Parameters = p.parseFunctionParameters()
+	lit.Parameters = p.parseParameters(token.LPAREN, token.RPAREN)
 
 	if !p.acceptOneOf(token.NEWLINE, token.SEMICOLON) {
 		return nil
@@ -452,15 +478,15 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	return lit
 }
 
-func (p *Parser) parseFunctionParameters() []*ast.Identifier {
-	if p.peekTokenIs(token.LPAREN) {
-		p.accept(token.LPAREN)
+func (p *Parser) parseParameters(startToken, endToken token.Type) []*ast.Identifier {
+	if p.peekTokenIs(startToken) {
+		p.accept(startToken)
 	}
 
 	identifiers := []*ast.Identifier{}
 
-	if p.peekTokenIs(token.RPAREN) {
-		p.accept(token.RPAREN)
+	if p.peekTokenIs(endToken) {
+		p.accept(endToken)
 		return identifiers
 	}
 
@@ -480,8 +506,8 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 		identifiers = append(identifiers, ident)
 	}
 
-	if p.peekTokenIs(token.RPAREN) {
-		p.accept(token.RPAREN)
+	if p.peekTokenIs(endToken) {
+		p.accept(endToken)
 	}
 
 	return identifiers
