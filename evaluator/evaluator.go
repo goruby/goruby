@@ -77,13 +77,13 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return val, nil
 	case *ast.ModuleExpression:
 		module := object.NewModule(node.Name.Value, nil)
-		env.Set("self", &object.Self{module, node.Name.Value})
-		defer env.Unset("self")
-		bodyReturn, err := Eval(node.Body, env)
+		moduleEnv := object.NewEnclosedEnvironment(env)
+		moduleEnv.Set("self", &object.Self{module, node.Name.Value})
+		bodyReturn, err := Eval(node.Body, moduleEnv)
 		if err != nil {
 			return nil, err
 		}
-		selfObject, _ := env.Get("self")
+		selfObject, _ := moduleEnv.Get("self")
 		self := selfObject.(*object.Self)
 		env.SetGlobal(node.Name.Value, self.RubyObject)
 		return bodyReturn, nil

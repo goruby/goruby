@@ -254,75 +254,107 @@ func TestVariableAssignmentExpression(t *testing.T) {
 }
 
 func TestModuleObject(t *testing.T) {
-	tests := []struct {
-		input           string
-		expectedName    string
-		expectedMethods map[string]string
-		expectedReturn  object.RubyObject
-	}{
-		{
-			`module Foo
+	t.Run("module definition", func(t *testing.T) {
+		tests := []struct {
+			input           string
+			expectedName    string
+			expectedMethods map[string]string
+			expectedReturn  object.RubyObject
+		}{
+			{
+				`module Foo
 				def a
-					"foo"
+				"foo"
 				end
-			end`,
-			"Foo",
-			map[string]string{"a": "fn() {\nfoo\n}"},
-			&object.Symbol{"a"},
-		},
-		{
-			`module Foo
+				end`,
+				"Foo",
+				map[string]string{"a": "fn() {\nfoo\n}"},
+				&object.Symbol{"a"},
+			},
+			{
+				`module Foo
 				3
-			end`,
-			"Foo",
-			map[string]string{},
-			&object.Integer{3},
-		},
-		{
-			`module Foo
-			end`,
-			"Foo",
-			map[string]string{},
-			object.NIL,
-		},
-	}
-
-	for _, tt := range tests {
-		env := object.NewEnvironment()
-		env.Set("self", &object.Self{&object.Object{}, "main"})
-		evaluated, err := testEval(tt.input, env)
-		checkError(t, err)
-
-		if !reflect.DeepEqual(evaluated, tt.expectedReturn) {
-			t.Logf("Expected return object to equal\n%+#v\n\tgot\n%+#v\n", tt.expectedReturn, evaluated)
-			t.Fail()
+				end`,
+				"Foo",
+				map[string]string{},
+				&object.Integer{3},
+			},
+			{
+				`module Foo
+				end`,
+				"Foo",
+				map[string]string{},
+				object.NIL,
+			},
 		}
 
-		module, ok := env.Get(tt.expectedName)
+		for _, tt := range tests {
+			env := object.NewEnvironment()
+			env.Set("self", &object.Self{&object.Object{}, "main"})
+			evaluated, err := testEval(tt.input, env)
+			checkError(t, err)
+
+			if !reflect.DeepEqual(evaluated, tt.expectedReturn) {
+				t.Logf("Expected return object to equal\n%+#v\n\tgot\n%+#v\n", tt.expectedReturn, evaluated)
+				t.Fail()
+			}
+
+			module, ok := env.Get(tt.expectedName)
+			if !ok {
+				t.Logf("Expected module to exist in env")
+				t.Logf("Env: %+#v\n", env)
+				t.FailNow()
+			}
+
+			actualMethods := make(map[string]string)
+
+			methods := module.Class().Methods().GetAll()
+			for name, method := range methods {
+				if function, ok := method.(*object.Function); ok {
+					actualMethods[name] = function.Inspect()
+				}
+			}
+
+			if !reflect.DeepEqual(tt.expectedMethods, actualMethods) {
+				t.Logf(
+					"Expected module methods to equal\n%+#v\n\tgot\n%+#v\n",
+					tt.expectedMethods,
+					actualMethods,
+				)
+				t.Fail()
+			}
+		}
+	})
+	t.Run("self after module definition", func(t *testing.T) {
+		input := `
+		module Foo
+			def a
+				"foo"
+			end
+		end
+		`
+
+		main := &object.Self{&object.Object{}, "main"}
+		env := object.NewEnvironment()
+		env.Set("self", main)
+		_, err := testEval(input, env)
+		checkError(t, err)
+
+		self, ok := env.Get("self")
 		if !ok {
-			t.Logf("Expected module to exist in env")
-			t.Logf("Env: %+#v\n", env)
+			t.Logf("Expected self in the env")
 			t.FailNow()
 		}
 
-		actualMethods := make(map[string]string)
-
-		methods := module.Class().Methods().GetAll()
-		for name, method := range methods {
-			if function, ok := method.(*object.Function); ok {
-				actualMethods[name] = function.Inspect()
-			}
-		}
-
-		if !reflect.DeepEqual(tt.expectedMethods, actualMethods) {
+		if !reflect.DeepEqual(main, self) {
 			t.Logf(
-				"Expected module methods to equal\n%+#v\n\tgot\n%+#v\n",
-				tt.expectedMethods,
-				actualMethods,
+				"Expected self to equal\n%+#v\n\tgot\n%+#v\n",
+				main,
+				self,
 			)
 			t.Fail()
 		}
-	}
+	})
 }
 
 func TestFunctionObject(t *testing.T) {
