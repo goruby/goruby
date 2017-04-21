@@ -19,7 +19,7 @@ func init() {
 
 var kernelMethodSet = map[string]RubyMethod{
 	"nil?":              withArity(0, publicMethod(kernelIsNil)),
-	"methods":           publicMethod(kernelPublicMethods),
+	"methods":           publicMethod(kernelMethods),
 	"public_methods":    publicMethod(kernelPublicMethods),
 	"protected_methods": publicMethod(kernelProtectedMethods),
 	"private_methods":   publicMethod(kernelPrivateMethods),
@@ -36,6 +36,34 @@ func kernelPuts(context CallContext, args ...RubyObject) (RubyObject, error) {
 	}
 	fmt.Println(out)
 	return NIL, nil
+}
+
+func kernelMethods(context CallContext, args ...RubyObject) (RubyObject, error) {
+	showInstanceMethods := true
+	if len(args) == 1 {
+		boolean, ok := args[0].(*Boolean)
+		if !ok {
+			boolean = TRUE.(*Boolean)
+		}
+		showInstanceMethods = boolean.Value
+	}
+
+	receiver := context.Receiver()
+	class := context.Receiver().Class()
+
+	extended, ok := receiver.(*extendedObject)
+
+	if !showInstanceMethods && !ok {
+		return &Array{}, nil
+	}
+
+	if !showInstanceMethods && ok {
+		class = extended.class
+	}
+
+	publicMethods := getMethods(class, PUBLIC_METHOD, showInstanceMethods)
+	protectedMethods := getMethods(class, PROTECTED_METHOD, showInstanceMethods)
+	return &Array{Elements: append(publicMethods.Elements, protectedMethods.Elements...)}, nil
 }
 
 func kernelPublicMethods(context CallContext, args ...RubyObject) (RubyObject, error) {

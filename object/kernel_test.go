@@ -11,14 +11,16 @@ import (
 
 func TestKernelMethods(t *testing.T) {
 	superClassMethods := map[string]RubyMethod{
-		"super_foo":         publicMethod(nil),
-		"super_bar":         publicMethod(nil),
-		"private_super_foo": privateMethod(nil),
+		"super_foo":           publicMethod(nil),
+		"super_bar":           publicMethod(nil),
+		"protected_super_foo": protectedMethod(nil),
+		"private_super_foo":   privateMethod(nil),
 	}
 	contextMethods := map[string]RubyMethod{
-		"foo":         publicMethod(nil),
-		"bar":         publicMethod(nil),
-		"private_foo": privateMethod(nil),
+		"foo":           publicMethod(nil),
+		"bar":           publicMethod(nil),
+		"protected_foo": protectedMethod(nil),
+		"private_foo":   privateMethod(nil),
 	}
 	t.Run("without superclass", func(t *testing.T) {
 		context := &callContext{
@@ -83,7 +85,7 @@ func TestKernelMethods(t *testing.T) {
 			},
 		}
 
-		result, err := kernelPublicMethods(context)
+		result, err := kernelMethods(context)
 
 		checkError(t, err, nil)
 
@@ -105,7 +107,7 @@ func TestKernelMethods(t *testing.T) {
 		}
 
 		var expectedMethods = []string{
-			":foo", ":bar", ":super_foo", ":super_bar",
+			":foo", ":bar", ":super_foo", ":super_bar", ":protected_foo", ":protected_super_foo",
 		}
 
 		expectedLen := len(expectedMethods)
@@ -123,20 +125,28 @@ func TestKernelMethods(t *testing.T) {
 			t.Fail()
 		}
 	})
-	t.Run("with superclass but boolean arg false", func(t *testing.T) {
+	t.Run("with superclass but show singleton methods", func(t *testing.T) {
+		class := &class{
+			instanceMethods: NewMethodSet(contextMethods),
+			superClass: &class{
+				instanceMethods: NewMethodSet(superClassMethods),
+				superClass:      nil,
+			},
+		}
 		context := &callContext{
-			receiver: &testRubyObject{
-				class: &class{
-					instanceMethods: NewMethodSet(contextMethods),
-					superClass: &class{
-						instanceMethods: NewMethodSet(superClassMethods),
-						superClass:      nil,
-					},
+			receiver: &extendedObject{
+				RubyObject: &testRubyObject{
+					class: class,
 				},
+				class: newEigenclass(class, map[string]RubyMethod{
+					"public_singleton_method":    publicMethod(nil),
+					"protected_singleton_method": protectedMethod(nil),
+					"private_singleton_method":   privateMethod(nil),
+				}),
 			},
 		}
 
-		result, err := kernelPublicMethods(context, FALSE)
+		result, err := kernelMethods(context, FALSE)
 
 		checkError(t, err, nil)
 
@@ -158,7 +168,7 @@ func TestKernelMethods(t *testing.T) {
 		}
 
 		var expectedMethods = []string{
-			":foo", ":bar",
+			":public_singleton_method", ":protected_singleton_method",
 		}
 
 		expectedLen := len(expectedMethods)
@@ -176,7 +186,7 @@ func TestKernelMethods(t *testing.T) {
 			t.Fail()
 		}
 	})
-	t.Run("with superclass and boolean arg true", func(t *testing.T) {
+	t.Run("with superclass and show regular methods", func(t *testing.T) {
 		context := &callContext{
 			receiver: &testRubyObject{
 				class: &class{
@@ -189,7 +199,7 @@ func TestKernelMethods(t *testing.T) {
 			},
 		}
 
-		result, err := kernelPublicMethods(context, TRUE)
+		result, err := kernelMethods(context, TRUE)
 
 		checkError(t, err, nil)
 
@@ -211,7 +221,7 @@ func TestKernelMethods(t *testing.T) {
 		}
 
 		var expectedMethods = []string{
-			":foo", ":bar", ":super_foo", ":super_bar",
+			":foo", ":bar", ":protected_foo", ":super_foo", ":super_bar", ":protected_super_foo",
 		}
 
 		expectedLen := len(expectedMethods)
