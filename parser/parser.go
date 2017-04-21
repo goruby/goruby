@@ -535,16 +535,6 @@ func (p *Parser) parseBlockStatement(t ...token.Type) *ast.BlockStatement {
 	return block
 }
 
-func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
-	ident, ok := function.(*ast.Identifier)
-	if !ok {
-		return p.parseContextCallExpression(function)
-	}
-	exp := &ast.ContextCallExpression{Token: ident.Token, Function: ident}
-	exp.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE)
-	return exp
-}
-
 func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expression {
 	contextCallExpression := &ast.ContextCallExpression{Token: p.curToken, Context: context}
 	if _, ok := context.(*ast.Self); ok && !p.currentTokenIs(token.DOT) {
@@ -578,12 +568,34 @@ func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 		p.accept(token.LPAREN)
 		p.nextToken()
 		contextCallExpression.Arguments = p.parseExpressionList(token.RPAREN)
+		if p.peekTokenOneOf(token.LBRACE, token.DO) {
+			contextCallExpression.Block = p.parseBlock().(*ast.BlockExpression)
+		}
 		return contextCallExpression
 	}
 
 	p.nextToken()
-	contextCallExpression.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE, token.EOF)
+	contextCallExpression.Arguments = p.parseExpressionList(
+		token.SEMICOLON, token.NEWLINE, token.EOF, token.LBRACE, token.DO,
+	)
+	if p.currentTokenOneOf(token.LBRACE, token.DO) {
+		contextCallExpression.Block = p.parseBlock().(*ast.BlockExpression)
+	}
 	return contextCallExpression
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	ident, ok := function.(*ast.Identifier)
+	if !ok {
+		return p.parseContextCallExpression(function)
+	}
+	exp := &ast.ContextCallExpression{Token: ident.Token, Function: ident}
+	exp.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE)
+	if p.peekTokenOneOf(token.LBRACE, token.DO) {
+		p.acceptOneOf(token.LBRACE, token.DO)
+		exp.Block = p.parseBlock().(*ast.BlockExpression)
+	}
+	return exp
 }
 
 func (p *Parser) parseCallExpressionWithParens(function ast.Expression) ast.Expression {
@@ -596,6 +608,10 @@ func (p *Parser) parseCallExpressionWithParens(function ast.Expression) ast.Expr
 	exp := &ast.ContextCallExpression{Token: p.curToken, Function: ident}
 	p.nextToken()
 	exp.Arguments = p.parseExpressionList(token.RPAREN)
+	if p.peekTokenOneOf(token.LBRACE, token.DO) {
+		p.acceptOneOf(token.LBRACE, token.DO)
+		exp.Block = p.parseBlock().(*ast.BlockExpression)
+	}
 	return exp
 }
 

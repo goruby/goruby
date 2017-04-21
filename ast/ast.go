@@ -335,10 +335,11 @@ func (ie *IndexExpression) String() string {
 
 // A ContextCallExpression represents a method call on a given Context
 type ContextCallExpression struct {
-	Token     token.Token  // The '.' token
-	Context   Expression   // The lefthandside expression
-	Function  *Identifier  // The function to call
-	Arguments []Expression // The function arguments
+	Token     token.Token      // The '.' token
+	Context   Expression       // The lefthandside expression
+	Function  *Identifier      // The function to call
+	Arguments []Expression     // The function arguments
+	Block     *BlockExpression // The function block
 }
 
 func (ce *ContextCallExpression) expressionNode() {}
@@ -359,6 +360,10 @@ func (ce *ContextCallExpression) String() string {
 	out.WriteString("(")
 	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
+	if ce.Block != nil {
+		out.WriteString("\n")
+		out.WriteString(ce.Block.String())
+	}
 	return out.String()
 }
 
