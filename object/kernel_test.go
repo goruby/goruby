@@ -30,7 +30,7 @@ func TestKernelMethods(t *testing.T) {
 			},
 		}
 
-		result, err := kernelMethods(context)
+		result, err := kernelPublicMethods(context)
 
 		checkError(t, err, nil)
 
@@ -83,7 +83,7 @@ func TestKernelMethods(t *testing.T) {
 			},
 		}
 
-		result, err := kernelMethods(context)
+		result, err := kernelPublicMethods(context)
 
 		checkError(t, err, nil)
 
@@ -136,7 +136,7 @@ func TestKernelMethods(t *testing.T) {
 			},
 		}
 
-		result, err := kernelMethods(context, FALSE)
+		result, err := kernelPublicMethods(context, FALSE)
 
 		checkError(t, err, nil)
 
@@ -189,7 +189,7 @@ func TestKernelMethods(t *testing.T) {
 			},
 		}
 
-		result, err := kernelMethods(context, TRUE)
+		result, err := kernelPublicMethods(context, TRUE)
 
 		checkError(t, err, nil)
 
@@ -316,11 +316,9 @@ func TestKernelRequire(t *testing.T) {
 	t.Run("wiring together", func(t *testing.T) {
 		evalCallCount := 0
 		var evalCallASTNode ast.Node
-		var evalCallEnv Environment
 		eval := func(node ast.Node, env Environment) (RubyObject, error) {
 			evalCallCount++
 			evalCallASTNode = node
-			evalCallEnv = env
 			return TRUE, nil
 		}
 
