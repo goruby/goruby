@@ -97,6 +97,8 @@ func Walk(v Visitor, node Node) {
 	case *Program:
 		walkStmtList(v, n.Statements)
 
+	case nil:
+
 	default:
 		panic(fmt.Sprintf("ast.Walk: unexpected node type %T", n))
 	}
