@@ -258,9 +258,12 @@ func TestClassNew(t *testing.T) {
 		initializeArgs = args
 		return context.Receiver(), nil
 	}
-	fooClass := NewClass("Foo", objectClass, map[string]RubyMethod{
-		"initialize": privateMethod(initializeStub),
-	}, nil)
+	fooClass := newClass(
+		"Foo",
+		objectClass,
+		map[string]RubyMethod{"initialize": privateMethod(initializeStub)},
+		nil,
+		func(c RubyClassObject) RubyObject { return &classInstance{c} })
 	env := NewEnvironment()
 	env.Set("Class", classClass)
 	env.Set("Foo", fooClass)
@@ -345,11 +348,11 @@ func TestClassInitialize(t *testing.T) {
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(instance, context.receiver) {
+	if !reflect.DeepEqual(instance, context.Receiver()) {
 		t.Logf(
 			"Expected instance to equal\n%+#v\n\tgot\n%+#v\n",
 			instance,
-			context.receiver,
+			context.Receiver(),
 		)
 		t.Fail()
 	}

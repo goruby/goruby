@@ -2,7 +2,13 @@ package object
 
 import "fmt"
 
-var basicObjectClass RubyClassObject = NewClass("BasicObject", nil, basicObjectMethods, basicObjectClassMethods)
+var basicObjectClass RubyClassObject = newClass(
+	"BasicObject",
+	nil,
+	basicObjectMethods,
+	basicObjectClassMethods,
+	func(RubyClassObject) RubyObject { return &basicObject{} },
+)
 
 func init() {
 	classes.Set("BasicObject", basicObjectClass)

@@ -1,6 +1,8 @@
 package object
 
-var stringClass RubyClassObject = NewClass("String", objectClass, stringMethods, stringClassMethods)
+var stringClass RubyClassObject = newClass(
+	"String", objectClass, stringMethods, stringClassMethods, func(RubyClassObject) RubyObject { return &String{} },
+)
 
 func init() {
 	classes.Set("String", stringClass)
