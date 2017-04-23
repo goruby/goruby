@@ -103,17 +103,22 @@ func classSuperclass(context CallContext, args ...RubyObject) (RubyObject, error
 
 func classNew(context CallContext, args ...RubyObject) (RubyObject, error) {
 	classObject := context.Receiver().(RubyClassObject)
-	var instance = classInstance{class: classObject}
-	Send(
-		&callContext{
-			receiver: &Self{&instance, classObject.Inspect()},
-			env:      context.Env(),
-			eval:     context.Eval,
-		},
-		"initialize",
-		args...,
-	)
-	return &instance, nil
+	instance := classObject.New()
+	if instance == nil {
+		return nil, NewNoMethodError(context.Receiver(), "new")
+	}
+	self := &Self{RubyObject: instance, Name: classObject.Inspect()}
+	callContext := &callContext{
+		receiver: self,
+		env:      context.Env(),
+		eval:     context.Eval,
+	}
+	_, err := Send(callContext, "initialize", args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.RubyObject, nil
 }
 
 func classInitialize(context CallContext, args ...RubyObject) (RubyObject, error) {

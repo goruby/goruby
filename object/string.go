@@ -22,25 +22,29 @@ func (s *String) Type() Type { return STRING_OBJ }
 // Class returns stringClass
 func (s *String) Class() RubyClass { return stringClass }
 
-var stringClassMethods = map[string]RubyMethod{
-	"new": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
-		switch len(args) {
-		case 0:
-			return &String{}, nil
-		case 1:
-			str, ok := args[0].(*String)
-			if !ok {
-				return nil, NewImplicitConversionTypeError(str, args[0])
-			}
-			return &String{Value: str.Value}, nil
-		default:
-			return nil, NewWrongNumberOfArgumentsError(len(args), 1)
-		}
-	}),
-}
+var stringClassMethods = map[string]RubyMethod{}
 
 var stringMethods = map[string]RubyMethod{
-	"to_s": withArity(0, publicMethod(stringToS)),
+	"initialize": privateMethod(stringInitialize),
+	"to_s":       withArity(0, publicMethod(stringToS)),
+}
+
+func stringInitialize(context CallContext, args ...RubyObject) (RubyObject, error) {
+	self, _ := context.Receiver().(*Self)
+	switch len(args) {
+	case 0:
+		self.RubyObject = &String{}
+		return self, nil
+	case 1:
+		str, ok := args[0].(*String)
+		if !ok {
+			return nil, NewImplicitConversionTypeError(str, args[0])
+		}
+		self.RubyObject = &String{Value: str.Value}
+		return self, nil
+	default:
+		return nil, NewWrongNumberOfArgumentsError(len(args), 1)
+	}
 }
 
 func stringToS(context CallContext, args ...RubyObject) (RubyObject, error) {
