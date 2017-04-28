@@ -30,6 +30,7 @@ var basicObjectClassMethods = map[string]RubyMethod{
 }
 
 var basicObjectMethods = map[string]RubyMethod{
+	"!@":             publicMethod(basicObjectNegate),
 	"method_missing": privateMethod(basicObjectMethodMissing),
 }
 
@@ -42,4 +43,11 @@ func basicObjectMethodMissing(context CallContext, args ...RubyObject) (RubyObje
 		return nil, NewImplicitConversionTypeError(method, args[0])
 	}
 	return nil, NewNoMethodError(context.Receiver(), method.Value)
+}
+
+func basicObjectNegate(context CallContext, args ...RubyObject) (RubyObject, error) {
+	if IsTruthy(context.Receiver()) {
+		return FALSE, nil
+	}
+	return TRUE, nil
 }

@@ -163,3 +163,17 @@ func (e *extendedObject) Class() RubyClass { return e.class }
 func (e *extendedObject) addMethod(name string, method RubyMethod) {
 	e.class.addMethod(name, method)
 }
+
+// IsTruthy returns true if obj is truthy, false otherwise
+func IsTruthy(obj RubyObject) bool {
+	switch obj {
+	case NIL:
+		return false
+	case TRUE:
+		return true
+	case FALSE:
+		return false
+	default:
+		return true
+	}
+}

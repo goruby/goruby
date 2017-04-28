@@ -116,7 +116,8 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err != nil {
 			return nil, err
 		}
-		return evalPrefixExpression(node.Operator, right)
+		context := &callContext{object.NewCallContext(env, right)}
+		return object.Send(context, node.Operator+"@")
 	case *ast.InfixExpression:
 		left, err := Eval(node.Left, env)
 		if err != nil {
@@ -169,39 +170,6 @@ func evalExpressions(exps []ast.Expression, env object.Environment) ([]object.Ru
 		result = append(result, evaluated)
 	}
 	return result, nil
-}
-
-func evalPrefixExpression(operator string, right object.RubyObject) (object.RubyObject, error) {
-	switch operator {
-	case "!":
-		return evalBangOperatorExpression(right), nil
-	case "-":
-		return evalMinusPrefixOperatorExpression(right)
-	default:
-		return nil, object.NewException("unknown operator: %s%s", operator, right.Type())
-	}
-}
-
-func evalBangOperatorExpression(right object.RubyObject) object.RubyObject {
-	switch right {
-	case object.TRUE:
-		return object.FALSE
-	case object.FALSE:
-		return object.TRUE
-	case object.NIL:
-		return object.TRUE
-	default:
-		return object.FALSE
-	}
-}
-
-func evalMinusPrefixOperatorExpression(right object.RubyObject) (object.RubyObject, error) {
-	switch right := right.(type) {
-	case *object.Integer:
-		return &object.Integer{Value: -right.Value}, nil
-	default:
-		return nil, object.NewException("unknown operator: -%s", right.Type())
-	}
 }
 
 func evalInfixExpression(operator string, left, right object.RubyObject) (object.RubyObject, error) {
@@ -263,7 +231,7 @@ func evalIfExpression(ie *ast.IfExpression, env object.Environment) (object.Ruby
 	if err != nil {
 		return nil, err
 	}
-	if isTruthy(condition) {
+	if object.IsTruthy(condition) {
 		return Eval(ie.Consequence, env)
 	} else if ie.Alternative != nil {
 		return Eval(ie.Alternative, env)
@@ -363,19 +331,6 @@ func unwrapReturnValue(obj object.RubyObject) object.RubyObject {
 		return returnValue.Value
 	}
 	return obj
-}
-
-func isTruthy(obj object.RubyObject) bool {
-	switch obj {
-	case object.NIL:
-		return false
-	case object.TRUE:
-		return true
-	case object.FALSE:
-		return false
-	default:
-		return true
-	}
 }
 
 // IsError returns true if the given RubyObject is an object.Error or an

@@ -32,7 +32,7 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated, err := testEval(tt.input)
+		evaluated, err := testEval(tt.input, object.NewMainEnvironment())
 		checkError(t, err)
 		testIntegerObject(t, evaluated, tt.expected)
 	}
@@ -85,7 +85,7 @@ func TestBangOperator(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated, err := testEval(tt.input)
+		evaluated, err := testEval(tt.input, object.NewMainEnvironment())
 		checkError(t, err)
 		testBooleanObject(t, evaluated, tt.expected)
 	}
@@ -156,7 +156,7 @@ func TestErrorHandling(t *testing.T) {
 		},
 		{
 			"-true",
-			"Exception: unknown operator: -BOOLEAN",
+			"NoMethodError: undefined method `-@' for true:TrueClass",
 		},
 		{
 			"true + false;",

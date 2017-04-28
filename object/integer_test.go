@@ -97,6 +97,66 @@ func TestIntegerAdd(t *testing.T) {
 	}
 }
 
+func TestIntegerUnaryMinus(t *testing.T) {
+	t.Run("positive int", func(t *testing.T) {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerUnaryMinus(context)
+
+		checkError(t, err, nil)
+
+		checkResult(t, result, NewInteger(-4))
+	})
+	t.Run("negative int", func(t *testing.T) {
+		context := &callContext{receiver: NewInteger(-4)}
+
+		result, err := integerUnaryMinus(context)
+
+		checkError(t, err, nil)
+
+		checkResult(t, result, NewInteger(4))
+	})
+	t.Run("zero", func(t *testing.T) {
+		context := &callContext{receiver: NewInteger(0)}
+
+		result, err := integerUnaryMinus(context)
+
+		checkError(t, err, nil)
+
+		checkResult(t, result, NewInteger(0))
+	})
+}
+
+func TestIntegerUnaryPlus(t *testing.T) {
+	t.Run("positive int", func(t *testing.T) {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerUnaryPlus(context)
+
+		checkError(t, err, nil)
+
+		checkResult(t, result, NewInteger(4))
+	})
+	t.Run("negative int", func(t *testing.T) {
+		context := &callContext{receiver: NewInteger(-4)}
+
+		result, err := integerUnaryPlus(context)
+
+		checkError(t, err, nil)
+
+		checkResult(t, result, NewInteger(-4))
+	})
+	t.Run("zero", func(t *testing.T) {
+		context := &callContext{receiver: NewInteger(0)}
+
+		result, err := integerUnaryPlus(context)
+
+		checkError(t, err, nil)
+
+		checkResult(t, result, NewInteger(0))
+	})
+}
+
 func checkError(t *testing.T, actual, expected error) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Logf("Expected error to equal %T:%v, got %T:%v\n", expected, expected, actual, actual)

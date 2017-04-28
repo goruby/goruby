@@ -33,6 +33,8 @@ var integerMethods = map[string]RubyMethod{
 	"div": withArity(1, publicMethod(integerDiv)),
 	"/":   withArity(1, publicMethod(integerDiv)),
 	"*":   withArity(1, publicMethod(integerMul)),
+	"-@":  withArity(0, publicMethod(integerUnaryMinus)),
+	"+@":  withArity(0, publicMethod(integerUnaryPlus)),
 }
 
 func integerDiv(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -63,4 +65,14 @@ func integerAdd(context CallContext, args ...RubyObject) (RubyObject, error) {
 		return nil, NewCoercionTypeError(args[0], i)
 	}
 	return NewInteger(i.Value + add.Value), nil
+}
+
+func integerUnaryMinus(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	return NewInteger(-i.Value), nil
+}
+
+func integerUnaryPlus(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	return NewInteger(i.Value), nil
 }
