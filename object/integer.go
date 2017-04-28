@@ -33,38 +33,120 @@ var integerMethods = map[string]RubyMethod{
 	"div": withArity(1, publicMethod(integerDiv)),
 	"/":   withArity(1, publicMethod(integerDiv)),
 	"*":   withArity(1, publicMethod(integerMul)),
+	"+":   withArity(1, publicMethod(integerAdd)),
+	"-":   withArity(1, publicMethod(integerSub)),
+	"<":   withArity(1, publicMethod(integerLessThan)),
+	"<=":  withArity(1, publicMethod(integerLessThanOrEqual)),
+	">":   withArity(1, publicMethod(integerGreaterThan)),
+	">=":  withArity(1, publicMethod(integerGreaterThanOrEqual)),
+	"<=>": withArity(1, publicMethod(integerSpaceShipOperator)),
 	"-@":  withArity(0, publicMethod(integerUnaryMinus)),
 	"+@":  withArity(0, publicMethod(integerUnaryPlus)),
 }
 
 func integerDiv(context CallContext, args ...RubyObject) (RubyObject, error) {
 	i := context.Receiver().(*Integer)
-	divisor, ok := args[0].(*Integer)
+	right, ok := args[0].(*Integer)
 	if !ok {
 		return nil, NewCoercionTypeError(args[0], i)
 	}
-	if divisor.Value == 0 {
+	if right.Value == 0 {
 		return nil, NewZeroDivisionError()
 	}
-	return NewInteger(i.Value / divisor.Value), nil
+	return NewInteger(i.Value / right.Value), nil
 }
 
 func integerMul(context CallContext, args ...RubyObject) (RubyObject, error) {
 	i := context.Receiver().(*Integer)
-	factor, ok := args[0].(*Integer)
+	right, ok := args[0].(*Integer)
 	if !ok {
 		return nil, NewCoercionTypeError(args[0], i)
 	}
-	return NewInteger(i.Value * factor.Value), nil
+	return NewInteger(i.Value * right.Value), nil
 }
 
 func integerAdd(context CallContext, args ...RubyObject) (RubyObject, error) {
 	i := context.Receiver().(*Integer)
-	add, ok := args[0].(*Integer)
+	right, ok := args[0].(*Integer)
 	if !ok {
 		return nil, NewCoercionTypeError(args[0], i)
 	}
-	return NewInteger(i.Value + add.Value), nil
+	return NewInteger(i.Value + right.Value), nil
+}
+
+func integerSub(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewCoercionTypeError(args[0], i)
+	}
+	return NewInteger(i.Value - right.Value), nil
+}
+
+func integerLessThan(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewCoercionTypeError(args[0], i)
+	}
+	if i.Value < right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
+}
+
+func integerLessThanOrEqual(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewCoercionTypeError(args[0], i)
+	}
+	if i.Value <= right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
+}
+
+func integerGreaterThan(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewCoercionTypeError(args[0], i)
+	}
+	if i.Value > right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
+}
+
+func integerGreaterThanOrEqual(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewCoercionTypeError(args[0], i)
+	}
+	if i.Value >= right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
+}
+
+func integerSpaceShipOperator(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return NIL, nil
+	}
+	switch {
+	case i.Value > right.Value:
+		return NewInteger(1), nil
+	case i.Value < right.Value:
+		return NewInteger(-1), nil
+	case i.Value == right.Value:
+		return NewInteger(0), nil
+	default:
+		return NIL, nil
+	}
 }
 
 func integerUnaryMinus(context CallContext, args ...RubyObject) (RubyObject, error) {

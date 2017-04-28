@@ -97,6 +97,230 @@ func TestIntegerAdd(t *testing.T) {
 	}
 }
 
+func TestIntegerSub(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(1)},
+			NewInteger(1),
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewCoercionTypeError(&String{}, &Integer{}),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(2)}
+
+		result, err := integerSub(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerLessThan(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(1)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(3)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewCoercionTypeError(&String{}, &Integer{}),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(2)}
+
+		result, err := integerLessThan(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerLessThanOrEqual(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(1)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(3)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewCoercionTypeError(&String{}, &Integer{}),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(2)}
+
+		result, err := integerLessThanOrEqual(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerGreaterThan(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(1)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(3)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewCoercionTypeError(&String{}, &Integer{}),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(2)}
+
+		result, err := integerGreaterThan(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerGreaterThanOrEqual(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(1)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(3)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewCoercionTypeError(&String{}, &Integer{}),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(2)}
+
+		result, err := integerGreaterThanOrEqual(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerSpaceShipOperator(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(1)},
+			NewInteger(1),
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(3)},
+			NewInteger(-1),
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			NewInteger(0),
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			NIL,
+			nil,
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(2)}
+
+		result, err := integerSpaceShipOperator(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
 func TestIntegerUnaryMinus(t *testing.T) {
 	t.Run("positive int", func(t *testing.T) {
 		context := &callContext{receiver: NewInteger(4)}
