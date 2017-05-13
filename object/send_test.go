@@ -104,7 +104,7 @@ func TestSend(t *testing.T) {
 	t.Run("self as context", func(t *testing.T) {
 		context := &callContext{
 			receiver: &Self{
-				&testRubyObject{
+				RubyObject: &testRubyObject{
 					class: &class{
 						name:            "base class",
 						instanceMethods: NewMethodSet(methods),
@@ -115,7 +115,7 @@ func TestSend(t *testing.T) {
 						},
 					},
 				},
-				"main",
+				Name: "main",
 			},
 		}
 

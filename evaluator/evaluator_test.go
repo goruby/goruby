@@ -214,7 +214,7 @@ end
 
 	for _, tt := range tests {
 		env := object.NewEnvironment()
-		env.Set("self", &object.Self{&object.Object{}, "main"})
+		env.Set("self", &object.Self{RubyObject: &object.Object{}, Name: "main"})
 		evaluated, err := testEval(tt.input, env)
 
 		if err == nil {
@@ -290,7 +290,7 @@ func TestModuleObject(t *testing.T) {
 
 		for _, tt := range tests {
 			env := object.NewEnvironment()
-			env.Set("self", &object.Self{&object.Object{}, "main"})
+			env.Set("self", &object.Self{RubyObject: &object.Object{}, Name: "main"})
 			evaluated, err := testEval(tt.input, env)
 			checkError(t, err)
 
@@ -334,7 +334,7 @@ func TestModuleObject(t *testing.T) {
 		end
 		`
 
-		main := &object.Self{&object.Object{}, "main"}
+		main := &object.Self{RubyObject: &object.Object{}, Name: "main"}
 		env := object.NewEnvironment()
 		env.Set("self", main)
 		_, err := testEval(input, env)
@@ -461,7 +461,7 @@ func TestFunctionObject(t *testing.T) {
 
 	for _, tt := range tests {
 		env := object.NewEnvironment()
-		env.Set("self", &object.Self{&object.Object{}, "main"})
+		env.Set("self", &object.Self{RubyObject: &object.Object{}, Name: "main"})
 		evaluated, err := testEval(tt.input, env)
 		checkError(t, err)
 		sym, ok := evaluated.(*object.Symbol)
@@ -521,7 +521,7 @@ func TestFunctionApplication(t *testing.T) {
 
 	for _, tt := range tests {
 		env := object.NewEnvironment()
-		env.Set("self", &object.Self{&object.Object{}, "main"})
+		env.Set("self", &object.Self{RubyObject: &object.Object{}, Name: "main"})
 		evaluated, err := testEval(tt.input, env)
 		checkError(t, err)
 		testIntegerObject(t, evaluated, tt.expected)
@@ -674,7 +674,7 @@ func TestSelfExpression(t *testing.T) {
 	input := "self"
 
 	env := object.NewMainEnvironment()
-	env.Set("self", &object.Self{&object.Integer{Value: 3}, "3"})
+	env.Set("self", &object.Self{RubyObject: &object.Integer{Value: 3}, Name: "3"})
 	evaluated, err := testEval(input, env)
 	checkError(t, err)
 

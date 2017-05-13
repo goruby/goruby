@@ -34,6 +34,18 @@ func TestMainMethodCalls(t *testing.T) {
 		`,
 			5,
 		},
+		{
+			"method with arguments and block and __BLOCK__ as local variable",
+			`
+		def add x, y
+			__BLOCK__ = 3
+			yield x + y
+		end
+
+		add 7, 3 { |sum| sum - 5 }
+		`,
+			5,
+		},
 	}
 
 	for _, tt := range tests {

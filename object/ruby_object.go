@@ -116,7 +116,9 @@ func (f *Function) Call(context CallContext, args ...RubyObject) (RubyObject, er
 	}
 	extendedEnv := f.extendFunctionEnv(arguments)
 	if blockGiven {
-		extendedEnv.Set("__BLOCK__", block)
+		self, _ := context.Env().Get("self")
+		selfObject := self.(*Self)
+		selfObject.Block = block
 	}
 	evaluated, err := context.Eval(f.Body, extendedEnv)
 	if err != nil {
@@ -161,8 +163,9 @@ func (f *Function) extractBlockFromArgs(args []RubyObject) (*Proc, []RubyObject,
 // the RubyObject and is just meant to indicate that the given object is
 // self in the given context.
 type Self struct {
-	RubyObject
-	Name string
+	RubyObject        // The encapsuled object acting as self
+	Block      *Proc  // the block given to the current execution binding
+	Name       string // The name of self in this context
 }
 
 // Type returns SELF
