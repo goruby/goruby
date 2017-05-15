@@ -15,6 +15,18 @@ func init() {
 	classes.Set("Proc", procClass)
 }
 
+func extractBlockFromArgs(args []RubyObject) (*Proc, []RubyObject, bool) {
+	if len(args) == 0 {
+		return nil, args, false
+	}
+	block, ok := args[len(args)-1].(*Proc)
+	if !ok {
+		return nil, args, false
+	}
+	args = args[:len(args)-1]
+	return block, args, true
+}
+
 // A Proc represents a user defined block of code.
 type Proc struct {
 	Parameters []*ast.Identifier
