@@ -29,9 +29,10 @@ func extractBlockFromArgs(args []RubyObject) (*Proc, []RubyObject, bool) {
 
 // A Proc represents a user defined block of code.
 type Proc struct {
-	Parameters []*ast.Identifier
-	Body       *ast.BlockStatement
-	Env        Environment
+	Parameters             []*ast.Identifier
+	Body                   *ast.BlockStatement
+	Env                    Environment
+	ArgumentCountMandatory bool
 }
 
 // Type returns proc_OBJ
@@ -57,7 +58,7 @@ func (p *Proc) Class() RubyClass { return procClass }
 
 // Call implements the RubyMethod interface. It evaluates p.Body and returns its result
 func (p *Proc) Call(context CallContext, args ...RubyObject) (RubyObject, error) {
-	if len(args) != len(p.Parameters) {
+	if p.ArgumentCountMandatory && len(args) != len(p.Parameters) {
 		return nil, NewWrongNumberOfArgumentsError(len(p.Parameters), len(args))
 	}
 	extendedEnv := p.extendProcEnv(args)
@@ -70,8 +71,14 @@ func (p *Proc) Call(context CallContext, args ...RubyObject) (RubyObject, error)
 
 func (p *Proc) extendProcEnv(args []RubyObject) Environment {
 	env := NewEnclosedEnvironment(p.Env)
+	arguments := args
+	if len(args) < len(p.Parameters) {
+		for i := 0; i < (len(p.Parameters) - len(args)); i++ {
+			arguments = append(arguments, NIL)
+		}
+	}
 	for paramIdx, param := range p.Parameters {
-		env.Set(param.Value, args[paramIdx])
+		env.Set(param.Value, arguments[paramIdx])
 	}
 	return env
 }

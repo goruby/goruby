@@ -3,6 +3,8 @@ package object
 import (
 	"reflect"
 	"testing"
+
+	"github.com/goruby/goruby/ast"
 )
 
 func TestExtractBlockFromArgs(t *testing.T) {
@@ -99,5 +101,50 @@ func TestExtractBlockFromArgs(t *testing.T) {
 			t.Logf("Expected remaining args to equal\n%+#v\n\tgot\n%+#v\n", expected, remaining)
 			t.Fail()
 		}
+	})
+}
+
+func TestProcCall(t *testing.T) {
+	t.Run("argument count not mandatory", func(t *testing.T) {
+		proc := &Proc{
+			Parameters: []*ast.Identifier{&ast.Identifier{Value: "a"}},
+			Body:       &ast.BlockStatement{Statements: []ast.Statement{}},
+			Env:        NewEnvironment(),
+			ArgumentCountMandatory: false,
+		}
+		eval := func(node ast.Node, env Environment) (RubyObject, error) {
+			return TRUE, nil
+		}
+		context := &callContext{
+			receiver: NIL,
+			env:      NewEnvironment(),
+			eval:     eval,
+		}
+
+		_, err := proc.Call(context)
+
+		checkError(t, err, nil)
+	})
+	t.Run("argument count mandatory", func(t *testing.T) {
+		proc := &Proc{
+			Parameters: []*ast.Identifier{&ast.Identifier{Value: "a"}},
+			Body:       &ast.BlockStatement{Statements: []ast.Statement{}},
+			Env:        NewEnvironment(),
+			ArgumentCountMandatory: true,
+		}
+		eval := func(node ast.Node, env Environment) (RubyObject, error) {
+			return TRUE, nil
+		}
+		context := &callContext{
+			receiver: NIL,
+			env:      NewEnvironment(),
+			eval:     eval,
+		}
+
+		_, err := proc.Call(context)
+
+		expected := NewWrongNumberOfArgumentsError(1, 0)
+
+		checkError(t, err, expected)
 	})
 }
