@@ -782,3 +782,35 @@ func TestKernelExtend(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestKernelBlockGiven(t *testing.T) {
+	t.Run("block present", func(t *testing.T) {
+		object := &Object{}
+		env := NewEnvironment()
+		block := &Proc{}
+		context := &callContext{
+			receiver: &Self{RubyObject: object, Block: block, Name: "foo"},
+			env:      env,
+		}
+
+		result, err := kernelBlockGiven(context)
+
+		checkError(t, err, nil)
+
+		checkResult(t, result, TRUE)
+	})
+	t.Run("no block present", func(t *testing.T) {
+		object := &Object{}
+		env := NewEnvironment()
+		context := &callContext{
+			receiver: &Self{RubyObject: object, Name: "foo"},
+			env:      env,
+		}
+
+		result, err := kernelBlockGiven(context)
+
+		checkError(t, err, nil)
+
+		checkResult(t, result, FALSE)
+	})
+}
