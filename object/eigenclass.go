@@ -29,6 +29,7 @@ func (e *eigenclass) SuperClass() RubyClass {
 	}
 	return objectClass
 }
+func (e *eigenclass) New() RubyObject { return e.wrappedClass.New() }
 func (e *eigenclass) addMethod(name string, method RubyMethod) {
 	e.methods.Set(name, method)
 }

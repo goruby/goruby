@@ -6,17 +6,39 @@ import (
 )
 
 var (
-	exceptionClass           RubyClassObject = NewClass("Exception", objectClass, exceptionMethods, exceptionClassMethods)
-	standardErrorClass       RubyClassObject = NewClass("StandardError", exceptionClass, nil, nil)
-	zeroDivisionErrorClass   RubyClassObject = NewClass("ZeroDivisionError", standardErrorClass, nil, nil)
-	argumentErrorClass       RubyClassObject = NewClass("ArgumentError", standardErrorClass, nil, nil)
-	nameErrorClass           RubyClassObject = NewClass("NameError", standardErrorClass, nil, nil)
-	noMethodErrorClass       RubyClassObject = NewClass("NoMethodError", nameErrorClass, nil, nil)
-	typeErrorClass           RubyClassObject = NewClass("TypeError", standardErrorClass, nil, nil)
-	scriptErrorClass         RubyClassObject = NewClass("ScriptError", exceptionClass, nil, nil)
-	loadErrorClass           RubyClassObject = NewClass("LoadError", scriptErrorClass, nil, nil)
-	syntaxErrorClass         RubyClassObject = NewClass("SyntaxError", scriptErrorClass, nil, nil)
-	notImplementedErrorClass RubyClassObject = NewClass("NotImplementedError", scriptErrorClass, nil, nil)
+	exceptionClass RubyClassObject = newClass(
+		"Exception", objectClass, exceptionMethods, exceptionClassMethods, func(RubyClassObject) RubyObject { return &Exception{} },
+	)
+	standardErrorClass RubyClassObject = newClass(
+		"StandardError", exceptionClass, nil, nil, func(RubyClassObject) RubyObject { return &StandardError{} },
+	)
+	zeroDivisionErrorClass RubyClassObject = newClass(
+		"ZeroDivisionError", standardErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &ZeroDivisionError{} },
+	)
+	argumentErrorClass RubyClassObject = newClass(
+		"ArgumentError", standardErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &ArgumentError{} },
+	)
+	nameErrorClass RubyClassObject = newClass(
+		"NameError", standardErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &NameError{} },
+	)
+	noMethodErrorClass RubyClassObject = newClass(
+		"NoMethodError", nameErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &NoMethodError{} },
+	)
+	typeErrorClass RubyClassObject = newClass(
+		"TypeError", standardErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &TypeError{} },
+	)
+	scriptErrorClass RubyClassObject = newClass(
+		"ScriptError", exceptionClass, nil, nil, func(RubyClassObject) RubyObject { return &ScriptError{} },
+	)
+	loadErrorClass RubyClassObject = newClass(
+		"LoadError", scriptErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &LoadError{} },
+	)
+	syntaxErrorClass RubyClassObject = newClass(
+		"SyntaxError", scriptErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &SyntaxError{} },
+	)
+	notImplementedErrorClass RubyClassObject = newClass(
+		"NotImplementedError", scriptErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &NotImplementedError{} },
+	)
 )
 
 func init() {

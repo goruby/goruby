@@ -14,3 +14,18 @@ func TestBasicObjectMethodMissing(t *testing.T) {
 
 	checkError(t, err, expected)
 }
+
+func TestBasicObjectInitialize(t *testing.T) {
+	context := &callContext{
+		receiver: &Self{
+			&classInstance{class: basicObjectClass},
+			"BasicObject",
+		},
+	}
+
+	result, err := basicObjectInitialize(context)
+
+	checkError(t, err, nil)
+
+	checkResult(t, result, context.Receiver())
+}
