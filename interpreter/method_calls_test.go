@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/goruby/goruby/object"
@@ -72,4 +73,61 @@ func TestMainMethodCalls(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMethodBlockLeakage(t *testing.T) {
+	t.Run("main methods", func(t *testing.T) {
+		input := `
+		def add x, y
+		yield x + y
+		end
+
+		def sub x, y
+		yield x - y
+		end
+
+		add 7, 3 { |sum| sum - 5 }
+
+		sub 10, 4
+		`
+		i := New()
+
+		_, err := i.Interpret(input)
+
+		expected := object.NewNoBlockGivenLocalJumpError()
+
+		if !reflect.DeepEqual(expected, err) {
+			t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, err)
+			t.Fail()
+		}
+	})
+	t.Run("custom class methods", func(t *testing.T) {
+		input := `
+		class Foo
+			def add x, y
+			yield x + y
+			end
+
+			def sub x, y
+			yield x - y
+			end
+		end
+
+		foo = Foo.new
+
+		foo.add 7, 3 { |sum| sum - 5 }
+
+		foo.sub 10, 4
+		`
+		i := New()
+
+		_, err := i.Interpret(input)
+
+		expected := object.NewNoBlockGivenLocalJumpError()
+
+		if !reflect.DeepEqual(expected, err) {
+			t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, err)
+			t.Fail()
+		}
+	})
 }
