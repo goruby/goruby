@@ -16,6 +16,7 @@ const (
 
 	IDENT
 	CONST
+	GLOBAL
 	INT
 	STRING
 	SYMBOL // :symbol

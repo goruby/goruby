@@ -253,6 +253,46 @@ func TestVariableAssignmentExpression(t *testing.T) {
 	}
 }
 
+func TestGlobalAssignmentExpression(t *testing.T) {
+	t.Run("assignments", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected int64
+		}{
+			{"$a = 5; $a;", 5},
+			{"$a = 5 * 5; $a;", 25},
+			{"$a = 5; $b = $a; $b;", 5},
+			{"$a = 5; $b = $a; $c = $a + $b + 5; $c;", 15},
+		}
+
+		for _, tt := range tests {
+			evaluated, err := testEval(tt.input)
+			checkError(t, err)
+			testIntegerObject(t, evaluated, tt.expected)
+		}
+	})
+	t.Run("set as global", func(t *testing.T) {
+		input := "$Foo = 3"
+
+		outer := object.NewEnvironment()
+		env := object.NewEnclosedEnvironment(outer)
+		_, err := testEval(input, env)
+		checkError(t, err)
+
+		_, ok := outer.Get("$Foo")
+		if !ok {
+			t.Logf("Expected $FOO to be set in outer env, was not")
+			t.Fail()
+		}
+
+		_, ok = env.Clone().Get("$Foo")
+		if ok {
+			t.Logf("Expected $FOO not to be set in inner env")
+			t.Fail()
+		}
+	})
+}
+
 func TestModuleObject(t *testing.T) {
 	t.Run("module definition", func(t *testing.T) {
 		tests := []struct {
@@ -573,6 +613,21 @@ func TestFunctionApplication(t *testing.T) {
 		evaluated, err := testEval(tt.input, env)
 		checkError(t, err)
 		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
+
+func TestGlobalLiteral(t *testing.T) {
+	input := `$foo = 'bar'; $foo`
+
+	evaluated, err := testEval(input)
+	checkError(t, err)
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if str.Value != "bar" {
+		t.Errorf("String has wrong value. got=%q", str.Value)
 	}
 }
 

@@ -1,5 +1,10 @@
 package object
 
+import (
+	"bytes"
+	"fmt"
+)
+
 var classes = NewEnvironment()
 
 // NewMainEnvironment returns a new Environment populated with all Ruby classes
@@ -43,7 +48,7 @@ type Environment interface {
 	Outer() Environment
 	// Clone returns a copy of the environment. It will shallow copy its values
 	//
-	// Note that clone will also not set its outer env, so calls to Outer will
+	// Note that clone will not set its outer env, so calls to Outer will
 	// return nil on cloned Environments
 	Clone() Environment
 }
@@ -147,4 +152,10 @@ func (e *environment) clone() *environment {
 		env.store[k] = v
 	}
 	return env
+}
+
+func (e *environment) String() string {
+	var out bytes.Buffer
+	fmt.Fprintf(&out, "%v", e.store)
+	return out.String()
 }

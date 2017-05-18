@@ -123,6 +123,8 @@ func startLexer(l *Lexer) StateFn {
 		return startLexer
 	}
 	switch r {
+	case '$':
+		return lexGlobal
 	case '\n':
 		l.lines++
 		l.emit(token.NEWLINE)
@@ -276,6 +278,25 @@ func lexSymbol(l *Lexer) StateFn {
 	return startLexer
 }
 
+func lexGlobal(l *Lexer) StateFn {
+	r := l.next()
+
+	if isExpressionDelimiter(r) {
+		return l.errorf("Illegal character at %d: '%c'", l.pos, r)
+	}
+
+	if isWhitespace(r) {
+		return l.errorf("Illegal character at %d: '%c'", l.pos, r)
+	}
+
+	for !isWhitespace(r) && !isExpressionDelimiter(r) {
+		r = l.next()
+	}
+	l.backup()
+	l.emit(token.GLOBAL)
+	return startLexer
+}
+
 func commentLexer(l *Lexer) StateFn {
 	r := l.next()
 	for r != '\n' {
@@ -300,4 +321,8 @@ func isDigit(r rune) bool {
 
 func isDigitOrUnderscore(r rune) bool {
 	return isDigit(r) || r == '_'
+}
+
+func isExpressionDelimiter(r rune) bool {
+	return r == '\n' || r == ';' || r == eof
 }
