@@ -269,7 +269,7 @@ func TestModuleObject(t *testing.T) {
 				end`,
 				"Foo",
 				map[string]string{"a": "fn() {\nfoo\n}"},
-				&object.Symbol{"a"},
+				&object.Symbol{Value: "a"},
 			},
 			{
 				`module Foo
@@ -277,7 +277,7 @@ func TestModuleObject(t *testing.T) {
 				end`,
 				"Foo",
 				map[string]string{},
-				&object.Integer{3},
+				&object.Integer{Value: 3},
 			},
 			{
 				`module Foo
@@ -355,6 +355,54 @@ func TestModuleObject(t *testing.T) {
 			t.Fail()
 		}
 	})
+	t.Run("module as open classes", func(t *testing.T) {
+		input :=
+			`module Foo
+				def a
+					"foo"
+				end
+			end
+			module Foo
+				def b
+					"bar"
+				end
+			end
+			`
+		env := object.NewEnvironment()
+		env.Set("self", &object.Self{RubyObject: &object.Object{}, Name: "main"})
+		_, err := testEval(input, env)
+		checkError(t, err)
+
+		module, ok := env.Get("Foo")
+		if !ok {
+			t.Logf("Expected module to exist in env")
+			t.Logf("Env: %+#v\n", env)
+			t.FailNow()
+		}
+
+		actualMethods := make(map[string]string)
+
+		methods := module.Class().Methods().GetAll()
+		for name, method := range methods {
+			if function, ok := method.(*object.Function); ok {
+				actualMethods[name] = function.Inspect()
+			}
+		}
+
+		expectedMethods := map[string]string{
+			"a": "fn() {\nfoo\n}",
+			"b": "fn() {\nbar\n}",
+		}
+
+		if !reflect.DeepEqual(expectedMethods, actualMethods) {
+			t.Logf(
+				"Expected module methods to equal\n%+#v\n\tgot\n%+#v\n",
+				expectedMethods,
+				actualMethods,
+			)
+			t.Fail()
+		}
+	})
 }
 
 func TestClassObject(t *testing.T) {
@@ -372,7 +420,7 @@ func TestClassObject(t *testing.T) {
 			end`,
 			"Foo",
 			map[string]string{"a": "fn() {\nfoo\n}"},
-			&object.Symbol{"a"},
+			&object.Symbol{Value: "a"},
 		},
 		{
 			`class Foo
@@ -380,7 +428,7 @@ func TestClassObject(t *testing.T) {
 			end`,
 			"Foo",
 			map[string]string{},
-			&object.Integer{3},
+			&object.Integer{Value: 3},
 		},
 		{
 			`class Foo
