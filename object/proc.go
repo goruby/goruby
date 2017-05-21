@@ -7,8 +7,9 @@ import (
 	"github.com/goruby/goruby/ast"
 )
 
-var procClass RubyClassObject = NewClass(
+var procClass RubyClassObject = newClass(
 	"Proc", objectClass, procMethods, procClassMethods,
+	func(c RubyClassObject) RubyObject { return &Proc{} },
 )
 
 func init() {

@@ -8,13 +8,20 @@ func init() {
 }
 
 // NewModule returns a new module with the given name and adds methods to its method set.
-func NewModule(name string, methods map[string]RubyMethod) *Module {
+func NewModule(name string, outerEnv Environment) *Module {
+	methods := make(map[string]RubyMethod)
+	return newModule(name, methods, outerEnv)
+}
+
+// newModule returns a new module with the given name and adds methods to its method set.
+func newModule(name string, methods map[string]RubyMethod, outerEnv Environment) *Module {
 	if methods == nil {
 		methods = make(map[string]RubyMethod)
 	}
 	return &Module{
-		name:  name,
-		class: newEigenclass(moduleClass, methods),
+		name:        name,
+		class:       newEigenclass(moduleClass, methods),
+		Environment: NewEnclosedEnvironment(outerEnv),
 	}
 }
 
@@ -22,6 +29,7 @@ func NewModule(name string, methods map[string]RubyMethod) *Module {
 type Module struct {
 	name  string
 	class *eigenclass
+	Environment
 }
 
 // Inspect returns the name of the module

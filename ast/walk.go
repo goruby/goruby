@@ -93,6 +93,10 @@ func Walk(v Visitor, node Node) {
 	case *BlockStatement:
 		walkStmtList(v, n.Statements)
 
+	case *ScopedIdentifier:
+		Walk(v, n.Outer)
+		Walk(v, n.Inner)
+
 	case *IfExpression:
 		Walk(v, n.Condition)
 		Walk(v, n.Consequence)

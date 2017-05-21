@@ -26,6 +26,7 @@ const (
 	CALL        // myFunction(X)
 	CONTEXT     // foo.myFunction(X)
 	INDEX       // array[index]
+	SCOPE       // A::B
 )
 
 var precedences = map[token.Type]int{
@@ -47,6 +48,7 @@ var precedences = map[token.Type]int{
 	token.LBRACKET: INDEX,
 	token.LBRACE:   BLOCKBRACES,
 	token.DO:       BLOCKDO,
+	token.SCOPE:    SCOPE,
 }
 
 type (
@@ -110,6 +112,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.RBRACKET, p.parseCallExpression)
 	p.registerInfix(token.ASSIGN, p.parseAssignment)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
+	p.registerInfix(token.SCOPE, p.parseScopedIdentifierExpression)
 	return p
 }
 
@@ -289,6 +292,22 @@ func (p *Parser) parseIdentifier() ast.Expression {
 
 func (p *Parser) parseGlobal() ast.Expression {
 	return &ast.Global{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+func (p *Parser) parseScopedIdentifierExpression(outer ast.Expression) ast.Expression {
+	ident, ok := outer.(*ast.Identifier)
+	if !ok || !ident.IsConstant() {
+		msg := fmt.Errorf(
+			"could not parse ScopedIdentifier expression: expected constant, got token %T",
+			outer,
+		)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	scopedIdent := &ast.ScopedIdentifier{Token: p.curToken, Outer: ident}
+	p.nextToken()
+	scopedIdent.Inner = p.parseExpression(LOWEST)
+	return scopedIdent
 }
 
 func (p *Parser) parseSelf() ast.Expression {

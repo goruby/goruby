@@ -53,6 +53,7 @@ add { |x| x }
 add do |x|
 end
 yield
+A::B
 $foo;
 $Foo
 $@
@@ -204,6 +205,10 @@ $a`
 		{token.END, "end"},
 		{token.NEWLINE, "\n"},
 		{token.YIELD, "yield"},
+		{token.NEWLINE, "\n"},
+		{token.CONST, "A"},
+		{token.SCOPE, "::"},
+		{token.CONST, "B"},
 		{token.NEWLINE, "\n"},
 		{token.GLOBAL, "$foo"},
 		{token.SEMICOLON, ";"},

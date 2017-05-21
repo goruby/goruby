@@ -740,9 +740,9 @@ func TestKernelExtend(t *testing.T) {
 		env:      env,
 	}
 
-	module := NewModule("Ext", map[string]RubyMethod{
+	module := newModule("Ext", map[string]RubyMethod{
 		"foo": publicMethod(nil),
-	})
+	}, nil)
 
 	result, err := kernelExtend(context, module)
 

@@ -289,6 +289,35 @@ func TestGlobalExpression(t *testing.T) {
 	}
 }
 
+func TestScopedIdentifierExpression(t *testing.T) {
+	input := "A::B"
+
+	l := lexer.New(input)
+	p := New(l)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf(
+			"program has not enough statements. got=%d",
+			len(program.Statements),
+		)
+	}
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+
+	_, ok = stmt.Expression.(*ast.ScopedIdentifier)
+	if !ok {
+		t.Logf("Expected expression to be *ast.ScopedIdentifier, got %T", stmt.Expression)
+		t.Fail()
+	}
+}
+
 func TestSelfExpression(t *testing.T) {
 	input := "self;"
 
