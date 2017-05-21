@@ -315,6 +315,18 @@ func TestScopedIdentifierExpression(t *testing.T) {
 			object.NewInteger(10).Inspect(),
 			object.NewInteger(10).Class(),
 		},
+		{
+			`
+			class A
+				def bar
+					13
+				end
+			end
+			A.new::bar
+			`,
+			object.NewInteger(13).Inspect(),
+			object.NewInteger(13).Class(),
+		},
 	}
 
 	for _, tt := range tests {
