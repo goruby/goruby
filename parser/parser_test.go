@@ -289,6 +289,35 @@ func TestGlobalExpression(t *testing.T) {
 	}
 }
 
+func TestScopedIdentifierExpression(t *testing.T) {
+	input := "A::B"
+
+	l := lexer.New(input)
+	p := New(l)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf(
+			"program has not enough statements. got=%d",
+			len(program.Statements),
+		)
+	}
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+
+	_, ok = stmt.Expression.(*ast.ScopedIdentifier)
+	if !ok {
+		t.Logf("Expected expression to be *ast.ScopedIdentifier, got %T", stmt.Expression)
+		t.Fail()
+	}
+}
+
 func TestSelfExpression(t *testing.T) {
 	input := "self;"
 
@@ -2184,6 +2213,58 @@ func TestContextCallExpression(t *testing.T) {
 	})
 	t.Run("chained context call with dot with parens", func(t *testing.T) {
 		input := "foo.add().bar();"
+
+		l := lexer.New(input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Statements does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
+				stmt.Expression)
+		}
+
+		context, ok := exp.Context.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf(
+				"expr.Context is not ast.ContextCallExpression. got=%T",
+				exp.Context,
+			)
+		}
+
+		if !testIdentifier(t, context.Function, "add") {
+			return
+		}
+
+		if len(context.Arguments) != 0 {
+			t.Fatalf("wrong length of arguments. got=%d", len(context.Arguments))
+		}
+
+		if !testIdentifier(t, exp.Function, "bar") {
+			return
+		}
+
+		if len(exp.Arguments) != 0 {
+			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+		}
+	})
+	t.Run("scope as context call", func(t *testing.T) {
+		input := "foo.add::bar;"
 
 		l := lexer.New(input)
 		p := New(l)

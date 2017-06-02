@@ -20,24 +20,46 @@ func init() {
 }
 
 // NewClass returns a new Ruby Class
-func NewClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod) RubyClassObject {
-	if instanceMethods == nil {
-		instanceMethods = map[string]RubyMethod{}
-	}
-	if classMethods == nil {
-		classMethods = map[string]RubyMethod{}
-	}
-	return newClass(name, superClass, instanceMethods, classMethods, defaultBuilder)
+func NewClass(name string, superClass RubyClass, env Environment) RubyClassObject {
+	instanceMethods := map[string]RubyMethod{}
+	classMethods := map[string]RubyMethod{}
+	return newClassWithEnv(name, superClass, instanceMethods, classMethods, defaultBuilder, env)
 }
 
 // newClass returns a new Ruby Class
-func newClass(name string, superClass RubyClass, instanceMethods, classMethods map[string]RubyMethod, builder func(RubyClassObject) RubyObject) *class {
+func newClass(
+	name string,
+	superClass RubyClass,
+	instanceMethods,
+	classMethods map[string]RubyMethod,
+	builder func(RubyClassObject) RubyObject,
+) *class {
+	return newClassWithEnv(
+		name,
+		superClass,
+		instanceMethods,
+		classMethods,
+		builder,
+		nil,
+	)
+}
+
+// newClass returns a new Ruby Class
+func newClassWithEnv(
+	name string,
+	superClass RubyClass,
+	instanceMethods,
+	classMethods map[string]RubyMethod,
+	builder func(RubyClassObject) RubyObject,
+	env Environment,
+) *class {
 	return &class{
 		name:            name,
 		superClass:      superClass,
 		instanceMethods: NewMethodSet(instanceMethods),
 		class:           newEigenclass(classClass, classMethods),
 		builder:         builder,
+		Environment:     NewEnclosedEnvironment(env),
 	}
 }
 
@@ -48,6 +70,7 @@ type class struct {
 	class           RubyClass
 	instanceMethods SettableMethodSet
 	builder         func(RubyClassObject) RubyObject
+	Environment
 }
 
 func (c *class) Inspect() string {

@@ -232,6 +232,26 @@ func (g *Global) literalNode()    {}
 // TokenLiteral returns the literal of the token.GLOBAL token
 func (g *Global) TokenLiteral() string { return g.Token.Literal }
 
+// ScopedIdentifier represents a scoped Constant declaration
+type ScopedIdentifier struct {
+	Token token.Token // the token.SCOPE
+	Outer *Identifier
+	Inner Expression
+}
+
+func (i *ScopedIdentifier) String() string {
+	var out bytes.Buffer
+	out.WriteString(i.Outer.String())
+	out.WriteString(i.Token.Literal)
+	out.WriteString(i.Inner.String())
+	return out.String()
+}
+func (i *ScopedIdentifier) expressionNode() {}
+func (i *ScopedIdentifier) literalNode()    {}
+
+// TokenLiteral returns the literal of the token.SCOPE token
+func (i *ScopedIdentifier) TokenLiteral() string { return i.Token.Literal }
+
 // IntegerLiteral represents an integer in the AST
 type IntegerLiteral struct {
 	Token token.Token

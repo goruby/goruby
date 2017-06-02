@@ -240,7 +240,7 @@ To run the command as one off run `go run main.go`.
 		- [ ] `&&=`
 - [x] function blocks (procs)
 - [x] constants
-- [ ] scope operator `::`
+- [x] scope operator `::`
 - [ ] classes
 	- [x] class objects
 	- [x] class Class

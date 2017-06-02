@@ -51,6 +51,8 @@ const (
 	RBRACKET // ]
 	PIPE     // |
 
+	SCOPE // ::
+
 	// Keywords
 
 	DEF

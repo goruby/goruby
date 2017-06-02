@@ -235,6 +235,119 @@ end
 	}
 }
 
+func mustGet(obj object.RubyObject, ok bool) object.RubyObject {
+	if !ok {
+		panic("object not found")
+	}
+	return obj
+}
+
+func TestScopedIdentifierExpression(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedInspect string
+		expectedClass   object.RubyClass
+	}{
+		{
+			`
+			module A
+				module B
+				end
+			end
+			A::B
+			`,
+			object.NewModule("B", nil).Inspect(),
+			object.NewModule("B", nil).Class(),
+		},
+		{
+			`
+			module A
+				class B
+				end
+			end
+			A::B
+			`,
+			object.NewClass("B", nil, nil).Inspect(),
+			object.NewClass("B", nil, nil).Class(),
+		},
+		{
+			`
+			class A
+				class B
+				end
+			end
+			A::B
+			`,
+			object.NewClass("B", nil, nil).Inspect(),
+			object.NewClass("B", nil, nil).Class(),
+		},
+		{
+			`
+			class A
+				module B
+				end
+			end
+			A::B
+			`,
+			object.NewModule("B", nil).Inspect(),
+			object.NewModule("B", nil).Class(),
+		},
+		{
+			`
+			module A
+				module B
+					module C
+					end
+				end
+			end
+			A::B::C
+			`,
+			object.NewModule("C", nil).Inspect(),
+			object.NewModule("C", nil).Class(),
+		},
+		{
+			`
+			module A
+				Ten = 10
+			end
+			A::Ten
+			`,
+			object.NewInteger(10).Inspect(),
+			object.NewInteger(10).Class(),
+		},
+		{
+			`
+			class A
+				def bar
+					13
+				end
+			end
+			A.new::bar
+			`,
+			object.NewInteger(13).Inspect(),
+			object.NewInteger(13).Class(),
+		},
+	}
+
+	for _, tt := range tests {
+		env := object.NewMainEnvironment()
+		evaluated, err := testEval(tt.input, env)
+		checkError(t, err)
+
+		actual := evaluated.Inspect()
+
+		if tt.expectedInspect != actual {
+			t.Logf("Expected eval return to equal\n%q\n\tgot\n%q\n", tt.expectedInspect, actual)
+			t.Fail()
+		}
+
+		if !reflect.DeepEqual(tt.expectedClass, evaluated.Class()) {
+			t.Logf("Expected eval return class to equal\n%+#v\n\tgot\n%+#v\n", tt.expectedClass, evaluated.Class())
+			t.Fail()
+		}
+	}
+}
+
 func TestVariableAssignmentExpression(t *testing.T) {
 	tests := []struct {
 		input    string

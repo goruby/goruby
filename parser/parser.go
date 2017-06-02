@@ -26,6 +26,7 @@ const (
 	CALL        // myFunction(X)
 	CONTEXT     // foo.myFunction(X)
 	INDEX       // array[index]
+	SCOPE       // A::B
 )
 
 var precedences = map[token.Type]int{
@@ -47,6 +48,7 @@ var precedences = map[token.Type]int{
 	token.LBRACKET: INDEX,
 	token.LBRACE:   BLOCKBRACES,
 	token.DO:       BLOCKDO,
+	token.SCOPE:    SCOPE,
 }
 
 type (
@@ -110,6 +112,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.RBRACKET, p.parseCallExpression)
 	p.registerInfix(token.ASSIGN, p.parseAssignment)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
+	p.registerInfix(token.SCOPE, p.parseScopedIdentifierExpression)
 	return p
 }
 
@@ -289,6 +292,18 @@ func (p *Parser) parseIdentifier() ast.Expression {
 
 func (p *Parser) parseGlobal() ast.Expression {
 	return &ast.Global{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+func (p *Parser) parseScopedIdentifierExpression(outer ast.Expression) ast.Expression {
+	ident, ok := outer.(*ast.Identifier)
+	if !ok {
+		return p.parseContextCallExpression(outer)
+	}
+
+	scopedIdent := &ast.ScopedIdentifier{Token: p.curToken, Outer: ident}
+	p.nextToken()
+	scopedIdent.Inner = p.parseExpression(LOWEST)
+	return scopedIdent
 }
 
 func (p *Parser) parseSelf() ast.Expression {
@@ -588,25 +603,22 @@ func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 		p.peekError(p.curToken.Type)
 		return nil
 	}
-	if p.currentTokenIs(token.DOT) {
+	if p.currentTokenOneOf(token.DOT, token.SCOPE) {
 		p.nextToken()
 	}
 
-	function := p.parseExpression(CONTEXT)
-	ident, ok := function.(*ast.Identifier)
-	if !ok {
-		msg := fmt.Errorf(
-			"could not parse call expression: expected identifier, got token '%T'",
-			function,
-		)
-		p.errors = append(p.errors, msg)
+	if !p.currentTokenIs(token.IDENT) {
+		p.peekError(token.IDENT)
 		return nil
 	}
+
+	function := p.parseIdentifier()
+	ident := function.(*ast.Identifier)
 	contextCallExpression.Function = ident
 
 	args := []ast.Expression{}
 
-	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE, token.DOT) {
+	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE, token.DOT, token.SCOPE) {
 		contextCallExpression.Arguments = args
 		return contextCallExpression
 	}
@@ -638,7 +650,7 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 		return p.parseContextCallExpression(function)
 	}
 	exp := &ast.ContextCallExpression{Token: ident.Token, Function: ident}
-	exp.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE)
+	exp.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE, token.SCOPE)
 	if p.peekTokenOneOf(token.LBRACE, token.DO) {
 		p.acceptOneOf(token.LBRACE, token.DO)
 		exp.Block = p.parseBlock().(*ast.BlockExpression)

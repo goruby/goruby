@@ -100,9 +100,9 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 	case *ast.ModuleExpression:
 		module, ok := env.Get(node.Name.Value)
 		if !ok {
-			module = object.NewModule(node.Name.Value, nil)
+			module = object.NewModule(node.Name.Value, env)
 		}
-		moduleEnv := object.NewEnclosedEnvironment(env)
+		moduleEnv := module.(object.Environment)
 		moduleEnv.Set("self", &object.Self{RubyObject: module, Name: node.Name.Value})
 		bodyReturn, err := Eval(node.Body, moduleEnv)
 		if err != nil {
@@ -119,9 +119,9 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		}
 		class, ok := env.Get(node.Name.Value)
 		if !ok {
-			class = object.NewClass(node.Name.Value, objectClass.(object.RubyClassObject), nil, nil)
+			class = object.NewClass(node.Name.Value, objectClass.(object.RubyClassObject), env)
 		}
-		classEnv := object.NewEnclosedEnvironment(env)
+		classEnv := class.(object.Environment)
 		classEnv.Set("self", &object.Self{RubyObject: class, Name: node.Name.Value})
 		bodyReturn, err := Eval(node.Body, classEnv)
 		if err != nil {
@@ -193,6 +193,21 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.IfExpression:
 		return evalIfExpression(node, env)
+	case *ast.ScopedIdentifier:
+		self, _ := env.Get("self")
+		outer, ok := env.Get(node.Outer.Value)
+		if !ok {
+			return nil, object.NewUndefinedLocalVariableOrMethodNameError(self, node.Outer.Value)
+		}
+		outerEnv, ok := outer.(object.Environment)
+		if !ok {
+			return nil, object.NewUndefinedLocalVariableOrMethodNameError(self, node.Outer.Value)
+		}
+		inner, err := Eval(node.Inner, outerEnv)
+		if err != nil {
+			return nil, err
+		}
+		return inner, nil
 	case nil:
 		return nil, nil
 	default:
