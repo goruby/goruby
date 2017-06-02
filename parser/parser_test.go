@@ -93,6 +93,50 @@ func TestVariableExpression(t *testing.T) {
 	})
 }
 
+func TestGlobalAssignment(t *testing.T) {
+	input := "$foo = 3"
+
+	l := lexer.New(input)
+	p := New(l)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf(
+			"program.Statements does not contain 1 statements. got=%d",
+			len(program.Statements),
+		)
+	}
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+
+	variable, ok := stmt.Expression.(*ast.GlobalAssignment)
+
+	expectedGlobal := "$foo"
+
+	if !testGlobal(t, variable.Name, expectedGlobal) {
+		return
+	}
+
+	val := variable.Value.String()
+
+	expectedValue := "3"
+
+	if val != expectedValue {
+		t.Logf(
+			"Expected variable value to equal %s, got %s\n",
+			expectedValue,
+			val,
+		)
+		t.Fail()
+	}
+}
+
 func TestReturnStatements(t *testing.T) {
 	tests := []struct {
 		input         string
@@ -206,6 +250,43 @@ func TestIdentifierExpression(t *testing.T) {
 			)
 		}
 	})
+}
+
+func TestGlobalExpression(t *testing.T) {
+	input := "$foobar;"
+
+	l := lexer.New(input)
+	p := New(l)
+	program, err := p.ParseProgram()
+	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf(
+			"program has not enough statements. got=%d",
+			len(program.Statements),
+		)
+	}
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+
+	global, ok := stmt.Expression.(*ast.Global)
+	if !ok {
+		t.Fatalf("expression not *ast.Global. got=%T", stmt.Expression)
+	}
+	if global.Value != "$foobar" {
+		t.Errorf("ident.Value not %s. got=%s", "$foobar", global.Value)
+	}
+	if global.TokenLiteral() != "$foobar" {
+		t.Errorf(
+			"global.TokenLiteral not %s. got=%s", "$foobar",
+			global.TokenLiteral(),
+		)
+	}
 }
 
 func TestSelfExpression(t *testing.T) {
@@ -2371,6 +2452,27 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 			"integer.TokenLiteral not %d. got=%s", value,
 			integ.TokenLiteral(),
 		)
+		return false
+	}
+
+	return true
+}
+
+func testGlobal(t *testing.T, exp ast.Expression, value string) bool {
+	global, ok := exp.(*ast.Global)
+	if !ok {
+		t.Errorf("exp not *ast.Identifier. got=%T", exp)
+		return false
+	}
+
+	if global.Value != value {
+		t.Errorf("global.Value not %s. got=%s", value, global.Value)
+		return false
+	}
+
+	if global.TokenLiteral() != value {
+		t.Errorf("global.TokenLiteral not %s. got=%s", value,
+			global.TokenLiteral())
 		return false
 	}
 

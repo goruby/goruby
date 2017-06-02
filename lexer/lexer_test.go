@@ -53,7 +53,10 @@ add { |x| x }
 add do |x|
 end
 yield
-`
+$foo;
+$Foo
+$@
+$a`
 
 	tests := []struct {
 		expectedType    token.Type
@@ -202,6 +205,14 @@ yield
 		{token.NEWLINE, "\n"},
 		{token.YIELD, "yield"},
 		{token.NEWLINE, "\n"},
+		{token.GLOBAL, "$foo"},
+		{token.SEMICOLON, ";"},
+		{token.NEWLINE, "\n"},
+		{token.GLOBAL, "$Foo"},
+		{token.NEWLINE, "\n"},
+		{token.GLOBAL, "$@"},
+		{token.NEWLINE, "\n"},
+		{token.GLOBAL, "$a"},
 		{token.EOF, ""},
 	}
 

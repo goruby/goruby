@@ -90,6 +90,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LBRACE, p.parseBlock)
 	p.registerPrefix(token.DO, p.parseBlock)
 	p.registerPrefix(token.YIELD, p.parseYield)
+	p.registerPrefix(token.GLOBAL, p.parseGlobal)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -107,7 +108,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.DOT, p.parseContextCallExpression)
 	p.registerInfix(token.SYMBOL, p.parseCallExpression)
 	p.registerInfix(token.RBRACKET, p.parseCallExpression)
-	p.registerInfix(token.ASSIGN, p.parseVariableAssignExpression)
+	p.registerInfix(token.ASSIGN, p.parseAssignment)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	return p
 }
@@ -247,13 +248,29 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	return leftExp
 }
 
-func (p *Parser) parseVariableAssignExpression(variable ast.Expression) ast.Expression {
-	ident, ok := variable.(*ast.Identifier)
-	if !ok {
-		msg := fmt.Errorf("could not parse variable assignment: expected identifier, got token '%T'", variable)
+func (p *Parser) parseAssignment(left ast.Expression) ast.Expression {
+	switch left := left.(type) {
+	case *ast.Identifier:
+		return p.parseVariableAssignExpression(left)
+	case *ast.Global:
+		return p.parseGlobalAssignment(left)
+	default:
+		msg := fmt.Errorf("could not parse assignment: unexpected lefthandside token '%T'", left)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
+}
+
+func (p *Parser) parseGlobalAssignment(global *ast.Global) ast.Expression {
+	assign := &ast.GlobalAssignment{
+		Name: global,
+	}
+	p.nextToken()
+	assign.Value = p.parseExpression(LOWEST)
+	return assign
+}
+
+func (p *Parser) parseVariableAssignExpression(ident *ast.Identifier) ast.Expression {
 	variableExp := &ast.VariableAssignment{
 		Name: ident,
 	}
@@ -268,6 +285,10 @@ func (p *Parser) parseNilLiteral() ast.Expression {
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+func (p *Parser) parseGlobal() ast.Expression {
+	return &ast.Global{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) parseSelf() ast.Expression {

@@ -201,7 +201,7 @@ To run the command as one off run `go run main.go`.
 - [ ] procs `->`
 - [ ] variables
 	- [x] variable assignments
-	- [ ] globals
+	- [x] globals
 - [ ] operators
 	- [x] `+`
 	- [x] `-`
@@ -248,19 +248,19 @@ To run the command as one off run `go run main.go`.
 	- [ ] class variables
 	- [x] class methods
 	- [x] instance methods
-	- [ ] method overrides
+	- [x] method overrides
 	- [ ] private
 	- [ ] protected
 	- [ ] public
 	- [x] inheritance
 	- [ ] constructors
 	- [x] new
-	- [ ] `self`
+	- [x] `self`
 	- [ ] singleton classes (also known as the metaclass or eigenclass) `class << self`
 	- [ ] assigment methods
 	- [ ] self defined classes
 	- [ ] self defined classes with inheritance
 - [x] modules
-- [ ] object main
+- [x] object main
 - [x] comments '#'
 

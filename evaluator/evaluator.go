@@ -45,6 +45,12 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return self, nil
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
+	case *ast.Global:
+		val, ok := env.Get(node.Value)
+		if !ok {
+			return object.NIL, nil
+		}
+		return val, nil
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}, nil
 	case *ast.SymbolLiteral:
@@ -83,6 +89,13 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			return nil, err
 		}
 		env.Set(node.Name.Value, val)
+		return val, nil
+	case *ast.GlobalAssignment:
+		val, err := Eval(node.Value, env)
+		if err != nil {
+			return nil, err
+		}
+		env.SetGlobal(node.Name.Value, val)
 		return val, nil
 	case *ast.ModuleExpression:
 		module, ok := env.Get(node.Name.Value)

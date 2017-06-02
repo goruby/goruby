@@ -115,6 +115,32 @@ func (bs *BlockStatement) String() string {
 	return out.String()
 }
 
+// GlobalAssignment represents a global assignment
+type GlobalAssignment struct {
+	Name  *Global
+	Value Expression
+}
+
+func (v *GlobalAssignment) String() string {
+	var out bytes.Buffer
+	out.WriteString(v.Name.String())
+	out.WriteString(" = ")
+	if v.Value != nil {
+		val := v.Value.String()
+		hasParens := strings.HasPrefix(val, "(") && strings.HasSuffix(val, ")")
+		_, isLiteral := v.Value.(literal)
+		if !isLiteral && !hasParens {
+			val = "(" + val + ")"
+		}
+		out.WriteString(val)
+	}
+	return out.String()
+}
+func (v *GlobalAssignment) expressionNode() {}
+
+// TokenLiteral returns the literal of the Name token
+func (v *GlobalAssignment) TokenLiteral() string { return v.Name.Token.Literal }
+
 // VariableAssignment represents a variable assignment
 type VariableAssignment struct {
 	Name  *Identifier
@@ -192,6 +218,19 @@ func (i *Identifier) IsConstant() bool { return i.Token.Type == token.CONST }
 
 // TokenLiteral returns the literal of the token.IDENT token
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+
+// Global represents a global in the AST
+type Global struct {
+	Token token.Token // the token.GLOBAL token
+	Value string
+}
+
+func (g *Global) String() string  { return g.Value }
+func (g *Global) expressionNode() {}
+func (g *Global) literalNode()    {}
+
+// TokenLiteral returns the literal of the token.GLOBAL token
+func (g *Global) TokenLiteral() string { return g.Token.Literal }
 
 // IntegerLiteral represents an integer in the AST
 type IntegerLiteral struct {

@@ -45,7 +45,7 @@ func Walk(v Visitor, node Node) {
 	// of the corresponding node types in ast.go)
 	switch n := node.(type) {
 	// Expressions
-	case *Identifier, *IntegerLiteral, *StringLiteral, *SymbolLiteral, *Boolean:
+	case *Identifier, *Global, *IntegerLiteral, *StringLiteral, *SymbolLiteral, *Boolean:
 		// nothing to do
 
 	case *FunctionLiteral:
@@ -80,6 +80,10 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Expression)
 
 	case *VariableAssignment:
+		Walk(v, n.Name)
+		Walk(v, n.Value)
+
+	case *GlobalAssignment:
 		Walk(v, n.Name)
 		Walk(v, n.Value)
 
