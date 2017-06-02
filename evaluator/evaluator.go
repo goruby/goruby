@@ -334,9 +334,16 @@ func evalIndexExpression(left, index object.RubyObject) (object.RubyObject, erro
 func evalArrayIndexExpression(array, index object.RubyObject) object.RubyObject {
 	arrayObject := array.(*object.Array)
 	idx := index.(*object.Integer).Value
-	max := int64(len(arrayObject.Elements) - 1)
-	if idx < 0 || idx > max {
+	maxNegative := -int64(len(arrayObject.Elements))
+	maxPositive := maxNegative*-1 - 1
+	if idx > 0 && idx > maxPositive {
 		return object.NIL
+	}
+	if idx < 0 && idx < maxNegative {
+		return object.NIL
+	}
+	if idx < 0 {
+		return arrayObject.Elements[len(arrayObject.Elements)+int(idx)]
 	}
 	return arrayObject.Elements[idx]
 }
