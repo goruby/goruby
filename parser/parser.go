@@ -493,18 +493,25 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 }
 
 func (p *Parser) parseParameters(startToken, endToken token.Type) []*ast.Identifier {
+	hasDelimiters := false
 	if p.peekTokenIs(startToken) {
+		hasDelimiters = true
 		p.accept(startToken)
 	}
 
 	identifiers := []*ast.Identifier{}
 
-	if p.peekTokenIs(endToken) {
+	if !hasDelimiters && p.peekTokenIs(endToken) {
+		p.peekError(token.NEWLINE, token.SEMICOLON)
+		return nil
+	}
+
+	if hasDelimiters && p.peekTokenIs(endToken) {
 		p.accept(endToken)
 		return identifiers
 	}
 
-	if p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
+	if !hasDelimiters && p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
 		return identifiers
 	}
 
@@ -520,7 +527,12 @@ func (p *Parser) parseParameters(startToken, endToken token.Type) []*ast.Identif
 		identifiers = append(identifiers, ident)
 	}
 
-	if p.peekTokenIs(endToken) {
+	if !hasDelimiters && p.peekTokenIs(endToken) {
+		p.peekError(endToken)
+		return nil
+	}
+
+	if hasDelimiters && p.peekTokenIs(endToken) {
 		p.accept(endToken)
 	}
 
@@ -583,6 +595,7 @@ func (p *Parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 		p.nextToken()
 		contextCallExpression.Arguments = p.parseExpressionList(token.RPAREN)
 		if p.peekTokenOneOf(token.LBRACE, token.DO) {
+			p.acceptOneOf(token.LBRACE, token.DO)
 			contextCallExpression.Block = p.parseBlock().(*ast.BlockExpression)
 		}
 		return contextCallExpression

@@ -28,6 +28,7 @@ var kernelMethodSet = map[string]RubyMethod{
 	"require":           withArity(1, privateMethod(kernelRequire)),
 	"extend":            publicMethod(kernelExtend),
 	"block_given?":      withArity(0, privateMethod(kernelBlockGiven)),
+	"tap":               publicMethod(kernelTap),
 }
 
 func kernelPuts(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -200,4 +201,19 @@ func kernelBlockGiven(context CallContext, args ...RubyObject) (RubyObject, erro
 		return FALSE, nil
 	}
 	return TRUE, nil
+}
+
+func kernelTap(context CallContext, args ...RubyObject) (RubyObject, error) {
+	block, remainingArgs, ok := extractBlockFromArgs(args)
+	if !ok {
+		return nil, NewNoBlockGivenLocalJumpError()
+	}
+	if len(remainingArgs) != 0 {
+		return nil, NewWrongNumberOfArgumentsError(0, 1)
+	}
+	_, err := block.Call(context, context.Receiver())
+	if err != nil {
+		return nil, err
+	}
+	return context.Receiver(), nil
 }

@@ -46,4 +46,14 @@ func (a *Array) Class() RubyClass { return arrayClass }
 
 var arrayClassMethods = map[string]RubyMethod{}
 
-var arrayMethods = map[string]RubyMethod{}
+var arrayMethods = map[string]RubyMethod{
+	"push": publicMethod(arrayPush),
+}
+
+func arrayPush(context CallContext, args ...RubyObject) (RubyObject, error) {
+	array, _ := context.Receiver().(*Array)
+	for _, item := range args {
+		array.Elements = append(array.Elements, item)
+	}
+	return array, nil
+}

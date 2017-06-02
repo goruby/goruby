@@ -110,7 +110,7 @@ func (f *Function) Class() RubyClass { return nil }
 
 // Call implements the RubyMethod interface. It evaluates f.Body and returns its result
 func (f *Function) Call(context CallContext, args ...RubyObject) (RubyObject, error) {
-	block, arguments, _ := f.extractBlockFromArgs(args)
+	block, arguments, _ := extractBlockFromArgs(args)
 	if len(arguments) != len(f.Parameters) {
 		return nil, NewWrongNumberOfArgumentsError(len(f.Parameters), len(arguments))
 	}
@@ -144,18 +144,6 @@ func (f *Function) unwrapReturnValue(obj RubyObject) RubyObject {
 		return returnValue.Value
 	}
 	return obj
-}
-
-func (f *Function) extractBlockFromArgs(args []RubyObject) (*Proc, []RubyObject, bool) {
-	if len(args) == 0 {
-		return nil, args, false
-	}
-	block, ok := args[len(args)-1].(*Proc)
-	if !ok {
-		return nil, args, false
-	}
-	args = args[:len(args)-1]
-	return block, args, true
 }
 
 // Self represents the value associated to `self`. It acts as a wrapper around

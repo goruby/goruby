@@ -1059,6 +1059,146 @@ func TestFunctionLiteralParsing(t *testing.T) {
 	}
 }
 
+func TestBlockExpressionParsing(t *testing.T) {
+	tests := []struct {
+		input         string
+		parameters    []string
+		bodyStatement string
+	}{
+		{
+			`do |x, y|
+          x + y
+          end`,
+			[]string{"x", "y"},
+			"(x + y)",
+		},
+		{
+			`do
+          x + y
+          end`,
+			[]string{},
+			"(x + y)",
+		},
+		{
+			"do ; x + y; end",
+			[]string{},
+			"(x + y)",
+		},
+		{
+			"do |x, y|; x + y; end",
+			[]string{"x", "y"},
+			"(x + y)",
+		},
+		{
+			"do |x, y|; x + y; end",
+			[]string{"x", "y"},
+			"(x + y)",
+		},
+		{
+			`{ |x, y|
+			  x + y
+			  }`,
+			[]string{"x", "y"},
+			"(x + y)",
+		},
+		{
+			`{
+          x + y
+          }`,
+			[]string{},
+			"(x + y)",
+		},
+		{
+			"{ x + y; }",
+			[]string{},
+			"(x + y)",
+		},
+		{
+			"{ |x, y|; x + y; }",
+			[]string{"x", "y"},
+			"(x + y)",
+		},
+		{
+			"{ |x, y|; x + y; }",
+			[]string{"x", "y"},
+			"(x + y)",
+		},
+		{
+			"{ |x, y|; x.add y }",
+			[]string{"x", "y"},
+			"x.add(y)",
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Body does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		block, ok := stmt.Expression.(*ast.BlockExpression)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not ast.FunctionLiteral. got=%T",
+				stmt.Expression,
+			)
+		}
+
+		if len(block.Parameters) != len(tt.parameters) {
+			t.Fatalf(
+				"block literal parameters wrong. want %d, got=%d\n",
+				len(tt.parameters),
+				len(block.Parameters),
+			)
+		}
+
+		for i, param := range block.Parameters {
+			testLiteralExpression(t, param, tt.parameters[i])
+		}
+
+		if len(block.Body.Statements) != 1 {
+			t.Fatalf(
+				"block.Body.Statements has not 1 statements. got=%d\n",
+				len(block.Body.Statements),
+			)
+		}
+
+		bodyStmt, ok := block.Body.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"block body stmt is not ast.ExpressionStatement. got=%T",
+				block.Body.Statements[0],
+			)
+		}
+
+		statement := bodyStmt.String()
+		if statement != tt.bodyStatement {
+			t.Logf(
+				"Expected body statement to equal\n%q\n\tgot\n%q\n",
+				tt.bodyStatement,
+				statement,
+			)
+			t.Fail()
+		}
+	}
+}
+
 func TestFunctionParameterParsing(t *testing.T) {
 	tests := []struct {
 		input          string
@@ -1091,6 +1231,49 @@ func TestFunctionParameterParsing(t *testing.T) {
 
 		for i, ident := range tt.expectedParams {
 			testLiteralExpression(t, function.Parameters[i], ident)
+		}
+	}
+}
+
+func TestBlockParameterParsing(t *testing.T) {
+	tests := []struct {
+		input          string
+		expectedParams []string
+	}{
+		{input: "{}", expectedParams: []string{}},
+		{input: "{ || }", expectedParams: []string{}},
+		{input: "{ |x| }", expectedParams: []string{"x"}},
+		{input: "{ |x, y, z| }", expectedParams: []string{"x", "y", "z"}},
+		{input: `do
+        end`, expectedParams: []string{}},
+		{input: `do ||
+        end`, expectedParams: []string{}},
+		{input: `do |x|
+        end`, expectedParams: []string{"x"}},
+		{input: `do |x, y, z|
+        end`, expectedParams: []string{"x", "y", "z"}},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program, err := p.ParseProgram()
+		t.Logf(tt.input)
+		checkParserErrors(t, err)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		block := stmt.Expression.(*ast.BlockExpression)
+
+		if len(block.Parameters) != len(tt.expectedParams) {
+			t.Errorf(
+				"length parameters wrong. want %d, got=%d\n",
+				len(tt.expectedParams),
+				len(block.Parameters),
+			)
+		}
+
+		for i, ident := range tt.expectedParams {
+			testLiteralExpression(t, block.Parameters[i], ident)
 		}
 	}
 }
@@ -2073,7 +2256,6 @@ func TestParsingClassExpressions(t *testing.T) {
 	l := lexer.New(input)
 	p := New(l)
 	program, err := p.ParseProgram()
-	fmt.Printf("Program: %s\n", program)
 	checkParserErrors(t, err)
 
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
