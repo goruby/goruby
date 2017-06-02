@@ -199,6 +199,9 @@ func startLexer(l *Lexer) StateFn {
 		return startLexer
 	case '#':
 		return commentLexer
+	case '|':
+		l.emit(token.PIPE)
+		return startLexer
 
 	default:
 		if isLetter(r) {

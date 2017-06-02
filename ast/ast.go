@@ -150,8 +150,32 @@ func (s *Self) String() string  { return s.Token.Literal }
 func (s *Self) expressionNode() {}
 func (s *Self) literalNode()    {}
 
-// TokenLiteral returns the literal of the token.IDENT token
+// TokenLiteral returns the literal of the token.SELF token
 func (s *Self) TokenLiteral() string { return s.Token.Literal }
+
+// YieldExpression represents self in the current context in the program
+type YieldExpression struct {
+	Token     token.Token  // the token.YIELD token
+	Arguments []Expression // The arguments to yield
+}
+
+func (y *YieldExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(y.Token.Literal)
+	if len(y.Arguments) != 0 {
+		args := []string{}
+		for _, a := range y.Arguments {
+			args = append(args, a.String())
+		}
+		out.WriteString(" ")
+		out.WriteString(strings.Join(args, ", "))
+	}
+	return out.String()
+}
+func (y *YieldExpression) expressionNode() {}
+
+// TokenLiteral returns the literal of the token.YIELD token
+func (y *YieldExpression) TokenLiteral() string { return y.Token.Literal }
 
 // An Identifier represents an identifier in the program
 type Identifier struct {
@@ -335,10 +359,11 @@ func (ie *IndexExpression) String() string {
 
 // A ContextCallExpression represents a method call on a given Context
 type ContextCallExpression struct {
-	Token     token.Token  // The '.' token
-	Context   Expression   // The lefthandside expression
-	Function  *Identifier  // The function to call
-	Arguments []Expression // The function arguments
+	Token     token.Token      // The '.' token
+	Context   Expression       // The lefthandside expression
+	Function  *Identifier      // The function to call
+	Arguments []Expression     // The function arguments
+	Block     *BlockExpression // The function block
 }
 
 func (ce *ContextCallExpression) expressionNode() {}
@@ -359,6 +384,46 @@ func (ce *ContextCallExpression) String() string {
 	out.WriteString("(")
 	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
+	if ce.Block != nil {
+		out.WriteString("\n")
+		out.WriteString(ce.Block.String())
+	}
+	return out.String()
+}
+
+// A BlockExpression represents a Ruby block
+type BlockExpression struct {
+	Token      token.Token     // token.DO or token.LBRACE
+	Parameters []*Identifier   // the block parameters
+	Body       *BlockStatement // the block body
+}
+
+func (b *BlockExpression) expressionNode() {}
+
+// TokenLiteral returns the literal from the Token
+func (b *BlockExpression) TokenLiteral() string { return b.Token.Literal }
+
+// String returns a string representation of the block statement
+func (b *BlockExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(b.Token.Literal)
+	if len(b.Parameters) != 0 {
+		args := []string{}
+		for _, a := range b.Parameters {
+			args = append(args, a.String())
+		}
+		out.WriteString("|")
+		out.WriteString(strings.Join(args, ", "))
+		out.WriteString("|")
+		out.WriteString("\n")
+	}
+	out.WriteString(b.Body.String())
+	out.WriteString("\n")
+	if b.Token.Type == token.LBRACE {
+		out.WriteString("}")
+	} else {
+		out.WriteString("end")
+	}
 	return out.String()
 }
 
@@ -381,7 +446,7 @@ func (m *ModuleExpression) String() string {
 	out.WriteString("\n")
 	out.WriteString(m.Body.String())
 	out.WriteString("\n")
-	out.WriteString(" end")
+	out.WriteString("end")
 	return out.String()
 }
 

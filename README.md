@@ -101,10 +101,11 @@ To run the command as one off run `go run main.go`.
 	- [x] return keyword
 	- [ ] default values for parameters
 	- [ ] keyword arguments
-	- [ ] block arguments
+	- [x] block arguments
 - [x] function calls
 	- [x] with parens
-	- [x] without parens
+	- [x] without parens	
+	- [x] with block arguments
 - [ ] conditionals
 	- [x] if
 	- [x] if/else
@@ -237,7 +238,7 @@ To run the command as one off run `go run main.go`.
 		- [ ] `>>=`
 		- [ ] `||=`
 		- [ ] `&&=`
-- [ ] function blocks (procs)
+- [x] function blocks (procs)
 - [x] constants
 - [ ] scope operator `::`
 - [ ] classes

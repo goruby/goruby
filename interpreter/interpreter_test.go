@@ -97,7 +97,7 @@ func TestSelfAfterModuleDefinition(t *testing.T) {
 		t.Fail()
 	}
 
-	expected := &object.Self{&object.Object{}, "main"}
+	expected := &object.Self{RubyObject: &object.Object{}, Name: "main"}
 	if !reflect.DeepEqual(expected, evaluated) {
 		t.Logf("Expected self to equal\n%+#v\n\tgot\n%+#v\n", expected, evaluated)
 		t.Fail()

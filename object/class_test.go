@@ -309,7 +309,7 @@ func TestClassNew(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedReceiver := &Self{instance, "Foo"}
+	expectedReceiver := &Self{RubyObject: instance, Name: "Foo"}
 	if !reflect.DeepEqual(expectedReceiver, initializeContext.Receiver()) {
 		t.Logf(
 			"Expected initialize context receiver to equal\n%+#v\n\tgot\n%+#v\n",

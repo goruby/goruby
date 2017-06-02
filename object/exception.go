@@ -39,6 +39,9 @@ var (
 	notImplementedErrorClass RubyClassObject = newClass(
 		"NotImplementedError", scriptErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &NotImplementedError{} },
 	)
+	localJumpErrorClass RubyClassObject = newClass(
+		"LocalJumpError", standardErrorClass, nil, nil, func(RubyClassObject) RubyObject { return &LocalJumpError{} },
+	)
 )
 
 func init() {
@@ -240,6 +243,7 @@ func (e *NoMethodError) Inspect() string { return formatException(e, e.Message) 
 // Class returns noMethodErrorClass
 func (e *NoMethodError) Class() RubyClass { return noMethodErrorClass }
 
+// NewWrongArgumentTypeError returns a TypeError with the default message for wrong arugument type errors
 func NewWrongArgumentTypeError(expected, actual RubyObject) *TypeError {
 	return &TypeError{
 		&exception{
@@ -386,3 +390,22 @@ func (e *NotImplementedError) Inspect() string { return formatException(e, e.Mes
 
 // Class returns notImplementedErrorClass
 func (e *NotImplementedError) Class() RubyClass { return notImplementedErrorClass }
+
+// NewNoBlockGivenLocalJumpError returns a LocalJumpError with the default message for missing blocks
+func NewNoBlockGivenLocalJumpError() *LocalJumpError {
+	return &LocalJumpError{&exception{Message: "no block given (yield)"}}
+}
+
+// LocalJumpError represents an error for a not supported jump
+type LocalJumpError struct {
+	*exception
+}
+
+// Type returns EXCEPTION_OBJ
+func (e *LocalJumpError) Type() Type { return EXCEPTION_OBJ }
+
+// Inspect returns a string starting with the exception class name, followed by the message
+func (e *LocalJumpError) Inspect() string { return formatException(e, e.Message) }
+
+// Class returns notImplementedErrorClass
+func (e *LocalJumpError) Class() RubyClass { return notImplementedErrorClass }

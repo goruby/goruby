@@ -110,10 +110,11 @@ func (f *Function) Class() RubyClass { return nil }
 
 // Call implements the RubyMethod interface. It evaluates f.Body and returns its result
 func (f *Function) Call(context CallContext, args ...RubyObject) (RubyObject, error) {
-	if len(args) != len(f.Parameters) {
-		return nil, NewWrongNumberOfArgumentsError(len(f.Parameters), len(args))
+	block, arguments, _ := f.extractBlockFromArgs(args)
+	if len(arguments) != len(f.Parameters) {
+		return nil, NewWrongNumberOfArgumentsError(len(f.Parameters), len(arguments))
 	}
-	extendedEnv := f.extendFunctionEnv(args)
+	extendedEnv := f.extendFunctionEnv(context.Env(), arguments, block)
 	evaluated, err := context.Eval(f.Body, extendedEnv)
 	if err != nil {
 		return nil, err
@@ -126,8 +127,12 @@ func (f *Function) Visibility() MethodVisibility {
 	return f.MethodVisibility
 }
 
-func (f *Function) extendFunctionEnv(args []RubyObject) Environment {
+func (f *Function) extendFunctionEnv(contextEnv Environment, args []RubyObject, block *Proc) Environment {
+	contextSelf, _ := contextEnv.Get("self")
+	contextSelfObject := contextSelf.(*Self)
+	funcSelf := &Self{RubyObject: contextSelfObject.RubyObject, Name: contextSelfObject.Name, Block: block}
 	env := NewEnclosedEnvironment(f.Env)
+	env.Set("self", funcSelf)
 	for paramIdx, param := range f.Parameters {
 		env.Set(param.Value, args[paramIdx])
 	}
@@ -141,12 +146,25 @@ func (f *Function) unwrapReturnValue(obj RubyObject) RubyObject {
 	return obj
 }
 
+func (f *Function) extractBlockFromArgs(args []RubyObject) (*Proc, []RubyObject, bool) {
+	if len(args) == 0 {
+		return nil, args, false
+	}
+	block, ok := args[len(args)-1].(*Proc)
+	if !ok {
+		return nil, args, false
+	}
+	args = args[:len(args)-1]
+	return block, args, true
+}
+
 // Self represents the value associated to `self`. It acts as a wrapper around
 // the RubyObject and is just meant to indicate that the given object is
 // self in the given context.
 type Self struct {
-	RubyObject
-	Name string
+	RubyObject        // The encapsuled object acting as self
+	Block      *Proc  // the block given to the current execution binding
+	Name       string // The name of self in this context
 }
 
 // Type returns SELF

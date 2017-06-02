@@ -49,6 +49,10 @@ module Abc
 end
 class Abc
 end
+add { |x| x }
+add do |x|
+end
+yield
 `
 
 	tests := []struct {
@@ -179,6 +183,24 @@ end
 		{token.CONST, "Abc"},
 		{token.NEWLINE, "\n"},
 		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.IDENT, "add"},
+		{token.LBRACE, "{"},
+		{token.PIPE, "|"},
+		{token.IDENT, "x"},
+		{token.PIPE, "|"},
+		{token.IDENT, "x"},
+		{token.RBRACE, "}"},
+		{token.NEWLINE, "\n"},
+		{token.IDENT, "add"},
+		{token.DO, "do"},
+		{token.PIPE, "|"},
+		{token.IDENT, "x"},
+		{token.PIPE, "|"},
+		{token.NEWLINE, "\n"},
+		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.YIELD, "yield"},
 		{token.NEWLINE, "\n"},
 		{token.EOF, ""},
 	}

@@ -6,7 +6,7 @@ var classes = NewEnvironment()
 // and the Kernel functions
 func NewMainEnvironment() Environment {
 	env := classes.Clone()
-	env.Set("self", &Self{&Object{}, "main"})
+	env.Set("self", &Self{RubyObject: &Object{}, Name: "main"})
 	env.SetGlobal("$LOADED_FEATURES", NewArray())
 	return env
 }

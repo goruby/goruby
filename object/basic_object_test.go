@@ -18,8 +18,8 @@ func TestBasicObjectMethodMissing(t *testing.T) {
 func TestBasicObjectInitialize(t *testing.T) {
 	context := &callContext{
 		receiver: &Self{
-			&classInstance{class: basicObjectClass},
-			"BasicObject",
+			RubyObject: &classInstance{class: basicObjectClass},
+			Name:       "BasicObject",
 		},
 	}
 

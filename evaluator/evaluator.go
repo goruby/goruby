@@ -59,7 +59,16 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			Body:       body,
 		}
 		object.AddMethod(context, node.Name.Value, function)
-		return &object.Symbol{node.Name.Value}, nil
+		return &object.Symbol{Value: node.Name.Value}, nil
+	case *ast.BlockExpression:
+		params := node.Parameters
+		body := node.Body
+		block := &object.Proc{
+			Parameters: params,
+			Body:       body,
+			Env:        env,
+		}
+		return block, nil
 	case *ast.ArrayLiteral:
 		elements, err := evalExpressions(node.Elements, env)
 		if err != nil {
@@ -78,7 +87,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 	case *ast.ModuleExpression:
 		module := object.NewModule(node.Name.Value, nil)
 		moduleEnv := object.NewEnclosedEnvironment(env)
-		moduleEnv.Set("self", &object.Self{module, node.Name.Value})
+		moduleEnv.Set("self", &object.Self{RubyObject: module, Name: node.Name.Value})
 		bodyReturn, err := Eval(node.Body, moduleEnv)
 		if err != nil {
 			return nil, err
@@ -97,7 +106,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			class = object.NewClass(node.Name.Value, objectClass.(object.RubyClassObject), nil, nil)
 		}
 		classEnv := object.NewEnclosedEnvironment(env)
-		classEnv.Set("self", &object.Self{class, node.Name.Value})
+		classEnv.Set("self", &object.Self{RubyObject: class, Name: node.Name.Value})
 		bodyReturn, err := Eval(node.Body, classEnv)
 		if err != nil {
 			return nil, err
@@ -118,8 +127,27 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err != nil {
 			return nil, err
 		}
+		if node.Block != nil {
+			block, err := Eval(node.Block, env)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, block)
+		}
 		callContext := &callContext{object.NewCallContext(env, context)}
 		return object.Send(callContext, node.Function.Value, args...)
+	case *ast.YieldExpression:
+		selfObject, _ := env.Get("self")
+		self := selfObject.(*object.Self)
+		if self.Block == nil {
+			return nil, object.NewNoBlockGivenLocalJumpError()
+		}
+		args, err := evalExpressions(node.Arguments, env)
+		if err != nil {
+			return nil, err
+		}
+		callContext := &callContext{object.NewCallContext(env, self)}
+		return self.Block.Call(callContext, args...)
 	case *ast.IndexExpression:
 		left, err := Eval(node.Left, env)
 		if err != nil {

@@ -62,6 +62,9 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Function)
 		walkExprList(v, n.Arguments)
 
+	case *YieldExpression:
+		walkExprList(v, n.Arguments)
+
 	case *PrefixExpression:
 		Walk(v, n.Right)
 
