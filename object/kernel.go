@@ -5,6 +5,7 @@ import (
 	"go/token"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -155,7 +156,19 @@ func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) 
 
 	file, err := ioutil.ReadFile(filename)
 	if os.IsNotExist(err) {
-		return nil, NewLoadError(name.Value)
+		found := false
+		loadPath, _ := context.Env().Get("$:")
+		for _, p := range loadPath.(*Array).Elements {
+			newPath := path.Join(p.(*String).Value, filename)
+			file, err = ioutil.ReadFile(newPath)
+			if !os.IsNotExist(err) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, NewNoSuchFileLoadError(name.Value)
+		}
 	}
 
 	prog, err := parser.ParseFile(token.NewFileSet(), filename, file, 0)

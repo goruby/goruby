@@ -278,6 +278,10 @@ func lexString(l *Lexer) StateFn {
 func lexGlobal(l *Lexer) StateFn {
 	r := l.next()
 
+	if r == '.' {
+		return l.errorf("Illegal character at %d: '%c'", l.pos, r)
+	}
+
 	if isExpressionDelimiter(r) {
 		return l.errorf("Illegal character: '%c'", r)
 	}
@@ -286,7 +290,7 @@ func lexGlobal(l *Lexer) StateFn {
 		return l.errorf("Illegal character: '%c'", r)
 	}
 
-	for !isWhitespace(r) && !isExpressionDelimiter(r) {
+	for !isWhitespace(r) && !isExpressionDelimiter(r) && r != '.' {
 		r = l.next()
 	}
 	l.backup()

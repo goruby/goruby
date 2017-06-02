@@ -541,6 +541,7 @@ func TestKernelRequire(t *testing.T) {
 	})
 	t.Run("file does not exist", func(t *testing.T) {
 		env := NewEnvironment()
+		env.SetGlobal("$:", NewArray())
 		eval := func(node ast.Node, env Environment) (RubyObject, error) {
 			return TRUE, nil
 		}
@@ -558,7 +559,7 @@ func TestKernelRequire(t *testing.T) {
 			t.Fail()
 		}
 
-		expectedErr := NewLoadError("file/not/exist")
+		expectedErr := NewNoSuchFileLoadError("file/not/exist")
 		if !reflect.DeepEqual(expectedErr, err) {
 			t.Logf("Expected error to equal %v, got %v", expectedErr, err)
 			t.Fail()

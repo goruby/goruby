@@ -37,6 +37,7 @@ end
 :"sym"
 :'sym'
 .
+:dotAfter.
 
 def nil?
 end
@@ -59,6 +60,7 @@ A::B
 =>
 $foo;
 $Foo
+$dotAfter.
 $@
 $a`
 
@@ -162,6 +164,10 @@ $a`
 		{token.NEWLINE, "\n"},
 		{token.DOT, "."},
 		{token.NEWLINE, "\n"},
+		{token.COLON, ":"},
+		{token.IDENT, "dotAfter"},
+		{token.DOT, "."},
+		{token.NEWLINE, "\n"},
 		{token.NEWLINE, "\n"},
 		{token.DEF, "def"},
 		{token.IDENT, "nil?"},
@@ -226,6 +232,9 @@ $a`
 		{token.SEMICOLON, ";"},
 		{token.NEWLINE, "\n"},
 		{token.GLOBAL, "$Foo"},
+		{token.NEWLINE, "\n"},
+		{token.GLOBAL, "$dotAfter"},
+		{token.DOT, "."},
 		{token.NEWLINE, "\n"},
 		{token.GLOBAL, "$@"},
 		{token.NEWLINE, "\n"},

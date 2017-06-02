@@ -315,12 +315,12 @@ func (e *ScriptError) Inspect() string { return formatException(e, e.Message) }
 // Class returns scriptErrorClass
 func (e *ScriptError) Class() RubyClass { return scriptErrorClass }
 
-// NewLoadError returns a new LoadError with the default message
-func NewLoadError(filepath string) *LoadError {
+// NewNoSuchFileLoadError returns a new LoadError with the default message
+func NewNoSuchFileLoadError(filepath string) *LoadError {
 	return &LoadError{
 		&exception{
 			Message: fmt.Sprintf(
-				"no such file to load -- %s",
+				"cannot load such file -- %s",
 				filepath,
 			),
 		},

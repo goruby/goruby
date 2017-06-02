@@ -2,6 +2,8 @@ package interpreter
 
 import (
 	"go/token"
+	"log"
+	"os"
 
 	"github.com/goruby/goruby/evaluator"
 	"github.com/goruby/goruby/object"
@@ -16,7 +18,16 @@ type Interpreter interface {
 // New returns an Interpreter ready to use and with the environment set to
 // object.NewMainEnvironment()
 func New() Interpreter {
-	return &interpreter{environment: object.NewMainEnvironment()}
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Printf("Cannot get working directory: %s\n", err)
+	}
+	env := object.NewMainEnvironment()
+	loadPath, _ := env.Get("$:")
+	loadPathArr := loadPath.(*object.Array)
+	loadPathArr.Elements = append(loadPathArr.Elements, &object.String{Value: cwd})
+	env.SetGlobal("$:", loadPathArr)
+	return &interpreter{environment: env}
 }
 
 type interpreter struct {
