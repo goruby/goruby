@@ -11,7 +11,6 @@ import (
 // Interpreter defines the methods of an interpreter
 type Interpreter interface {
 	Interpret(string) (object.RubyObject, error)
-	SetEnvironment(object.Environment)
 }
 
 // New returns an Interpreter ready to use and with the environment set to
@@ -30,10 +29,6 @@ func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
 		return nil, object.NewSyntaxError(err)
 	}
 	return evaluator.Eval(node, i.environment)
-}
-
-func (i *interpreter) SetEnvironment(env object.Environment) {
-	i.environment = env
 }
 
 func (i *interpreter) parse(input string) (ast.Node, error) {

@@ -10,17 +10,16 @@ import (
 	"github.com/goruby/goruby/parser"
 )
 
-const PROMPT = "girb:%03d> "
+const prompt = "girb:%03d> "
 
+// Start starts the repl for the given reader in and writes its results to out.
 func Start(in io.Reader, out chan<- string) {
 	scanner := bufio.NewScanner(in)
 	counter := 1
-	env := object.NewMainEnvironment()
 	interpreter := interpreter.New()
-	interpreter.SetEnvironment(env)
 	var buffer string
 	for {
-		out <- fmt.Sprintf(PROMPT, counter)
+		out <- fmt.Sprintf(prompt, counter)
 		counter++
 		scanned := scanner.Scan()
 		if !scanned {
