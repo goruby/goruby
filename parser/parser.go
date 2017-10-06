@@ -15,41 +15,41 @@ import (
 // Possible precendece values
 const (
 	_ int = iota
-	LOWEST
-	BLOCKDO     // do
-	BLOCKBRACES // { |x| }
-	EQUALS      // ==
-	LESSGREATER // > or <
-	ASSIGNMENT  // x = 5
-	SUM         // + or -
-	PRODUCT     // * or /
-	PREFIX      // -X or !X
-	CALL        // myFunction(X)
-	CONTEXT     // foo.myFunction(X)
-	INDEX       // array[index]
-	SCOPE       // A::B
+	precLowest
+	precBlockDo     // do
+	precBlockBraces // { |x| }
+	precEquals      // ==
+	precLessGreater // > or <
+	precAssignment  // x = 5
+	precSum         // + or -
+	precProduct     // * or /
+	precPrefix      // -X or !X
+	precCall        // myFunction(X)
+	precContext     // foo.myFunction(X)
+	precIndex       // array[index]
+	precScope       // A::B
 )
 
 var precedences = map[token.Type]int{
-	token.EQ:       EQUALS,
-	token.NOTEQ:    EQUALS,
-	token.LT:       LESSGREATER,
-	token.GT:       LESSGREATER,
-	token.PLUS:     SUM,
-	token.MINUS:    SUM,
-	token.SLASH:    PRODUCT,
-	token.ASTERISK: PRODUCT,
-	token.ASSIGN:   ASSIGNMENT,
-	token.LPAREN:   CALL,
-	token.IDENT:    CALL,
-	token.INT:      CALL,
-	token.STRING:   CALL,
-	token.SYMBOL:   CALL,
-	token.DOT:      CONTEXT,
-	token.LBRACKET: INDEX,
-	token.LBRACE:   BLOCKBRACES,
-	token.DO:       BLOCKDO,
-	token.SCOPE:    SCOPE,
+	token.EQ:       precEquals,
+	token.NOTEQ:    precEquals,
+	token.LT:       precLessGreater,
+	token.GT:       precLessGreater,
+	token.PLUS:     precSum,
+	token.MINUS:    precSum,
+	token.SLASH:    precProduct,
+	token.ASTERISK: precProduct,
+	token.ASSIGN:   precAssignment,
+	token.LPAREN:   precCall,
+	token.IDENT:    precCall,
+	token.INT:      precCall,
+	token.STRING:   precCall,
+	token.SYMBOL:   precCall,
+	token.DOT:      precContext,
+	token.LBRACKET: precIndex,
+	token.LBRACE:   precBlockBraces,
+	token.DO:       precBlockDo,
+	token.SCOPE:    precScope,
 }
 
 type (
@@ -213,7 +213,7 @@ func (p *parser) parseReturnStatement() *ast.ReturnStatement {
 		return stmt
 	}
 
-	stmt.ReturnValue = p.parseExpression(LOWEST)
+	stmt.ReturnValue = p.parseExpression(precLowest)
 
 	if !p.acceptOneOf(token.NEWLINE, token.SEMICOLON) {
 		return nil
@@ -223,7 +223,7 @@ func (p *parser) parseReturnStatement() *ast.ReturnStatement {
 
 func (p *parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
-	stmt.Expression = p.parseExpression(LOWEST)
+	stmt.Expression = p.parseExpression(precLowest)
 	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE) {
 		p.nextToken()
 	}
@@ -271,7 +271,7 @@ func (p *parser) parseGlobalAssignment(global *ast.Global) ast.Expression {
 		Name: global,
 	}
 	p.nextToken()
-	assign.Value = p.parseExpression(LOWEST)
+	assign.Value = p.parseExpression(precLowest)
 	return assign
 }
 
@@ -280,7 +280,7 @@ func (p *parser) parseVariableAssignExpression(ident *ast.Identifier) ast.Expres
 		Name: ident,
 	}
 	p.nextToken()
-	variableExp.Value = p.parseExpression(LOWEST)
+	variableExp.Value = p.parseExpression(precLowest)
 	return variableExp
 }
 
@@ -304,7 +304,7 @@ func (p *parser) parseScopedIdentifierExpression(outer ast.Expression) ast.Expre
 
 	scopedIdent := &ast.ScopedIdentifier{Token: p.curToken, Outer: ident}
 	p.nextToken()
-	scopedIdent.Inner = p.parseExpression(LOWEST)
+	scopedIdent.Inner = p.parseExpression(precLowest)
 	return scopedIdent
 }
 
@@ -391,7 +391,7 @@ func (p *parser) parsePrefixExpression() ast.Expression {
 		Operator: p.curToken.Literal,
 	}
 	p.nextToken()
-	expression.Right = p.parseExpression(PREFIX)
+	expression.Right = p.parseExpression(precPrefix)
 	return expression
 }
 
@@ -411,7 +411,7 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 	exp := &ast.IndexExpression{Token: p.curToken, Left: left}
 
 	p.nextToken()
-	exp.Index = p.parseExpression(LOWEST)
+	exp.Index = p.parseExpression(precLowest)
 
 	if !p.accept(token.RBRACKET) {
 		return nil
@@ -421,7 +421,7 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 
 func (p *parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
-	exp := p.parseExpression(LOWEST)
+	exp := p.parseExpression(precLowest)
 	if !p.accept(token.RPAREN) {
 		return nil
 	}
@@ -431,7 +431,7 @@ func (p *parser) parseGroupedExpression() ast.Expression {
 func (p *parser) parseIfExpression() ast.Expression {
 	expression := &ast.IfExpression{Token: p.curToken}
 	p.nextToken()
-	expression.Condition = p.parseExpression(LOWEST)
+	expression.Condition = p.parseExpression(precLowest)
 	if p.peekTokenIs(token.THEN) {
 		p.accept(token.THEN)
 	}
@@ -683,11 +683,11 @@ func (p *parser) parseExpressionList(end ...token.Type) []ast.Expression {
 		return list
 	}
 
-	list = append(list, p.parseExpression(LOWEST))
+	list = append(list, p.parseExpression(precLowest))
 
 	for p.peekTokenIs(token.COMMA) {
 		p.consume(token.COMMA)
-		list = append(list, p.parseExpression(LOWEST))
+		list = append(list, p.parseExpression(precLowest))
 	}
 
 	if p.peekTokenOneOf(end...) {
@@ -701,14 +701,14 @@ func (p *parser) peekPrecedence() int {
 	if p, ok := precedences[p.peekToken.Type]; ok {
 		return p
 	}
-	return LOWEST
+	return precLowest
 }
 
 func (p *parser) curPrecedence() int {
 	if p, ok := precedences[p.curToken.Type]; ok {
 		return p
 	}
-	return LOWEST
+	return precLowest
 }
 
 func (p *parser) currentTokenOneOf(types ...token.Type) bool {
