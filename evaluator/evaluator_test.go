@@ -1,10 +1,10 @@
 package evaluator
 
 import (
+	"go/token"
 	"reflect"
 	"testing"
 
-	"github.com/goruby/goruby/lexer"
 	"github.com/goruby/goruby/object"
 	"github.com/goruby/goruby/parser"
 )
@@ -942,9 +942,7 @@ func testEval(input string, context ...object.Environment) (object.RubyObject, e
 	if len(context) > 0 {
 		env = context[0]
 	}
-	l := lexer.New(input)
-	p := parser.New(l)
-	program, err := p.ParseProgram()
+	program, err := parser.ParseFile(token.NewFileSet(), "", input)
 	if err != nil {
 		return nil, object.NewSyntaxError(err)
 	}

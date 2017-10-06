@@ -2,12 +2,12 @@ package object
 
 import (
 	"fmt"
+	"go/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/goruby/goruby/lexer"
 	"github.com/goruby/goruby/parser"
 )
 
@@ -157,9 +157,8 @@ func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) 
 	if os.IsNotExist(err) {
 		return nil, NewLoadError(name.Value)
 	}
-	l := lexer.New(string(file))
-	p := parser.New(l)
-	prog, err := p.ParseProgram()
+
+	prog, err := parser.ParseFile(token.NewFileSet(), filename, file)
 	if err != nil {
 		return nil, NewSyntaxError(err)
 	}

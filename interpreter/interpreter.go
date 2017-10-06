@@ -1,9 +1,9 @@
 package interpreter
 
 import (
-	"github.com/goruby/goruby/ast"
+	"go/token"
+
 	"github.com/goruby/goruby/evaluator"
-	"github.com/goruby/goruby/lexer"
 	"github.com/goruby/goruby/object"
 	"github.com/goruby/goruby/parser"
 )
@@ -24,15 +24,9 @@ type interpreter struct {
 }
 
 func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
-	node, err := i.parse(input)
+	node, err := parser.ParseFile(token.NewFileSet(), "", input)
 	if err != nil {
 		return nil, object.NewSyntaxError(err)
 	}
 	return evaluator.Eval(node, i.environment)
-}
-
-func (i *interpreter) parse(input string) (ast.Node, error) {
-	l := lexer.New(input)
-	p := parser.New(l)
-	return p.ParseProgram()
 }
