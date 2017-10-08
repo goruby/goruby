@@ -139,7 +139,8 @@ func startLexer(l *Lexer) StateFn {
 			l.emit(token.SCOPE)
 			return startLexer
 		}
-		return lexSymbol
+		l.emit(token.COLON)
+		return startLexer
 	case '.':
 		l.emit(token.DOT)
 		return startLexer
@@ -268,18 +269,6 @@ func lexString(l *Lexer) StateFn {
 	l.emit(token.STRING)
 	l.next()
 	l.ignore()
-	return startLexer
-}
-
-func lexSymbol(l *Lexer) StateFn {
-	l.ignore()
-	r := l.next()
-
-	for isLetter(r) || isDigit(r) {
-		r = l.next()
-	}
-	l.backup()
-	l.emit(token.SYMBOL)
 	return startLexer
 }
 

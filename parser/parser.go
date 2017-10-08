@@ -28,6 +28,7 @@ const (
 	precContext     // foo.myFunction(X)
 	precIndex       // array[index]
 	precScope       // A::B
+	precSymbol      // :Symbol
 )
 
 var precedences = map[token.Type]int{
@@ -44,12 +45,12 @@ var precedences = map[token.Type]int{
 	token.IDENT:    precCall,
 	token.INT:      precCall,
 	token.STRING:   precCall,
-	token.SYMBOL:   precCall,
 	token.DOT:      precContext,
 	token.LBRACKET: precIndex,
 	token.LBRACE:   precBlockBraces,
 	token.DO:       precBlockDo,
 	token.SCOPE:    precScope,
+	token.COLON:    precSymbol,
 }
 
 type (
@@ -103,7 +104,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.DEF, p.parseFunctionLiteral)
-	p.registerPrefix(token.SYMBOL, p.parseSymbolLiteral)
+	p.registerPrefix(token.COLON, p.parseSymbolLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.NIL, p.parseNilLiteral)
 	p.registerPrefix(token.SELF, p.parseSelf)
@@ -128,7 +129,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.INT, p.parseCallExpression)
 	p.registerInfix(token.STRING, p.parseCallExpression)
 	p.registerInfix(token.DOT, p.parseContextCallExpression)
-	p.registerInfix(token.SYMBOL, p.parseCallExpression)
+	p.registerInfix(token.COLON, p.parseCallExpression)
 	p.registerInfix(token.RBRACKET, p.parseCallExpression)
 	p.registerInfix(token.ASSIGN, p.parseAssignment)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
@@ -461,7 +462,13 @@ func (p *parser) parseSymbolLiteral() ast.Expression {
 	if p.trace {
 		defer un(trace(p, "parseSymbolLiteral"))
 	}
-	return &ast.SymbolLiteral{Token: p.curToken, Value: p.curToken.Literal}
+	symbol := &ast.SymbolLiteral{Token: p.curToken}
+	if !p.acceptOneOf(token.IDENT) {
+		return nil
+	}
+	val := p.parseExpression(precLowest)
+	symbol.Value = val
+	return symbol
 }
 
 func (p *parser) parseArrayLiteral() ast.Expression {

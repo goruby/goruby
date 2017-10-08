@@ -2260,7 +2260,7 @@ func TestSymbolExpression(t *testing.T) {
 		t.Fatalf("exp not *ast.SymbolLiteral. got=%T", stmt.Expression)
 	}
 
-	if literal.Value != "symbol" {
+	if literal.Value.String() != "symbol" {
 		t.Errorf("literal.Value not %q. got=%q", "symbol", literal.Value)
 	}
 }
