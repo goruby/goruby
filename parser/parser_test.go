@@ -2250,18 +2250,37 @@ func TestStringLiteralExpression(t *testing.T) {
 }
 
 func TestSymbolExpression(t *testing.T) {
-	input := `:symbol;`
-	program, err := parseSource(input)
-	checkParserErrors(t, err)
-
-	stmt := program.Statements[0].(*ast.ExpressionStatement)
-	literal, ok := stmt.Expression.(*ast.SymbolLiteral)
-	if !ok {
-		t.Fatalf("exp not *ast.SymbolLiteral. got=%T", stmt.Expression)
+	tests := []struct {
+		input string
+		value string
+	}{
+		{
+			`:symbol;`,
+			"symbol",
+		},
+		{
+			`:"symbol";`,
+			"symbol",
+		},
+		{
+			`:'symbol';`,
+			"symbol",
+		},
 	}
 
-	if literal.Value.String() != "symbol" {
-		t.Errorf("literal.Value not %q. got=%q", "symbol", literal.Value)
+	for _, tt := range tests {
+		program, err := parseSource(tt.input)
+		checkParserErrors(t, err)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		literal, ok := stmt.Expression.(*ast.SymbolLiteral)
+		if !ok {
+			t.Fatalf("exp not *ast.SymbolLiteral. got=%T", stmt.Expression)
+		}
+
+		if literal.Value.String() != tt.value {
+			t.Errorf("literal.Value not %q. got=%q", tt.value, literal.Value)
+		}
 	}
 }
 

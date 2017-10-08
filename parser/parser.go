@@ -463,7 +463,7 @@ func (p *parser) parseSymbolLiteral() ast.Expression {
 		defer un(trace(p, "parseSymbolLiteral"))
 	}
 	symbol := &ast.SymbolLiteral{Token: p.curToken}
-	if !p.acceptOneOf(token.IDENT) {
+	if !p.acceptOneOf(token.IDENT, token.STRING) {
 		return nil
 	}
 	val := p.parseExpression(precLowest)

@@ -54,11 +54,21 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}, nil
 	case *ast.SymbolLiteral:
-		var value string
-		if ident, ok := node.Value.(*ast.Identifier); ok {
-			value = ident.Value
+		switch value := node.Value.(type) {
+		case *ast.Identifier:
+			return &object.Symbol{Value: value.Value}, nil
+		case *ast.StringLiteral:
+			str, err := Eval(value, env)
+			if err != nil {
+				return nil, err
+			}
+			if str, ok := str.(*object.String); ok {
+				return &object.Symbol{Value: str.Value}, nil
+			}
+			panic(fmt.Errorf("error while parsing SymbolLiteral: expected *object.String, got %T", str))
+		default:
+			return nil, object.NewSyntaxError(fmt.Errorf("malformed symbol AST: %T", value))
 		}
-		return &object.Symbol{Value: value}, nil
 	case *ast.FunctionLiteral:
 		params := node.Parameters
 		body := node.Body

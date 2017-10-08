@@ -34,6 +34,8 @@ end
 "foo bar"
 'foo bar'
 :sym
+:"sym"
+:'sym'
 .
 
 def nil?
@@ -150,6 +152,12 @@ $a`
 		{token.NEWLINE, "\n"},
 		{token.COLON, ":"},
 		{token.IDENT, "sym"},
+		{token.NEWLINE, "\n"},
+		{token.COLON, ":"},
+		{token.STRING, "sym"},
+		{token.NEWLINE, "\n"},
+		{token.COLON, ":"},
+		{token.STRING, "sym"},
 		{token.NEWLINE, "\n"},
 		{token.DOT, "."},
 		{token.NEWLINE, "\n"},
