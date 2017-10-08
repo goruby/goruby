@@ -187,9 +187,9 @@ To run the command as one off run `go run main.go`.
 - [ ] hashes
 - [ ] symbols
 	- [x] `:symbol`
-	- [ ] `:"symbol"`
+	- [x] `:"symbol"`
 	- [ ] `:"symbol"` with interpolation
-	- [ ] `:'symbol'`
+	- [x] `:'symbol'`
 	- [ ] `%s{symbol}`
 	- [ ] singleton symbols
 - [ ] regexp
