@@ -37,6 +37,8 @@ const (
 	NOTEQ // !=
 	operator_end
 
+	HASHROCKET // =>
+
 	// Delimiters
 
 	NEWLINE // \n
@@ -110,7 +112,8 @@ var tokens = [...]string{
 	RBRACKET: "]",
 	PIPE:     "|",
 
-	SCOPE: "::",
+	SCOPE:      "::",
+	HASHROCKET: "=>",
 
 	DEF:    "def",
 	SELF:   "self",
