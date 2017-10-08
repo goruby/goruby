@@ -603,7 +603,7 @@ func TestKernelRequire(t *testing.T) {
 			t.Fail()
 		}
 
-		expectedErr := "syntax error, Parsing errors:\n\texpected next token to be of type [END], got EOF instead\n"
+		expectedErr := "syntax error, Parsing errors:\n\texpected next token to be of type [end], got EOF instead\n"
 		if !reflect.DeepEqual(expectedErr, err.Error()) {
 			t.Logf("Expected error to equal\n%q\n\tgot\n%q", expectedErr, err.Error())
 			t.Fail()
