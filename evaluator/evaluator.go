@@ -54,7 +54,11 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}, nil
 	case *ast.SymbolLiteral:
-		return &object.Symbol{Value: node.Value}, nil
+		var value string
+		if ident, ok := node.Value.(*ast.Identifier); ok {
+			value = ident.Value
+		}
+		return &object.Symbol{Value: value}, nil
 	case *ast.FunctionLiteral:
 		params := node.Parameters
 		body := node.Body

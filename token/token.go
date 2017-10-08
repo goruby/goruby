@@ -20,7 +20,6 @@ const (
 	GLOBAL
 	INT
 	STRING
-	SYMBOL // :symbol
 	literal_end
 
 	// Operators
@@ -84,7 +83,6 @@ var tokens = [...]string{
 	GLOBAL: "GLOBAL",
 	INT:    "INT",
 	STRING: "STRING",
-	SYMBOL: "SYMBOL",
 
 	ASSIGN:   "=",
 	PLUS:     "+",

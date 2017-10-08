@@ -306,7 +306,7 @@ func (sl *StringLiteral) String() string       { return sl.Value }
 // SymbolLiteral represents a symbol within the AST
 type SymbolLiteral struct {
 	Token token.Token // the ':'
-	Value string
+	Value Expression
 }
 
 func (s *SymbolLiteral) expressionNode() {}
@@ -314,7 +314,7 @@ func (s *SymbolLiteral) literalNode()    {}
 
 // TokenLiteral returns the literal from token token.SYMBOL
 func (s *SymbolLiteral) TokenLiteral() string { return s.Token.Literal }
-func (s *SymbolLiteral) String() string       { return ":" + s.Token.Literal }
+func (s *SymbolLiteral) String() string       { return ":" + s.Value.String() }
 
 // IfExpression represents an if expression within the AST
 type IfExpression struct {
