@@ -148,6 +148,9 @@ func startLexer(l *Lexer) StateFn {
 		if l.peek() == '=' {
 			l.next()
 			l.emit(token.EQ)
+		} else if l.peek() == '>' {
+			l.next()
+			l.emit(token.HASHROCKET)
 		} else {
 			l.emit(token.ASSIGN)
 		}
