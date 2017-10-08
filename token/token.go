@@ -2,6 +2,7 @@ package token
 
 import (
 	"bytes"
+	"strconv"
 	"unicode"
 )
 
@@ -13,16 +14,17 @@ const (
 	EOF                 // end of input
 
 	// Identifier + literals
-
+	literal_beg
 	IDENT
 	CONST
 	GLOBAL
 	INT
 	STRING
 	SYMBOL // :symbol
+	literal_end
 
 	// Operators
-
+	operator_beg
 	ASSIGN   // =
 	PLUS     // +
 	MINUS    // -
@@ -34,6 +36,7 @@ const (
 	GT    // >
 	EQ    // ==
 	NOTEQ // !=
+	operator_end
 
 	// Delimiters
 
@@ -54,7 +57,7 @@ const (
 	SCOPE // ::
 
 	// Keywords
-
+	keyword_beg
 	DEF
 	SELF
 	END
@@ -69,7 +72,80 @@ const (
 	CLASS
 	DO
 	YIELD
+	keyword_end
 )
+
+var tokens = [...]string{
+	ILLEGAL: "ILLEGAL",
+	EOF:     "EOF",
+
+	IDENT:  "IDENT",
+	CONST:  "CONST",
+	GLOBAL: "GLOBAL",
+	INT:    "INT",
+	STRING: "STRING",
+	SYMBOL: "SYMBOL",
+
+	ASSIGN:   "=",
+	PLUS:     "+",
+	MINUS:    "-",
+	BANG:     "!",
+	ASTERISK: "*",
+	SLASH:    "/",
+
+	LT:    "<",
+	GT:    ">",
+	EQ:    "==",
+	NOTEQ: "!=",
+
+	NEWLINE:   "NEWLINE",
+	COMMA:     ",",
+	SEMICOLON: ";",
+
+	DOT:      ".",
+	COLON:    ":",
+	LPAREN:   "(",
+	RPAREN:   ")",
+	LBRACE:   "{",
+	RBRACE:   "}",
+	LBRACKET: "[",
+	RBRACKET: "]",
+	PIPE:     "|",
+
+	SCOPE: "::",
+
+	DEF:    "def",
+	SELF:   "self",
+	END:    "end",
+	IF:     "if",
+	THEN:   "then",
+	ELSE:   "else",
+	TRUE:   "true",
+	FALSE:  "false",
+	RETURN: "return",
+	NIL:    "nil",
+	MODULE: "module",
+	CLASS:  "class",
+	DO:     "do",
+	YIELD:  "yield",
+}
+
+// String returns the string corresponding to the token tok.
+// For operators, delimiters, and keywords the string is the actual
+// token character sequence (e.g., for the token ADD, the string is
+// "+"). For all other tokens the string corresponds to the token
+// constant name (e.g. for the token IDENT, the string is "IDENT").
+//
+func (tok Type) String() string {
+	s := ""
+	if 0 <= tok && tok < Type(len(tokens)) {
+		s = tokens[tok]
+	}
+	if s == "" {
+		s = "token(" + strconv.Itoa(int(tok)) + ")"
+	}
+	return s
+}
 
 var keywords = map[string]Type{
 	"def":    DEF,
@@ -115,3 +191,20 @@ type Token struct {
 	Literal string
 	Pos     int
 }
+
+// Predicates
+
+// IsLiteral returns true for tokens corresponding to identifiers
+// and basic type literals; it returns false otherwise.
+//
+func (tok Type) IsLiteral() bool { return literal_beg < tok && tok < literal_end }
+
+// IsOperator returns true for tokens corresponding to operators and
+// delimiters; it returns false otherwise.
+//
+func (tok Type) IsOperator() bool { return operator_beg < tok && tok < operator_end }
+
+// IsKeyword returns true for tokens corresponding to keywords;
+// it returns false otherwise.
+//
+func (tok Type) IsKeyword() bool { return keyword_beg < tok && tok < keyword_end }
