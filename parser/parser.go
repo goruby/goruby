@@ -124,6 +124,10 @@ type parser struct {
 	l      *lexer.Lexer
 	errors []error
 
+	// Tracing/debugging
+	mode   Mode // parsing mode
+	trace  bool // == (mode & Trace != 0)
+
 	curToken  token.Token
 	peekToken token.Token
 

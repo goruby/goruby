@@ -22,7 +22,7 @@ module Foo
 
 end`
 
-	f, err := parser.ParseFile(fset, "", src)
+	f, err := parser.ParseFile(fset, "", src, parser.AllErrors)
 	if err != nil {
 		fmt.Println(err)
 		return

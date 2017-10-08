@@ -39,6 +39,17 @@ func readSource(filename string, src interface{}) ([]byte, error) {
 	return ioutil.ReadFile(filename)
 }
 
+// A Mode value is a set of flags (or 0).
+// They control the amount of source code parsed and other optional
+// parser functionality.
+//
+type Mode uint
+
+const (
+	Trace     = 1 << iota // print a trace of parsed productions
+	AllErrors             // report all errors (not just the first 10 on different lines)
+)
+
 // ParseFile parses the source code of a single Ruby source file and returns
 // the corresponding ast.Program node. The source code may be provided via
 // the filename of the source file, or via the src parameter.
@@ -48,14 +59,15 @@ func readSource(filename string, src interface{}) ([]byte, error) {
 // for the src parameter must be string, []byte, or io.Reader.
 // If src == nil, ParseFile parses the file specified by filename.
 //
-// Position information is recorded in the
+// The mode parameter controls the amount of source text parsed and other
+// optional parser functionality. Position information is recorded in the
 // file set fset, which must not be nil.
 //
 // If the source couldn't be read or the source was read but syntax
 // errors were found, the returned AST is nil and the error
 // indicates the specific failure.
 //
-func ParseFile(fset *gotoken.FileSet, filename string, src interface{}) (*ast.Program, error) {
+func ParseFile(fset *gotoken.FileSet, filename string, src interface{}, mode Mode) (*ast.Program, error) {
 	if fset == nil {
 		panic("parser.ParseFile: no token.FileSet provided (fset == nil)")
 	}
@@ -69,5 +81,9 @@ func ParseFile(fset *gotoken.FileSet, filename string, src interface{}) (*ast.Pr
 	l := lexer.New(string(text))
 	p := newParser(l)
 	p.file = fset.AddFile(filename, -1, len(text))
+
+	p.mode = mode
+	p.trace = mode&Trace != 0 // for convenience (p.trace is used frequently)
+
 	return p.ParseProgram()
 }

@@ -158,7 +158,7 @@ func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) 
 		return nil, NewLoadError(name.Value)
 	}
 
-	prog, err := parser.ParseFile(token.NewFileSet(), filename, file)
+	prog, err := parser.ParseFile(token.NewFileSet(), filename, file, 0)
 	if err != nil {
 		return nil, NewSyntaxError(err)
 	}

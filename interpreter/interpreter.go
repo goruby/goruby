@@ -24,7 +24,7 @@ type interpreter struct {
 }
 
 func (i *interpreter) Interpret(input string) (object.RubyObject, error) {
-	node, err := parser.ParseFile(token.NewFileSet(), "", input)
+	node, err := parser.ParseFile(token.NewFileSet(), "", input, 0)
 	if err != nil {
 		return nil, object.NewSyntaxError(err)
 	}
