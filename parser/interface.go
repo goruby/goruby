@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 
 	"github.com/goruby/goruby/ast"
-	"github.com/goruby/goruby/lexer"
 	"github.com/pkg/errors"
 )
 
@@ -78,12 +77,8 @@ func ParseFile(fset *gotoken.FileSet, filename string, src interface{}, mode Mod
 		return nil, err
 	}
 
-	l := lexer.New(string(text))
-	p := newParser(l)
-	p.file = fset.AddFile(filename, -1, len(text))
-
-	p.mode = mode
-	p.trace = mode&Trace != 0 // for convenience (p.trace is used frequently)
+	var p parser
+	p.init(fset, filename, text, mode)
 
 	return p.ParseProgram()
 }
