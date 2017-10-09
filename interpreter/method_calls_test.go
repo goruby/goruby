@@ -53,7 +53,7 @@ func TestMainMethodCalls(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			i := New()
 
-			evaluated, err := i.Interpret(tt.input)
+			evaluated, err := i.Interpret("", tt.input)
 			if err != nil {
 				t.Logf("Expected no error, got %T:%v", err, err)
 				t.FailNow()
@@ -92,7 +92,7 @@ func TestMethodBlockLeakage(t *testing.T) {
 		`
 		i := New()
 
-		_, err := i.Interpret(input)
+		_, err := i.Interpret("", input)
 
 		expected := object.NewNoBlockGivenLocalJumpError()
 
@@ -121,7 +121,7 @@ func TestMethodBlockLeakage(t *testing.T) {
 		`
 		i := New()
 
-		_, err := i.Interpret(input)
+		_, err := i.Interpret("", input)
 
 		expected := object.NewNoBlockGivenLocalJumpError()
 
@@ -139,7 +139,7 @@ func TestKernelTap(t *testing.T) {
 	`
 	i := New()
 
-	evaluated, err := i.Interpret(input)
+	evaluated, err := i.Interpret("", input)
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v", err, err)
 		t.FailNow()

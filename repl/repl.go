@@ -29,7 +29,7 @@ func Start(in io.Reader, out chan<- string) {
 		}
 
 		buffer += scanner.Text()
-		evaluated, err := interpreter.Interpret(buffer)
+		evaluated, err := interpreter.Interpret("", buffer)
 		if err != nil {
 			if isEOFError(err) {
 				buffer += "\n"

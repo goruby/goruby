@@ -33,7 +33,7 @@ func main() {
 	interpreter := interpreter.New()
 	if len(onelineScripts) != 0 {
 		input := strings.Join(onelineScripts, "\n")
-		_, err := interpreter.Interpret(input)
+		_, err := interpreter.Interpret("", input)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
@@ -50,7 +50,7 @@ func main() {
 		log.Printf("Error while opening program file: %T:%v\n", err, err)
 		os.Exit(1)
 	}
-	_, err = interpreter.Interpret(string(fileBytes))
+	_, err = interpreter.Interpret(args[0], fileBytes)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

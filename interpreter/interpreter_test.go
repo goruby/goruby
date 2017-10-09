@@ -23,7 +23,7 @@ func TestInterpreterInterpret(t *testing.T) {
 			`
 		i := New()
 
-		out, err := i.Interpret(input)
+		out, err := i.Interpret("", input)
 		if err != nil {
 			panic(err)
 		}
@@ -52,7 +52,7 @@ func TestModuleInEnv(t *testing.T) {
 	`
 	interpreter := New()
 
-	evaluated, err := interpreter.Interpret(input)
+	evaluated, err := interpreter.Interpret("", input)
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v", err, err)
 		t.Fail()
@@ -78,7 +78,7 @@ func TestInterpretModules(t *testing.T) {
 
 		i := New()
 
-		evaluated, err := i.Interpret(input)
+		evaluated, err := i.Interpret("", input)
 		if err != nil {
 			t.Logf("Expected no error, got %T:%v", err, err)
 			t.FailNow()
@@ -108,7 +108,7 @@ func TestInterpretModules(t *testing.T) {
 
 		i := New()
 
-		evaluated, err := i.Interpret(input)
+		evaluated, err := i.Interpret("", input)
 		if err != nil {
 			t.Logf("Expected no error, got %T:%v", err, err)
 			t.FailNow()
@@ -144,7 +144,7 @@ func TestInterpretModules(t *testing.T) {
 
 		i := New()
 
-		evaluated, err := i.Interpret(input)
+		evaluated, err := i.Interpret("", input)
 		if err != nil {
 			t.Logf("Expected no error, got %T:%v", err, err)
 			t.FailNow()
@@ -186,7 +186,7 @@ func TestInterpretModules(t *testing.T) {
 
 		i := New()
 
-		evaluated, err := i.Interpret(input)
+		evaluated, err := i.Interpret("", input)
 		if err != nil {
 			t.Logf("Expected no error, got %T:%v", err, err)
 			t.FailNow()
@@ -220,7 +220,7 @@ func TestInterpretModules(t *testing.T) {
 
 		i := New()
 
-		_, err := i.Interpret(input)
+		_, err := i.Interpret("", input)
 		if err == nil {
 			t.Logf("Expected error, got nil")
 			t.FailNow()
@@ -247,7 +247,7 @@ func TestInterpretClasses(t *testing.T) {
 
 		i := New()
 
-		evaluated, err := i.Interpret(input)
+		evaluated, err := i.Interpret("", input)
 		if err != nil {
 			t.Logf("Expected no error, got %T:%v", err, err)
 			t.FailNow()
@@ -277,7 +277,7 @@ func TestInterpretClasses(t *testing.T) {
 
 		i := New()
 
-		evaluated, err := i.Interpret(input)
+		evaluated, err := i.Interpret("", input)
 		if err != nil {
 			t.Logf("Expected no error, got %T:%v", err, err)
 			t.FailNow()
@@ -313,7 +313,7 @@ func TestInterpretClasses(t *testing.T) {
 
 		i := New()
 
-		evaluated, err := i.Interpret(input)
+		evaluated, err := i.Interpret("", input)
 		if err != nil {
 			t.Logf("Expected no error, got %T:%v", err, err)
 			t.FailNow()
@@ -355,7 +355,7 @@ func TestInterpretClasses(t *testing.T) {
 
 		i := New()
 
-		evaluated, err := i.Interpret(input)
+		evaluated, err := i.Interpret("", input)
 		if err != nil {
 			t.Logf("Expected no error, got %T:%v", err, err)
 			t.FailNow()
@@ -389,7 +389,7 @@ func TestInterpretClasses(t *testing.T) {
 
 		i := New()
 
-		_, err := i.Interpret(input)
+		_, err := i.Interpret("", input)
 		if err == nil {
 			t.Logf("Expected error, got nil")
 			t.FailNow()
