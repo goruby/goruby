@@ -62,15 +62,34 @@ var defaultExpressionTerminators = []token.Type{
 	token.NEWLINE,
 }
 
-// newParser returns a Parser ready to use the tokens emitted by l
-func newParser(l *lexer.Lexer) *parser {
-	p := &parser{
-		l:      l,
-		errors: []error{},
-	}
-	// Read two tokens, so curToken and peekToken are both set
-	p.nextToken()
-	p.nextToken()
+// A parser parses the token emitted by the provided lexer.Lexer and returns an
+// AST describing the parsed program.
+type parser struct {
+	file   *gotoken.File
+	l      *lexer.Lexer
+	errors []error
+
+	// Tracing/debugging
+	mode   Mode // parsing mode
+	trace  bool // == (mode & Trace != 0)
+	indent int  // indentation used for tracing output
+
+	pos       gotoken.Pos
+	curToken  token.Token
+	peekToken token.Token
+
+	prefixParseFns map[token.Type]prefixParseFn
+	infixParseFns  map[token.Type]infixParseFn
+}
+
+func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode Mode) {
+	p.file = fset.AddFile(filename, -1, len(src))
+
+	p.l = lexer.New(string(src))
+	p.errors = []error{}
+
+	p.mode = mode
+	p.trace = mode&Trace != 0 // for convenience (p.trace is used frequently)
 
 	p.prefixParseFns = make(map[token.Type]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
@@ -114,27 +133,10 @@ func newParser(l *lexer.Lexer) *parser {
 	p.registerInfix(token.ASSIGN, p.parseAssignment)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	p.registerInfix(token.SCOPE, p.parseScopedIdentifierExpression)
-	return p
-}
 
-// A parser parses the token emitted by the provided lexer.Lexer and returns an
-// AST describing the parsed program.
-type parser struct {
-	file   *gotoken.File
-	l      *lexer.Lexer
-	errors []error
-
-	// Tracing/debugging
-	mode   Mode // parsing mode
-	trace  bool // == (mode & Trace != 0)
-	indent int  // indentation used for tracing output
-
-	pos       gotoken.Pos
-	curToken  token.Token
-	peekToken token.Token
-
-	prefixParseFns map[token.Type]prefixParseFn
-	infixParseFns  map[token.Type]infixParseFn
+	// Read two tokens, so curToken and peekToken are both set
+	p.nextToken()
+	p.nextToken()
 }
 
 func (p *parser) printTrace(a ...interface{}) {
