@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"github.com/goruby/goruby/token"
@@ -362,6 +363,29 @@ func (al *ArrayLiteral) String() string {
 	out.WriteString("[")
 	out.WriteString(strings.Join(elements, ", "))
 	out.WriteString("]")
+	return out.String()
+}
+
+// HashLiteral represents an Hash literal within the AST
+type HashLiteral struct {
+	Token token.Token // the '{'
+	Map   map[Expression]Expression
+}
+
+func (hl *HashLiteral) expressionNode() {}
+func (hl *HashLiteral) literalNode()    {}
+
+// TokenLiteral returns the literal of the token token.LBRACE
+func (hl *HashLiteral) TokenLiteral() string { return hl.Token.Literal }
+func (hl *HashLiteral) String() string {
+	var out bytes.Buffer
+	elements := []string{}
+	for key, val := range hl.Map {
+		elements = append(elements, fmt.Sprintf("%q => %q", key.String(), val.String()))
+	}
+	out.WriteString("{")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("}")
 	return out.String()
 }
 

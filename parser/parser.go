@@ -110,7 +110,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerPrefix(token.SELF, p.parseSelf)
 	p.registerPrefix(token.MODULE, p.parseModule)
 	p.registerPrefix(token.CLASS, p.parseClass)
-	p.registerPrefix(token.LBRACE, p.parseBlock)
+	p.registerPrefix(token.LBRACE, p.parseHash)
 	p.registerPrefix(token.DO, p.parseBlock)
 	p.registerPrefix(token.YIELD, p.parseYield)
 	p.registerPrefix(token.GLOBAL, p.parseGlobal)
@@ -131,6 +131,8 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.DOT, p.parseContextCallExpression)
 	p.registerInfix(token.COLON, p.parseCallExpression)
 	p.registerInfix(token.RBRACKET, p.parseCallExpression)
+	p.registerInfix(token.LBRACE, p.parseCallExpression)
+	p.registerInfix(token.DO, p.parseCallExpression)
 	p.registerInfix(token.ASSIGN, p.parseAssignment)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	p.registerInfix(token.SCOPE, p.parseScopedIdentifierExpression)
@@ -490,6 +492,47 @@ func (p *parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: p.curToken, Value: p.currentTokenIs(token.TRUE)}
 }
 
+func (p *parser) parseHash() ast.Expression {
+	hash := &ast.HashLiteral{Token: p.curToken, Map: make(map[ast.Expression]ast.Expression)}
+	if p.trace {
+		defer un(trace(p, "parseHash"))
+	}
+	p.nextToken()
+
+	if p.currentTokenIs(token.RBRACE) {
+		return hash
+	}
+
+	k, v, ok := p.parseKeyValue()
+	if !ok {
+		return nil
+	}
+	hash.Map[k] = v
+
+	for p.peekTokenIs(token.COMMA) {
+		p.consume(token.COMMA)
+		k, v, ok := p.parseKeyValue()
+		if !ok {
+			return nil
+		}
+		hash.Map[k] = v
+	}
+
+	if !p.accept(token.RBRACE) {
+		return nil
+	}
+	return hash
+}
+
+func (p *parser) parseKeyValue() (ast.Expression, ast.Expression, bool) {
+	key := p.parseExpression(precLowest)
+	if !p.consume(token.HASHROCKET) {
+		return nil, nil, false
+	}
+	val := p.parseExpression(precLowest)
+	return key, val, true
+}
+
 func (p *parser) parseBlock() ast.Expression {
 	if p.trace {
 		defer un(trace(p, "parseBlock"))
@@ -499,8 +542,8 @@ func (p *parser) parseBlock() ast.Expression {
 		block.Parameters = p.parseParameters(token.PIPE, token.PIPE)
 	}
 
-	if p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON, token.PIPE) {
-		p.acceptOneOf(token.NEWLINE, token.SEMICOLON, token.PIPE)
+	if p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
+		p.acceptOneOf(token.NEWLINE, token.SEMICOLON)
 	}
 
 	endToken := token.RBRACE
@@ -816,6 +859,11 @@ func (p *parser) parseCallExpression(function ast.Expression) ast.Expression {
 		return p.parseContextCallExpression(function)
 	}
 	exp := &ast.ContextCallExpression{Token: ident.Token, Function: ident}
+	if p.currentTokenOneOf(token.LBRACE, token.DO) {
+		exp.Block = p.parseBlock().(*ast.BlockExpression)
+		return exp
+	}
+
 	exp.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE, token.SCOPE)
 	if p.peekTokenOneOf(token.LBRACE, token.DO) {
 		p.acceptOneOf(token.LBRACE, token.DO)
@@ -857,7 +905,7 @@ func (p *parser) parseExpressionList(end ...token.Type) []ast.Expression {
 
 	for p.peekTokenIs(token.COMMA) {
 		p.consume(token.COMMA)
-		list = append(list, p.parseExpression(precLowest))
+		list = append(list, p.parseExpression(precBlockBraces))
 	}
 
 	if p.peekTokenOneOf(end...) {

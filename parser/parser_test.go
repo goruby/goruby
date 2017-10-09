@@ -689,35 +689,35 @@ func TestBlockExpression(t *testing.T) {
 		expectedBody      string
 	}{
 		{
-			"{ x }",
+			"method { x }",
 			nil,
 			"x",
 		},
 		{
-			"{ |x| x }",
+			"method { |x| x }",
 			[]*ast.Identifier{&ast.Identifier{Value: "x"}},
 			"x",
 		},
 		{
-			"do; x; end",
+			"method do; x; end",
 			nil,
 			"x",
 		},
 		{
 			`
-			do
+			method do
 				x
 			end`,
 			nil,
 			"x",
 		},
 		{
-			"do |x| x; end",
+			"method do |x| x; end",
 			[]*ast.Identifier{&ast.Identifier{Value: "x"}},
 			"x",
 		},
 		{
-			`do |x|
+			`method do |x|
 				x
 			end`,
 			[]*ast.Identifier{&ast.Identifier{Value: "x"}},
@@ -744,9 +744,15 @@ func TestBlockExpression(t *testing.T) {
 			)
 		}
 
-		block, ok := stmt.Expression.(*ast.BlockExpression)
+		call, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
-			t.Fatalf("exp not *ast.BlockExpression. got=%T", stmt.Expression)
+			t.Fatalf("exp not *ast.ContextCallExpression. got=%T", stmt.Expression)
+		}
+
+		block := call.Block
+		if block == nil {
+			t.Logf("Expected block not to be nil")
+			t.FailNow()
 		}
 
 		if len(block.Parameters) != len(tt.expectedArguments) {
@@ -1137,65 +1143,65 @@ func TestBlockExpressionParsing(t *testing.T) {
 		bodyStatement string
 	}{
 		{
-			`do |x, y|
+			`method do |x, y|
           x + y
           end`,
 			[]string{"x", "y"},
 			"(x + y)",
 		},
 		{
-			`do
+			`method do
           x + y
           end`,
 			[]string{},
 			"(x + y)",
 		},
 		{
-			"do ; x + y; end",
+			"method do ; x + y; end",
 			[]string{},
 			"(x + y)",
 		},
 		{
-			"do |x, y|; x + y; end",
+			"method do |x, y|; x + y; end",
 			[]string{"x", "y"},
 			"(x + y)",
 		},
 		{
-			"do |x, y|; x + y; end",
+			"method do |x, y|; x + y; end",
 			[]string{"x", "y"},
 			"(x + y)",
 		},
 		{
-			`{ |x, y|
+			`method { |x, y|
 			  x + y
 			  }`,
 			[]string{"x", "y"},
 			"(x + y)",
 		},
 		{
-			`{
+			`method {
           x + y
           }`,
 			[]string{},
 			"(x + y)",
 		},
 		{
-			"{ x + y; }",
+			"method { x + y; }",
 			[]string{},
 			"(x + y)",
 		},
 		{
-			"{ |x, y|; x + y; }",
+			"method { |x, y|; x + y; }",
 			[]string{"x", "y"},
 			"(x + y)",
 		},
 		{
-			"{ |x, y|; x + y; }",
+			"method { |x, y|; x + y; }",
 			[]string{"x", "y"},
 			"(x + y)",
 		},
 		{
-			"{ |x, y|; x.add y }",
+			"method { |x, y|; x.add y }",
 			[]string{"x", "y"},
 			"x.add(y)",
 		},
@@ -1221,12 +1227,20 @@ func TestBlockExpressionParsing(t *testing.T) {
 			)
 		}
 
-		block, ok := stmt.Expression.(*ast.BlockExpression)
+		call, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
-			t.Fatalf(
-				"stmt.Expression is not ast.FunctionLiteral. got=%T",
+			t.Logf(
+				"stmt.Expression is not *ast.ContextCallExpression. got=%T",
 				stmt.Expression,
 			)
+			t.Fail()
+		}
+
+		block := call.Block
+
+		if block == nil {
+			t.Logf("Expected block not to be nil")
+			t.FailNow()
 		}
 
 		if len(block.Parameters) != len(tt.parameters) {
@@ -1307,17 +1321,17 @@ func TestBlockParameterParsing(t *testing.T) {
 		input          string
 		expectedParams []string
 	}{
-		{input: "{}", expectedParams: []string{}},
-		{input: "{ || }", expectedParams: []string{}},
-		{input: "{ |x| }", expectedParams: []string{"x"}},
-		{input: "{ |x, y, z| }", expectedParams: []string{"x", "y", "z"}},
-		{input: `do
+		{input: "method {}", expectedParams: []string{}},
+		{input: "method { || }", expectedParams: []string{}},
+		{input: "method { |x| }", expectedParams: []string{"x"}},
+		{input: "method { |x, y, z| }", expectedParams: []string{"x", "y", "z"}},
+		{input: `method do
         end`, expectedParams: []string{}},
-		{input: `do ||
+		{input: `method do ||
         end`, expectedParams: []string{}},
-		{input: `do |x|
+		{input: `method do |x|
         end`, expectedParams: []string{"x"}},
-		{input: `do |x, y, z|
+		{input: `method do |x, y, z|
         end`, expectedParams: []string{"x", "y", "z"}},
 	}
 
@@ -1327,7 +1341,21 @@ func TestBlockParameterParsing(t *testing.T) {
 		checkParserErrors(t, err)
 
 		stmt := program.Statements[0].(*ast.ExpressionStatement)
-		block := stmt.Expression.(*ast.BlockExpression)
+		call, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Logf(
+				"stmt.Expression is not *ast.ContextCallExpression. got=%T",
+				stmt.Expression,
+			)
+			t.Fail()
+		}
+
+		block := call.Block
+
+		if block == nil {
+			t.Logf("Expected block not to be nil")
+			t.FailNow()
+		}
 
 		if len(block.Parameters) != len(tt.expectedParams) {
 			t.Errorf(
@@ -2285,9 +2313,14 @@ func TestSymbolExpression(t *testing.T) {
 }
 
 func TestParsingArrayLiterals(t *testing.T) {
-	input := "[1, 2 * 2, 3 + 3]"
+	input := "[1, 2 * 2, 3 + 3, {'foo'=>2}]"
 	program, err := parseSource(input)
 	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Logf("Expected only one statement, got %d\n", len(program.Statements))
+		t.Fail()
+	}
 
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 	array, ok := stmt.Expression.(*ast.ArrayLiteral)
@@ -2295,12 +2328,13 @@ func TestParsingArrayLiterals(t *testing.T) {
 		t.Fatalf("exp not ast.ArrayLiteral. got=%T", stmt.Expression)
 	}
 
-	if len(array.Elements) != 3 {
-		t.Fatalf("len(array.Elements) not 3. got=%d", len(array.Elements))
+	if len(array.Elements) != 4 {
+		t.Fatalf("len(array.Elements) not 4. got=%d", len(array.Elements))
 	}
 	testIntegerLiteral(t, array.Elements[0], 1)
 	testInfixExpression(t, array.Elements[1], 2, "*", 2)
 	testInfixExpression(t, array.Elements[2], 3, "+", 3)
+	testHashLiteral(t, array.Elements[3], map[string]string{"foo": "2"})
 }
 
 func TestParsingIndexExpressions(t *testing.T) {
@@ -2346,6 +2380,35 @@ func TestParsingClassExpressions(t *testing.T) {
 	_, ok = stmt.Expression.(*ast.ClassExpression)
 	if !ok {
 		t.Fatalf("exp not *ast.ClassExpression. got=%T", stmt.Expression)
+	}
+}
+
+func TestParseHash(t *testing.T) {
+	tests := []struct {
+		input   string
+		hashMap map[string]string
+	}{
+		{
+			input:   `{"foo" => 42}`,
+			hashMap: map[string]string{"foo": "42"},
+		},
+		{
+			input:   `{"foo" => 42, "bar" => "baz"}`,
+			hashMap: map[string]string{"foo": "42", "bar": "baz"},
+		},
+	}
+
+	for _, tt := range tests {
+		program, err := parseSource(tt.input)
+		checkParserErrors(t, err)
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Logf("Expected first statement to be *ast.ExpressionStatement, got %T\n", stmt)
+			t.FailNow()
+		}
+
+		testHashLiteral(t, stmt.Expression, tt.hashMap)
 	}
 }
 
@@ -2521,6 +2584,24 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 		return false
 	}
 
+	return true
+}
+
+func testHashLiteral(t *testing.T, expr ast.Expression, value map[string]string) bool {
+	hash, ok := expr.(*ast.HashLiteral)
+	if !ok {
+		t.Errorf("exp not *ast.HashLiteral. got=%T", expr)
+		return false
+	}
+	hashMap := make(map[string]string)
+	for k, v := range hash.Map {
+		hashMap[k.String()] = v.String()
+	}
+
+	if !reflect.DeepEqual(hashMap, value) {
+		t.Logf("Expected hash to equal\n%q\n\tgot\n%q\n", value, hashMap)
+		return false
+	}
 	return true
 }
 
