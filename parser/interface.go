@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 	gotoken "go/token"
 	"io"
 	"io/ioutil"
@@ -81,4 +82,49 @@ func ParseFile(fset *gotoken.FileSet, filename string, src interface{}, mode Mod
 	p.init(fset, filename, text, mode)
 
 	return p.ParseProgram()
+}
+
+// ParseExprFrom is a convenience function for parsing an expression.
+// The arguments have the same meaning as for ParseFile, but the source must
+// be a valid Go (type or value) expression. Specifically, fset must not
+// be nil.
+//
+func ParseExprFrom(fset *gotoken.FileSet, filename string, src interface{}, mode Mode) (ast.Expression, error) {
+	if fset == nil {
+		panic("parser.ParseExprFrom: no token.FileSet provided (fset == nil)")
+	}
+
+	// get source
+	text, err := readSource(filename, src)
+	if err != nil {
+		return nil, err
+	}
+
+	var p parser
+	p.init(fset, filename, text, mode)
+
+	program, err := p.ParseProgram()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(program.Statements) == 0 {
+		return nil, fmt.Errorf("source did not contain any expressions to parse")
+	}
+
+	for _, stmt := range program.Statements {
+		if exprStmt, ok := stmt.(*ast.ExpressionStatement); ok {
+			return exprStmt.Expression, nil
+		}
+	}
+
+	return nil, fmt.Errorf("source only contains statements")
+}
+
+// ParseExpr is a convenience function for obtaining the AST of an expression x.
+// The position information recorded in the AST is undefined. The filename used
+// in error messages is the empty string.
+//
+func ParseExpr(x string) (ast.Expression, error) {
+	return ParseExprFrom(gotoken.NewFileSet(), "", []byte(x), 0)
 }
