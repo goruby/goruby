@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"fmt"
+	gotoken "go/token"
 
 	"github.com/goruby/goruby/token"
 	"github.com/pkg/errors"
@@ -93,15 +94,30 @@ func IsEOFInsteadOfNewlineError(err error) bool {
 	return false
 }
 
+type tokens []token.Type
+
+func (t tokens) String() string {
+	if len(t) == 1 {
+		return t[0].String()
+	}
+	var s []token.Type = t
+	return fmt.Sprintf("%s", s)
+}
+
 type unexpectedTokenError struct {
+	Pos            gotoken.Position
 	expectedTokens []token.Type
 	actualToken    token.Type
 }
 
-func (u *unexpectedTokenError) Error() string {
-	return fmt.Sprintf(
-		"expected next token to be of type %s, got %s instead",
-		u.expectedTokens,
-		u.actualToken,
+func (e *unexpectedTokenError) Error() string {
+	msg := fmt.Sprintf(
+		"unexpected %s, expecting %s",
+		e.actualToken,
+		tokens(e.expectedTokens),
 	)
+	if e.Pos.Filename != "" || e.Pos.IsValid() {
+		return e.Pos.String() + ": " + msg
+	}
+	return msg
 }

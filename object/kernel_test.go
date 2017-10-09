@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/goruby/goruby/ast"
+	"github.com/goruby/goruby/parser"
 )
 
 func TestKernelMethods(t *testing.T) {
@@ -603,9 +604,14 @@ func TestKernelRequire(t *testing.T) {
 			t.Fail()
 		}
 
-		expectedErr := "syntax error, Parsing errors:\n\texpected next token to be of type [end], got EOF instead\n"
-		if !reflect.DeepEqual(expectedErr, err.Error()) {
-			t.Logf("Expected error to equal\n%q\n\tgot\n%q", expectedErr, err.Error())
+		syntaxErr, ok := err.(*SyntaxError)
+		if !ok {
+			t.Logf("Expected syntax error, got %T:%v\n", err, err)
+			t.Fail()
+		}
+		underlyingErr := syntaxErr.UnderlyingError()
+		if !parser.IsEOFError(underlyingErr) {
+			t.Logf("Expected EOF error, got:\n%q", underlyingErr)
 			t.Fail()
 		}
 
