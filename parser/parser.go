@@ -191,6 +191,9 @@ func (p *parser) nextToken() {
 		}
 	}
 	p.curToken = p.peekToken
+	if p.curToken.Type == token.NEWLINE {
+		p.file.AddLine(int(p.pos))
+	}
 	if p.l.HasNext() {
 		p.peekToken = p.l.NextToken()
 		p.pos = gotoken.Pos(p.curToken.Pos)
@@ -205,7 +208,9 @@ func (p *parser) Errors() []error {
 }
 
 func (p *parser) peekError(t ...token.Type) {
+	epos := p.file.Position(p.pos)
 	err := &unexpectedTokenError{
+		Pos:            epos,
 		expectedTokens: t,
 		actualToken:    p.peekToken.Type,
 	}
