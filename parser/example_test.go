@@ -42,3 +42,21 @@ end`
 	// *ast.VariableAssignment
 	// *ast.ModuleExpression
 }
+
+func ExampleParseExpr() {
+	src := `def bar()
+	puts "Hello world"
+end`
+
+	expr, err := parser.ParseExpr(src)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("%T\n", expr)
+
+	// output:
+	//
+	// *ast.FunctionLiteral
+}
