@@ -214,7 +214,16 @@ func (p *parser) peekError(t ...token.Type) {
 		expectedTokens: t,
 		actualToken:    p.peekToken.Type,
 	}
-	p.errors = append(p.errors, err)
+	p.errors = append(p.errors, errors.WithStack(err))
+}
+
+func (p *parser) noPrefixParseFnError(t token.Type) {
+	msg := fmt.Sprintf("no prefix parse function for type %s found", t)
+	epos := p.file.Position(p.pos)
+	if epos.Filename != "" || epos.IsValid() {
+		msg = epos.String() + ": " + msg
+	}
+	p.errors = append(p.errors, errors.Errorf(msg))
 }
 
 // ParseProgram returns the parsed program AST and all errors which occured
@@ -293,11 +302,6 @@ func (p *parser) parseExpressionStatement() *ast.ExpressionStatement {
 		p.nextToken()
 	}
 	return stmt
-}
-
-func (p *parser) noPrefixParseFnError(t token.Type) {
-	msg := fmt.Errorf("no prefix parse function for type %s found", t)
-	p.errors = append(p.errors, msg)
 }
 
 func (p *parser) parseExpression(precedence int) ast.Expression {

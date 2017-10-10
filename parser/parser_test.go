@@ -8,6 +8,7 @@ import (
 
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/token"
+	"github.com/pkg/errors"
 )
 
 func TestVariableExpression(t *testing.T) {
@@ -1891,8 +1892,8 @@ func TestContextCallExpression(t *testing.T) {
 			actualToken:    token.IDENT,
 		}
 
-		errors := err.(*Errors)
-		actual := errors.errors[0]
+		errs := err.(*Errors)
+		actual := errors.Cause(errs.errors[0])
 
 		if !reflect.DeepEqual(expected, actual) {
 			t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, actual)
@@ -2512,9 +2513,20 @@ func checkParserErrors(t *testing.T, err error) {
 	if err == nil {
 		return
 	}
-	errors := err.(*Errors)
+	parserErrors := err.(*Errors)
 
-	t.Errorf("parser has %d errors", len(errors.errors))
-	t.Errorf("parser error: %s", err.Error())
+	type stackTracer interface {
+		StackTrace() errors.StackTrace
+	}
+
+	t.Errorf("parser has %d errors", len(parserErrors.errors))
+	for _, e := range parserErrors.errors {
+		t.Errorf("%v", e)
+		if stackErr, ok := e.(stackTracer); ok {
+			st := stackErr.StackTrace()
+			fmt.Printf("Error stack:%+v\n", st[0:2]) // top two frames
+		}
+
+	}
 	t.FailNow()
 }
