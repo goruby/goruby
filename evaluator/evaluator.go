@@ -95,6 +95,20 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			return nil, err
 		}
 		return &object.Array{Elements: elements}, nil
+	case *ast.HashLiteral:
+		hashMap := make(map[object.RubyObject]object.RubyObject)
+		for k, v := range node.Map {
+			key, err := Eval(k, env)
+			if err != nil {
+				return nil, err
+			}
+			value, err := Eval(v, env)
+			if err != nil {
+				return nil, err
+			}
+			hashMap[key] = value
+		}
+		return &object.Hash{Map: hashMap}, nil
 
 	// Expressions
 	case *ast.VariableAssignment:
