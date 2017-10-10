@@ -57,13 +57,18 @@ func (a *Array) hashKey() hashKey {
 var arrayClassMethods = map[string]RubyMethod{}
 
 var arrayMethods = map[string]RubyMethod{
-	"push": publicMethod(arrayPush),
+	"push":    publicMethod(arrayPush),
+	"unshift": publicMethod(arrayUnshift),
 }
 
 func arrayPush(context CallContext, args ...RubyObject) (RubyObject, error) {
 	array, _ := context.Receiver().(*Array)
-	for _, item := range args {
-		array.Elements = append(array.Elements, item)
-	}
+	array.Elements = append(array.Elements, args...)
+	return array, nil
+}
+
+func arrayUnshift(context CallContext, args ...RubyObject) (RubyObject, error) {
+	array, _ := context.Receiver().(*Array)
+	array.Elements = append(args, array.Elements...)
 	return array, nil
 }
