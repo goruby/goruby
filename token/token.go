@@ -73,6 +73,7 @@ const (
 	CLASS
 	DO
 	YIELD
+	KEYWORD__FILE__
 	keyword_end
 )
 
@@ -115,20 +116,21 @@ var tokens = [...]string{
 	SCOPE:      "::",
 	HASHROCKET: "=>",
 
-	DEF:    "def",
-	SELF:   "self",
-	END:    "end",
-	IF:     "if",
-	THEN:   "then",
-	ELSE:   "else",
-	TRUE:   "true",
-	FALSE:  "false",
-	RETURN: "return",
-	NIL:    "nil",
-	MODULE: "module",
-	CLASS:  "class",
-	DO:     "do",
-	YIELD:  "yield",
+	DEF:             "def",
+	SELF:            "self",
+	END:             "end",
+	IF:              "if",
+	THEN:            "then",
+	ELSE:            "else",
+	TRUE:            "true",
+	FALSE:           "false",
+	RETURN:          "return",
+	NIL:             "nil",
+	MODULE:          "module",
+	CLASS:           "class",
+	DO:              "do",
+	YIELD:           "yield",
+	KEYWORD__FILE__: "__FILE__",
 }
 
 // String returns the string corresponding to the token tok.
@@ -148,21 +150,13 @@ func (tok Type) String() string {
 	return s
 }
 
-var keywords = map[string]Type{
-	"def":    DEF,
-	"end":    END,
-	"if":     IF,
-	"then":   THEN,
-	"else":   ELSE,
-	"true":   TRUE,
-	"false":  FALSE,
-	"nil":    NIL,
-	"return": RETURN,
-	"self":   SELF,
-	"module": MODULE,
-	"class":  CLASS,
-	"do":     DO,
-	"yield":  YIELD,
+var keywords map[string]Type
+
+func init() {
+	keywords = make(map[string]Type)
+	for i := keyword_beg + 1; i < keyword_end; i++ {
+		keywords[tokens[i]] = i
+	}
 }
 
 // LookupIdent returns a keyword Type if ident is a keyword. If ident starts

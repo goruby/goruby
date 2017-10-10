@@ -1078,6 +1078,29 @@ func TestHashIndexExpressions(t *testing.T) {
 	}
 }
 
+func TestKeyword__File__(t *testing.T) {
+	input := "__FILE__"
+
+	env := object.NewEnvironment()
+	program, err := parser.ParseFile(token.NewFileSet(), "some_file.rb", input, 0)
+	checkError(t, err)
+	evaluated, err := Eval(program, env)
+	checkError(t, err)
+
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Logf("Expected evaluated to be *object.String, got %T\n", evaluated)
+		t.FailNow()
+	}
+
+	expected := "some_file.rb"
+
+	if expected != str.Value {
+		t.Logf("Expected __FILE__ to equal %q, got %q\n", expected, str.Value)
+		t.Fail()
+	}
+}
+
 func testExceptionObject(t *testing.T, obj object.RubyObject, errorMessage string) {
 	if !IsError(obj) {
 		t.Logf("Expected error or exception, got %T", obj)

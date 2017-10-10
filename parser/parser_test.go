@@ -111,16 +111,16 @@ func TestVariableExpression(t *testing.T) {
 		end
 		`
 
-		_, err := parseSource(input)
+		_, errs := parseSource(input)
 
-		if err == nil {
+		if errs == nil {
 			t.Logf("Expected error, got nil")
 			t.FailNow()
 		}
 
 		expected := fmt.Errorf("dynamic constant assignment")
 
-		errors := err.(*Errors).errors
+		errors := errs.errors
 		if len(errors) != 1 {
 			t.Logf("Exected one error, got %d", len(errors))
 			t.FailNow()
@@ -376,6 +376,61 @@ func TestSelfExpression(t *testing.T) {
 	if !ok {
 		t.Fatalf("expression not *ast.Self. got=%T", stmt.Expression)
 	}
+}
+
+func TestKeyword__FILE__(t *testing.T) {
+	t.Run("keyword found", func(t *testing.T) {
+		input := "__FILE__;"
+
+		program, err := ParseFile(gotoken.NewFileSet(), "a_filename.rb", input, 0)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program has not enough statements. got=%d",
+				len(program.Statements),
+			)
+		}
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		file, ok := stmt.Expression.(*ast.Keyword__FILE__)
+		if !ok {
+			t.Fatalf("expression not *ast.Keyword__FILE__. got=%T", stmt.Expression)
+		}
+
+		expected := "a_filename.rb"
+
+		if expected != file.Filename {
+			t.Logf("Expected filename to equal %q, got %q\n", expected, file.Filename)
+			t.Fail()
+		}
+	})
+	t.Run("assignment to keyword", func(t *testing.T) {
+		input := "__FILE__ = 42;"
+
+		_, err := parseSource(input)
+
+		expected := "1:9: Can't assign to __FILE__"
+
+		parserErrors := err.errors
+		if len(parserErrors) != 1 {
+			t.Logf("Expected one error, got %d\n", len(parserErrors))
+			t.Logf("Errors: %v\n", err)
+			t.FailNow()
+		}
+
+		if expected != parserErrors[0].Error() {
+			t.Logf("Expected error to equal\n%q\n\tgot\n%q\n", expected, parserErrors[0].Error())
+			t.Fail()
+		}
+
+	})
 }
 
 func TestYieldExpression(t *testing.T) {
@@ -1969,8 +2024,8 @@ func TestContextCallExpression(t *testing.T) {
 			actualToken:    token.IDENT,
 		}
 
-		errs := err.(*Errors)
-		actual := errors.Cause(errs.errors[0])
+		errs := err.errors
+		actual := errors.Cause(errs[0])
 
 		if !reflect.DeepEqual(expected, actual) {
 			t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, actual)
@@ -2654,15 +2709,27 @@ func testHashLiteral(t *testing.T, expr ast.Expression, value map[string]string)
 	return true
 }
 
-func parseSource(src string) (*ast.Program, error) {
-	return ParseFile(gotoken.NewFileSet(), "", src, 0)
+func parseSource(src string) (*ast.Program, *Errors) {
+	prog, err := ParseFile(gotoken.NewFileSet(), "", src, 0)
+	var parserErrors *Errors
+	if err != nil {
+		parserErrors = err.(*Errors)
+	}
+	return prog, parserErrors
 }
 
 func checkParserErrors(t *testing.T, err error) {
 	if err == nil {
 		return
 	}
-	parserErrors := err.(*Errors)
+	parserErrors, ok := err.(*Errors)
+	if parserErrors == nil {
+		return
+	}
+	if !ok {
+		t.Logf("Unexpected parser error: %T:%v\n", err, err)
+		t.FailNow()
+	}
 
 	type stackTracer interface {
 		StackTrace() errors.StackTrace

@@ -114,6 +114,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerPrefix(token.DO, p.parseBlock)
 	p.registerPrefix(token.YIELD, p.parseYield)
 	p.registerPrefix(token.GLOBAL, p.parseGlobal)
+	p.registerPrefix(token.KEYWORD__FILE__, p.parseKeyword__FILE__)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -322,6 +323,9 @@ func (p *parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExp := prefix()
 	for precedence < p.peekPrecedence() {
+		if leftExp == nil {
+			return nil // fail early and stop parsing
+		}
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
@@ -349,6 +353,11 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 		p.nextToken()
 		assign.Right = p.parseExpression(precLowest)
 		return assign
+	case *ast.Keyword__FILE__:
+		epos := p.file.Position(p.pos)
+		msg := fmt.Errorf("%s: Can't assign to __FILE__", epos.String())
+		p.errors = append(p.errors, msg)
+		return nil
 	default:
 		msg := fmt.Errorf("could not parse assignment: unexpected lefthandside token '%T'", left)
 		p.errors = append(p.errors, msg)
@@ -426,6 +435,17 @@ func (p *parser) parseSelf() ast.Expression {
 		return nil
 	}
 	return self
+}
+
+func (p *parser) parseKeyword__FILE__() ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseKeyword__FILE__"))
+	}
+	file := &ast.Keyword__FILE__{
+		Token:    p.curToken,
+		Filename: p.file.Name(),
+	}
+	return file
 }
 
 func (p *parser) parseYield() ast.Expression {

@@ -58,6 +58,7 @@ end
 yield
 A::B
 =>
+__FILE__
 $foo;
 $Foo
 $dotAfter.
@@ -227,6 +228,8 @@ $a`
 		{token.CONST, "B"},
 		{token.NEWLINE, "\n"},
 		{token.HASHROCKET, "=>"},
+		{token.NEWLINE, "\n"},
+		{token.KEYWORD__FILE__, "__FILE__"},
 		{token.NEWLINE, "\n"},
 		{token.GLOBAL, "$foo"},
 		{token.SEMICOLON, ";"},

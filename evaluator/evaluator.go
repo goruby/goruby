@@ -43,6 +43,8 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 	case (*ast.Self):
 		self, _ := env.Get("self")
 		return self, nil
+	case (*ast.Keyword__FILE__):
+		return &object.String{Value: node.Filename}, nil
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 	case *ast.Global:

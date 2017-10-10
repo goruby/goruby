@@ -211,6 +211,19 @@ func (y *YieldExpression) expressionNode() {}
 // TokenLiteral returns the literal of the token.YIELD token
 func (y *YieldExpression) TokenLiteral() string { return y.Token.Literal }
 
+// Keyword__FILE__ represents __FILE__ in the AST
+type Keyword__FILE__ struct {
+	Token    token.Token // the token.FILE__ token
+	Filename string
+}
+
+func (f *Keyword__FILE__) String() string  { return f.Token.Literal }
+func (f *Keyword__FILE__) expressionNode() {}
+func (f *Keyword__FILE__) literalNode()    {}
+
+// TokenLiteral returns the literal of the token.FILE__ token
+func (f *Keyword__FILE__) TokenLiteral() string { return f.Token.Literal }
+
 // An Identifier represents an identifier in the program
 type Identifier struct {
 	Token token.Token // the token.IDENT token
