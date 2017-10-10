@@ -915,6 +915,38 @@ func TestSelfExpression(t *testing.T) {
 	testIntegerObject(t, self.RubyObject, 3)
 }
 
+func TestHashLiteral(t *testing.T) {
+	input := `{"foo" => 42, :bar => 2, true => false, nil => true, 2 => 2}`
+
+	env := object.NewMainEnvironment()
+	evaluated, err := testEval(input, env)
+	checkError(t, err)
+
+	hash, ok := evaluated.(*object.Hash)
+	if !ok {
+		t.Logf("Expected evaluated object to be *object.Hash, got=%T", evaluated)
+		t.FailNow()
+	}
+
+	expected := map[string]object.RubyObject{
+		"foo":  &object.Integer{Value: 42},
+		":bar": &object.Integer{Value: 2},
+		"true": object.FALSE,
+		"nil":  object.TRUE,
+		"2":    &object.Integer{Value: 2},
+	}
+
+	actual := make(map[string]object.RubyObject)
+	for k, v := range hash.Map {
+		actual[k.Inspect()] = v
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Logf("Expected hash to equal\n%s\n\tgot\n%s\n", expected, actual)
+		t.Fail()
+	}
+}
+
 func testExceptionObject(t *testing.T, obj object.RubyObject, errorMessage string) {
 	if !IsError(obj) {
 		t.Logf("Expected error or exception, got %T", obj)

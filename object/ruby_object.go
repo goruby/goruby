@@ -19,6 +19,7 @@ const (
 	CLASS_OBJ          Type = "CLASS"
 	CLASS_INSTANCE_OBJ Type = "CLASS"
 	ARRAY_OBJ          Type = "ARRAY"
+	HASH_OBJ           Type = "HASH"
 	INTEGER_OBJ        Type = "INTEGER"
 	STRING_OBJ         Type = "STRING"
 	SYMBOL_OBJ         Type = "SYMBOL"
