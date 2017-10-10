@@ -301,7 +301,7 @@ func (sl *StringLiteral) literalNode()    {}
 
 // TokenLiteral returns the literal from token token.STRING
 func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
-func (sl *StringLiteral) String() string       { return sl.Token.Literal }
+func (sl *StringLiteral) String() string       { return sl.Value }
 
 // SymbolLiteral represents a symbol within the AST
 type SymbolLiteral struct {
