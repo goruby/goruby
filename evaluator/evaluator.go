@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/object"
@@ -379,16 +380,17 @@ func evalIfExpression(ie *ast.IfExpression, env object.Environment) (object.Ruby
 }
 
 func evalIndexExpression(left, index object.RubyObject) (object.RubyObject, error) {
-	switch {
-	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
-		return evalArrayIndexExpression(left, index), nil
+	switch target := left.(type) {
+	case *object.Array:
+		return evalArrayIndexExpression(target, index), nil
+	case *object.Hash:
+		return evalHashIndexExpression(target, index), nil
 	default:
 		return nil, object.NewException("index operator not supported: %s", left.Type())
 	}
 }
 
-func evalArrayIndexExpression(array, index object.RubyObject) object.RubyObject {
-	arrayObject := array.(*object.Array)
+func evalArrayIndexExpression(arrayObject *object.Array, index object.RubyObject) object.RubyObject {
 	idx := index.(*object.Integer).Value
 	maxNegative := -int64(len(arrayObject.Elements))
 	maxPositive := maxNegative*-1 - 1
@@ -402,6 +404,17 @@ func evalArrayIndexExpression(array, index object.RubyObject) object.RubyObject 
 		return arrayObject.Elements[len(arrayObject.Elements)+int(idx)]
 	}
 	return arrayObject.Elements[idx]
+}
+
+func evalHashIndexExpression(hash *object.Hash, index object.RubyObject) object.RubyObject {
+	key := index.Inspect()
+	for k, v := range hash.Map {
+		// TODO: reflect calls are very expensive. Maybe enhance the Map within Hash?
+		if k.Inspect() == key && reflect.TypeOf(k) == reflect.TypeOf(index) {
+			return v
+		}
+	}
+	return object.NIL
 }
 
 func evalBlockStatement(block *ast.BlockStatement, env object.Environment) (object.RubyObject, error) {
