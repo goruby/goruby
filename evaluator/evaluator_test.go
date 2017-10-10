@@ -947,6 +947,77 @@ func TestHashLiteral(t *testing.T) {
 	}
 }
 
+func TestHashIndexExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{
+			"{'foo' => 1, 'bar' => 2, 'qux' => 3}['foo']",
+			1,
+		},
+		{
+			"{'foo' => 1, 'bar' => 2, 'qux' => 3}['bar']",
+			2,
+		},
+		{
+			"{'foo' => 1, 'bar' => 2, 'qux' => 3}['qux']",
+			3,
+		},
+		{
+			"i = 'foo'; {'foo'=>1}[i];",
+			1,
+		},
+		{
+			"{1=>1, 2=>2, 3=>3}[1 + 1];",
+			2,
+		},
+		{
+			"myHash = {1=>1, 2=>2, 3=>3}; myHash[2];",
+			2,
+		},
+		{
+			"myHash = {0=>1, 1=>2, 2=>3}; myHash[0] + myHash[1] + myHash[2];",
+			6,
+		},
+		{
+			"myHash = {0=>1, 1=>2, 2=>3}; i = myHash[0]; myHash[i]",
+			2,
+		},
+		{
+			"{0=>1, 1=>2, 2=>3}[3]",
+			nil,
+		},
+		{
+			"{0=>1, 1=>2, 2=>3}[-1]",
+			nil,
+		},
+		{
+			"{:foo => 1, :bar => 2, :qux => 3}[:qux]",
+			3,
+		},
+		{
+			"{'foo' =>1, true => 2, false => 3}[true]",
+			2,
+		},
+		{
+			"{nil =>1, :qux => 2, 3=>3}[nil]",
+			1,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated, err := testEval(tt.input)
+		checkError(t, err)
+		integer, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNilObject(t, evaluated)
+		}
+	}
+}
+
 func testExceptionObject(t *testing.T, obj object.RubyObject, errorMessage string) {
 	if !IsError(obj) {
 		t.Logf("Expected error or exception, got %T", obj)

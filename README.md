@@ -102,6 +102,7 @@ To run the command as one off run `go run main.go`.
 	- [ ] default values for parameters
 	- [ ] keyword arguments
 	- [x] block arguments
+	- [ ] hash as last argument without braces
 - [x] function calls
 	- [x] with parens
 	- [x] without parens	
@@ -185,6 +186,10 @@ To run the command as one off run `go run main.go`.
 	- [ ] array of symbols `%i{}`
 - [x] nil
 - [ ] hashes
+	- [x] literal with `=>` notation
+	- [ ] literal with `key:` notation
+	- [x] indexing `hash[:foo]`
+	- [x] every Ruby Object can be a hash key
 - [ ] symbols
 	- [x] `:symbol`
 	- [x] `:"symbol"`
