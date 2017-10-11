@@ -555,9 +555,10 @@ func (m *ModuleExpression) String() string {
 
 // ClassExpression represents a module definition
 type ClassExpression struct {
-	Token token.Token // The class keyword
-	Name  *Identifier // The class name, will always be a const
-	Body  *BlockStatement
+	Token      token.Token // The class keyword
+	Name       *Identifier // The class name, will always be a const
+	SuperClass *Identifier // The superclass, if any
+	Body       *BlockStatement
 }
 
 func (m *ClassExpression) expressionNode() {}
@@ -569,6 +570,12 @@ func (m *ClassExpression) String() string {
 	out.WriteString(m.TokenLiteral())
 	out.WriteString(" ")
 	out.WriteString(m.Name.String())
+	if m.SuperClass != nil {
+		out.WriteString(" ")
+		out.WriteString("<")
+		out.WriteString(" ")
+		out.WriteString(m.SuperClass.String())
+	}
 	out.WriteString("\n")
 	out.WriteString(m.Body.String())
 	out.WriteString("\n")

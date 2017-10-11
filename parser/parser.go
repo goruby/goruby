@@ -709,6 +709,11 @@ func (p *parser) parseClass() ast.Expression {
 	}
 	expr.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
+	if p.peekTokenIs(token.LT) {
+		p.consume(token.LT)
+		expr.SuperClass = p.parseIdentifier().(*ast.Identifier)
+	}
+
 	if !p.acceptOneOf(token.NEWLINE, token.SEMICOLON) {
 		return nil
 	}

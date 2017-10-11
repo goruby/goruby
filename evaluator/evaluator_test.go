@@ -620,10 +620,11 @@ func TestModuleObject(t *testing.T) {
 
 func TestClassObject(t *testing.T) {
 	tests := []struct {
-		input           string
-		expectedName    string
-		expectedMethods map[string]string
-		expectedReturn  object.RubyObject
+		input              string
+		expectedName       string
+		expectedSuperclass string
+		expectedMethods    map[string]string
+		expectedReturn     object.RubyObject
 	}{
 		{
 			`class Foo
@@ -632,6 +633,7 @@ func TestClassObject(t *testing.T) {
 				end
 			end`,
 			"Foo",
+			"Object",
 			map[string]string{"a": "fn() {\nfoo\n}"},
 			&object.Symbol{Value: "a"},
 		},
@@ -640,6 +642,7 @@ func TestClassObject(t *testing.T) {
 				3
 			end`,
 			"Foo",
+			"Object",
 			map[string]string{},
 			&object.Integer{Value: 3},
 		},
@@ -647,6 +650,15 @@ func TestClassObject(t *testing.T) {
 			`class Foo
 			end`,
 			"Foo",
+			"Object",
+			map[string]string{},
+			object.NIL,
+		},
+		{
+			`class Foo < BasicObject
+			end`,
+			"Foo",
+			"BasicObject",
 			map[string]string{},
 			object.NIL,
 		},
@@ -673,6 +685,13 @@ func TestClassObject(t *testing.T) {
 		if !ok {
 			t.Logf("Expected class to be a object.RubyClassObject, got %T", classClass)
 			t.FailNow()
+		}
+
+		superClass := classClass.SuperClass().(object.RubyClassObject)
+
+		if superClass.Inspect() != tt.expectedSuperclass {
+			t.Logf("Expected superclass %q, got %q\n", tt.expectedSuperclass, superClass.Inspect())
+			t.Fail()
 		}
 
 		actualMethods := make(map[string]string)

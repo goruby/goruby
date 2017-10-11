@@ -161,13 +161,17 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		env.Set(node.Name.Value, self.RubyObject)
 		return bodyReturn, nil
 	case *ast.ClassExpression:
-		objectClass, ok := env.Get("Object")
+		superClassName := "Object"
+		if node.SuperClass != nil {
+			superClassName = node.SuperClass.Value
+		}
+		superClass, ok := env.Get(superClassName)
 		if !ok {
-			return nil, object.NewUninitializedConstantNameError("Object")
+			return nil, object.NewUninitializedConstantNameError(superClassName)
 		}
 		class, ok := env.Get(node.Name.Value)
 		if !ok {
-			class = object.NewClass(node.Name.Value, objectClass.(object.RubyClassObject), env)
+			class = object.NewClass(node.Name.Value, superClass.(object.RubyClassObject), env)
 		}
 		classEnv := class.(object.Environment)
 		classEnv.Set("self", &object.Self{RubyObject: class, Name: node.Name.Value})
