@@ -1,5 +1,7 @@
 package object
 
+import "hash/fnv"
+
 var stringClass RubyClassObject = newClass(
 	"String", objectClass, stringMethods, stringClassMethods, func(RubyClassObject) RubyObject { return &String{} },
 )
@@ -21,6 +23,13 @@ func (s *String) Type() Type { return STRING_OBJ }
 
 // Class returns stringClass
 func (s *String) Class() RubyClass { return stringClass }
+
+// hashKey returns a hash key to be used by Hashes
+func (s *String) hashKey() hashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+	return hashKey{Type: s.Type(), Value: h.Sum64()}
+}
 
 var stringClassMethods = map[string]RubyMethod{}
 

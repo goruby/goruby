@@ -9,7 +9,9 @@ func init() {
 }
 
 // Object represents an Object in Ruby
-type Object struct{}
+type Object struct {
+	_ int // for uniqueness
+}
 
 // Inspect return ""
 func (o *Object) Inspect() string { return "" }

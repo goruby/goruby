@@ -1,6 +1,9 @@
 package object
 
-import "strings"
+import (
+	"hash/fnv"
+	"strings"
+)
 
 var arrayClass RubyClassObject = newClass(
 	"Array",
@@ -43,6 +46,13 @@ func (a *Array) Inspect() string {
 
 // Class returns the class of the Array
 func (a *Array) Class() RubyClass { return arrayClass }
+func (a *Array) hashKey() hashKey {
+	h := fnv.New64a()
+	for _, e := range a.Elements {
+		h.Write(hash(e).bytes())
+	}
+	return hashKey{Type: a.Type(), Value: h.Sum64()}
+}
 
 var arrayClassMethods = map[string]RubyMethod{}
 

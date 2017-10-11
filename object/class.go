@@ -2,6 +2,7 @@ package object
 
 import (
 	"fmt"
+	"hash/fnv"
 )
 
 var classClass RubyClassObject = &class{
@@ -88,6 +89,11 @@ func (c *class) SuperClass() RubyClass {
 }
 func (c *class) Methods() MethodSet {
 	return c.instanceMethods
+}
+func (c *class) hashKey() hashKey {
+	h := fnv.New64a()
+	h.Write([]byte(c.name))
+	return hashKey{Type: c.Type(), Value: h.Sum64()}
 }
 func (c *class) addMethod(name string, method RubyMethod) {
 	c.instanceMethods.Set(name, method)
