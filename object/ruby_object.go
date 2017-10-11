@@ -55,6 +55,10 @@ type RubyClassObject interface {
 	RubyClass
 }
 
+type hashable interface {
+	hashKey() hashKey
+}
+
 type extendable interface {
 	addMethod(name string, method RubyMethod)
 }

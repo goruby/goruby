@@ -2,7 +2,6 @@ package evaluator
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/object"
@@ -97,7 +96,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		}
 		return &object.Array{Elements: elements}, nil
 	case *ast.HashLiteral:
-		hashMap := make(map[object.RubyObject]object.RubyObject)
+		var hash object.Hash
 		for k, v := range node.Map {
 			key, err := Eval(k, env)
 			if err != nil {
@@ -107,9 +106,9 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			if err != nil {
 				return nil, err
 			}
-			hashMap[key] = value
+			hash.Set(key, value)
 		}
-		return &object.Hash{Map: hashMap}, nil
+		return &hash, nil
 
 	// Expressions
 	case *ast.VariableAssignment:
@@ -407,14 +406,11 @@ func evalArrayIndexExpression(arrayObject *object.Array, index object.RubyObject
 }
 
 func evalHashIndexExpression(hash *object.Hash, index object.RubyObject) object.RubyObject {
-	key := index.Inspect()
-	for k, v := range hash.Map {
-		// TODO: reflect calls are very expensive. Maybe enhance the Map within Hash?
-		if k.Inspect() == key && reflect.TypeOf(k) == reflect.TypeOf(index) {
-			return v
-		}
+	result, ok := hash.Get(index)
+	if !ok {
+		return object.NIL
 	}
-	return object.NIL
+	return result
 }
 
 func evalBlockStatement(block *ast.BlockStatement, env object.Environment) (object.RubyObject, error) {

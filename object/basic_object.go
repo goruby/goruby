@@ -1,6 +1,8 @@
 package object
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var basicObjectClass RubyClassObject = newClass(
 	"BasicObject",
@@ -15,7 +17,9 @@ func init() {
 }
 
 // basicObject represents a basicObject object in Ruby
-type basicObject struct{}
+type basicObject struct {
+	_ int // for uniqueness
+}
 
 // Inspect returns empty string. BasicObjects do not have an `inspect` method.
 func (b *basicObject) Inspect() string {

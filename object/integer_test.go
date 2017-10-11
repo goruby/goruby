@@ -5,6 +5,25 @@ import (
 	"testing"
 )
 
+func TestInteger_hashKey(t *testing.T) {
+	hello1 := &Integer{Value: 1}
+	hello2 := &Integer{Value: 1}
+	diff1 := &Integer{Value: 3}
+	diff2 := &Integer{Value: 3}
+
+	if hello1.hashKey() != hello2.hashKey() {
+		t.Errorf("strings with same content have different hash keys")
+	}
+
+	if diff1.hashKey() != diff2.hashKey() {
+		t.Errorf("strings with same content have different hash keys")
+	}
+
+	if hello1.hashKey() == diff1.hashKey() {
+		t.Errorf("strings with different content have same hash keys")
+	}
+}
+
 func TestIntegerDiv(t *testing.T) {
 	tests := []struct {
 		arguments []RubyObject

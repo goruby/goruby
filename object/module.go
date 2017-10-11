@@ -1,5 +1,7 @@
 package object
 
+import "hash/fnv"
+
 var moduleClass RubyClassObject = &class{name: "Module", instanceMethods: NewMethodSet(moduleMethods)}
 
 func init() {
@@ -44,6 +46,11 @@ func (m *Module) Class() RubyClass {
 		return m.class
 	}
 	return moduleClass
+}
+func (m *Module) hashKey() hashKey {
+	h := fnv.New64a()
+	h.Write([]byte(m.name))
+	return hashKey{Type: m.Type(), Value: h.Sum64()}
 }
 
 func (m *Module) addMethod(name string, method RubyMethod) {

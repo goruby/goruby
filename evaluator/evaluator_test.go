@@ -937,7 +937,7 @@ func TestHashLiteral(t *testing.T) {
 	}
 
 	actual := make(map[string]object.RubyObject)
-	for k, v := range hash.Map {
+	for k, v := range hash.Map() {
 		actual[k.Inspect()] = v
 	}
 

@@ -87,6 +87,25 @@ func TestClassInspect(t *testing.T) {
 	}
 }
 
+func TestClass_hashKey(t *testing.T) {
+	hello1 := &class{name: "Hello World"}
+	hello2 := &class{name: "Hello World"}
+	diff1 := &class{name: "My name is johnny"}
+	diff2 := &class{name: "My name is johnny"}
+
+	if hello1.hashKey() != hello2.hashKey() {
+		t.Errorf("strings with same content have different hash keys")
+	}
+
+	if diff1.hashKey() != diff2.hashKey() {
+		t.Errorf("strings with same content have different hash keys")
+	}
+
+	if hello1.hashKey() == diff1.hashKey() {
+		t.Errorf("strings with different content have same hash keys")
+	}
+}
+
 func TestClassInstanceInspect(t *testing.T) {
 	context := &classInstance{class: &class{name: "Foo"}}
 

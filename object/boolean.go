@@ -35,6 +35,16 @@ func (b *Boolean) Class() RubyClass {
 	return falseClass
 }
 
+func (b *Boolean) hashKey() hashKey {
+	var value uint64
+	if b.Value {
+		value = 1
+	} else {
+		value = 0
+	}
+	return hashKey{Type: b.Type(), Value: value}
+}
+
 var booleanTrueMethods = map[string]RubyMethod{}
 
 var booleanFalseMethods = map[string]RubyMethod{}
