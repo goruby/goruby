@@ -116,6 +116,25 @@ func (bs *BlockStatement) String() string {
 	return out.String()
 }
 
+// Assignment represents a generic assignment
+type Assignment struct {
+	Token token.Token
+	Left  Expression
+	Right Expression
+}
+
+func (a *Assignment) String() string {
+	var out bytes.Buffer
+	out.WriteString(encloseInParensIfNeeded(a.Left))
+	out.WriteString(" = ")
+	out.WriteString(encloseInParensIfNeeded(a.Right))
+	return out.String()
+}
+func (a *Assignment) expressionNode() {}
+
+// TokenLiteral returns the literal of the ASSIGN token
+func (a *Assignment) TokenLiteral() string { return a.Token.Literal }
+
 // GlobalAssignment represents a global assignment
 type GlobalAssignment struct {
 	Name  *Global
@@ -127,13 +146,7 @@ func (v *GlobalAssignment) String() string {
 	out.WriteString(v.Name.String())
 	out.WriteString(" = ")
 	if v.Value != nil {
-		val := v.Value.String()
-		hasParens := strings.HasPrefix(val, "(") && strings.HasSuffix(val, ")")
-		_, isLiteral := v.Value.(literal)
-		if !isLiteral && !hasParens {
-			val = "(" + val + ")"
-		}
-		out.WriteString(val)
+		out.WriteString(encloseInParensIfNeeded(v.Value))
 	}
 	return out.String()
 }
@@ -153,13 +166,7 @@ func (v *VariableAssignment) String() string {
 	out.WriteString(v.Name.String())
 	out.WriteString(" = ")
 	if v.Value != nil {
-		val := v.Value.String()
-		hasParens := strings.HasPrefix(val, "(") && strings.HasSuffix(val, ")")
-		_, isLiteral := v.Value.(literal)
-		if !isLiteral && !hasParens {
-			val = "(" + val + ")"
-		}
-		out.WriteString(val)
+		out.WriteString(encloseInParensIfNeeded(v.Value))
 	}
 	return out.String()
 }
@@ -596,4 +603,14 @@ func (oe *InfixExpression) String() string {
 	out.WriteString(oe.Right.String())
 	out.WriteString(")")
 	return out.String()
+}
+
+func encloseInParensIfNeeded(expr Expression) string {
+	val := expr.String()
+	hasParens := strings.HasPrefix(val, "(") && strings.HasSuffix(val, ")")
+	_, isLiteral := expr.(literal)
+	if !isLiteral && !hasParens {
+		val = "(" + val + ")"
+	}
+	return val
 }

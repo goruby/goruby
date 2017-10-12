@@ -348,6 +348,66 @@ func TestScopedIdentifierExpression(t *testing.T) {
 	}
 }
 
+func TestAssignment(t *testing.T) {
+	t.Run("assign to hash", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected int64
+		}{
+			{
+				`{:foo => 3}[:foo] = 5`,
+				5,
+			},
+		}
+
+		for _, tt := range tests {
+			evaluated, err := testEval(tt.input)
+			checkError(t, err)
+
+			testIntegerObject(t, evaluated, tt.expected)
+		}
+	})
+	t.Run("assign to array", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			size     int
+			elements []object.RubyObject
+		}{
+			{
+				`x = [3]; x[0] = 5; x`,
+				1,
+				[]object.RubyObject{&object.Integer{Value: 5}},
+			},
+			{
+				`x = [3]; x[3] = 5; x`,
+				4,
+				[]object.RubyObject{&object.Integer{Value: 3}, object.NIL, object.NIL, &object.Integer{Value: 5}},
+			},
+		}
+
+		for _, tt := range tests {
+			evaluated, err := testEval(tt.input)
+			checkError(t, err)
+
+			array, ok := evaluated.(*object.Array)
+			if !ok {
+				t.Logf("Expected to eval to array, got %T\n", evaluated)
+				t.FailNow()
+			}
+
+			if len(array.Elements) != tt.size {
+				t.Logf("Expected array size to equal %d, got %d\n", tt.size, len(array.Elements))
+				t.Fail()
+			}
+
+			if !reflect.DeepEqual(array.Elements, tt.elements) {
+				t.Logf("Expected elements to equal\n%s\n\tgot\n%s\n", tt.elements, array.Elements)
+				t.Fail()
+			}
+		}
+	})
+}
+
 func TestVariableAssignmentExpression(t *testing.T) {
 	tests := []struct {
 		input    string
