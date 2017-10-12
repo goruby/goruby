@@ -11,7 +11,7 @@ type Visitor interface {
 
 // Helper functions for common node lists. They may be empty.
 
-func walkIdentList(v Visitor, list []*Identifier) {
+func walkParameterList(v Visitor, list []*FunctionParameter) {
 	for _, x := range list {
 		Walk(v, x)
 	}
@@ -48,10 +48,18 @@ func Walk(v Visitor, node Node) {
 	case *Identifier, *Global, *IntegerLiteral, *StringLiteral, *SymbolLiteral, *Boolean:
 		// nothing to do
 
+	case *BlockExpression:
+		walkParameterList(v, n.Parameters)
+		Walk(v, n.Body)
+
 	case *FunctionLiteral:
 		Walk(v, n.Name)
-		walkIdentList(v, n.Parameters)
+		walkParameterList(v, n.Parameters)
 		Walk(v, n.Body)
+
+	case *FunctionParameter:
+		Walk(v, n.Name)
+		Walk(v, n.Default)
 
 	case *IndexExpression:
 		Walk(v, n.Left)
@@ -113,6 +121,7 @@ func Walk(v Visitor, node Node) {
 		walkStmtList(v, n.Statements)
 
 	case nil:
+		// nothing to do
 
 	default:
 		panic(fmt.Sprintf("ast.Walk: unexpected node type %T", n))

@@ -413,7 +413,7 @@ func (hl *HashLiteral) String() string {
 type FunctionLiteral struct {
 	Token      token.Token // The 'def' token
 	Name       *Identifier
-	Parameters []*Identifier
+	Parameters []*FunctionParameter
 	Body       *BlockStatement
 }
 
@@ -436,6 +436,26 @@ func (fl *FunctionLiteral) String() string {
 	out.WriteString(") ")
 	out.WriteString(fl.Body.String())
 	out.WriteString(" end")
+	return out.String()
+}
+
+// A FunctionParameter represents a parameter in a function literal
+type FunctionParameter struct {
+	Name    *Identifier
+	Default Expression
+}
+
+func (f *FunctionParameter) expressionNode() {}
+
+// TokenLiteral returns the token of the parameter name
+func (f *FunctionParameter) TokenLiteral() string { return f.Name.TokenLiteral() }
+func (f *FunctionParameter) String() string {
+	var out bytes.Buffer
+	out.WriteString(f.Name.String())
+	if f.Default != nil {
+		out.WriteString(" = ")
+		out.WriteString(encloseInParensIfNeeded(f.Default))
+	}
 	return out.String()
 }
 
@@ -496,9 +516,9 @@ func (ce *ContextCallExpression) String() string {
 
 // A BlockExpression represents a Ruby block
 type BlockExpression struct {
-	Token      token.Token     // token.DO or token.LBRACE
-	Parameters []*Identifier   // the block parameters
-	Body       *BlockStatement // the block body
+	Token      token.Token          // token.DO or token.LBRACE
+	Parameters []*FunctionParameter // the block parameters
+	Body       *BlockStatement      // the block body
 }
 
 func (b *BlockExpression) expressionNode() {}

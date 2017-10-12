@@ -85,7 +85,7 @@ func (rv *ReturnValue) Class() RubyClass { return rv.Value.Class() }
 
 // A Function represents a user defined function. It is no real Ruby object.
 type Function struct {
-	Parameters       []*ast.Identifier
+	Parameters       []*ast.FunctionParameter
 	Body             *ast.BlockStatement
 	Env              Environment
 	MethodVisibility MethodVisibility
@@ -139,7 +139,7 @@ func (f *Function) extendFunctionEnv(contextEnv Environment, args []RubyObject, 
 	env := NewEnclosedEnvironment(f.Env)
 	env.Set("self", funcSelf)
 	for paramIdx, param := range f.Parameters {
-		env.Set(param.Value, args[paramIdx])
+		env.Set(param.Name.Value, args[paramIdx])
 	}
 	return env
 }

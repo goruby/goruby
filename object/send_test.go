@@ -183,8 +183,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.Identifier{
-				&ast.Identifier{Value: "x"},
+			Parameters: []*ast.FunctionParameter{
+				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -205,8 +205,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.Identifier{
-				&ast.Identifier{Value: "x"},
+			Parameters: []*ast.FunctionParameter{
+				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -233,8 +233,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.Identifier{
-				&ast.Identifier{Value: "x"},
+			Parameters: []*ast.FunctionParameter{
+				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -271,8 +271,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.Identifier{
-				&ast.Identifier{Value: "x"},
+			Parameters: []*ast.FunctionParameter{
+				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -306,8 +306,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.Identifier{
-				&ast.Identifier{Value: "x"},
+			Parameters: []*ast.FunctionParameter{
+				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -366,8 +366,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.Identifier{
-				&ast.Identifier{Value: "x"},
+			Parameters: []*ast.FunctionParameter{
+				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,

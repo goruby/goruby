@@ -758,7 +758,7 @@ func (p *parser) parseFunctionLiteral() ast.Expression {
 	return lit
 }
 
-func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Identifier {
+func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.FunctionParameter {
 	if p.trace {
 		defer un(trace(p, "parseParameters"))
 	}
@@ -768,7 +768,7 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Identif
 		p.accept(startToken)
 	}
 
-	identifiers := []*ast.Identifier{}
+	identifiers := []*ast.FunctionParameter{}
 
 	if !hasDelimiters && p.peekTokenIs(endToken) {
 		p.peekError(token.NEWLINE, token.SEMICOLON)
@@ -786,13 +786,13 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Identif
 
 	p.accept(token.IDENT)
 
-	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
 	identifiers = append(identifiers, ident)
 
 	for p.peekTokenIs(token.COMMA) {
 		p.accept(token.COMMA)
 		p.accept(token.IDENT)
-		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
 		identifiers = append(identifiers, ident)
 	}
 

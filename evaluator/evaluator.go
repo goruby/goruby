@@ -523,7 +523,7 @@ func applyFunction(fn object.CallContext, args []object.RubyObject) (object.Ruby
 func extendFunctionEnv(fn *object.Function, args []object.RubyObject) object.Environment {
 	env := object.NewEnclosedEnvironment(fn.Env)
 	for paramIdx, param := range fn.Parameters {
-		env.Set(param.Value, args[paramIdx])
+		env.Set(param.Name.Value, args[paramIdx])
 	}
 	return env
 }

@@ -836,7 +836,7 @@ func TestKernelTap(t *testing.T) {
 		}
 
 		block := &Proc{
-			Parameters: []*ast.Identifier{&ast.Identifier{Value: "o"}},
+			Parameters: []*ast.FunctionParameter{&ast.FunctionParameter{Name: &ast.Identifier{Value: "o"}}},
 			Body:       &ast.BlockStatement{Statements: []ast.Statement{}},
 			Env:        NewEnvironment(),
 		}
@@ -860,7 +860,7 @@ func TestKernelTap(t *testing.T) {
 		}
 
 		block := &Proc{
-			Parameters: []*ast.Identifier{&ast.Identifier{Value: "o"}},
+			Parameters: []*ast.FunctionParameter{&ast.FunctionParameter{Name: &ast.Identifier{Value: "o"}}},
 			Body:       &ast.BlockStatement{Statements: []ast.Statement{}},
 			Env:        NewEnvironment(),
 		}
@@ -902,7 +902,7 @@ func TestKernelTap(t *testing.T) {
 		}
 
 		block := &Proc{
-			Parameters: []*ast.Identifier{},
+			Parameters: []*ast.FunctionParameter{},
 			Body:       &ast.BlockStatement{Statements: []ast.Statement{}},
 			Env:        NewEnvironment(),
 		}

@@ -30,7 +30,7 @@ func extractBlockFromArgs(args []RubyObject) (*Proc, []RubyObject, bool) {
 
 // A Proc represents a user defined block of code.
 type Proc struct {
-	Parameters             []*ast.Identifier
+	Parameters             []*ast.FunctionParameter
 	Body                   *ast.BlockStatement
 	Env                    Environment
 	ArgumentCountMandatory bool
@@ -79,7 +79,7 @@ func (p *Proc) extendProcEnv(args []RubyObject) Environment {
 		}
 	}
 	for paramIdx, param := range p.Parameters {
-		env.Set(param.Value, arguments[paramIdx])
+		env.Set(param.Name.Value, arguments[paramIdx])
 	}
 	return env
 }

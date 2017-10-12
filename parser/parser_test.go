@@ -1210,7 +1210,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 		}
 
 		for i, param := range function.Parameters {
-			testLiteralExpression(t, param, tt.parameters[i])
+			testLiteralExpression(t, param.Name, tt.parameters[i])
 		}
 
 		if len(function.Body.Statements) != 1 {
@@ -1356,7 +1356,7 @@ func TestBlockExpressionParsing(t *testing.T) {
 		}
 
 		for i, param := range block.Parameters {
-			testLiteralExpression(t, param, tt.parameters[i])
+			testLiteralExpression(t, param.Name, tt.parameters[i])
 		}
 
 		if len(block.Body.Statements) != 1 {
@@ -1415,7 +1415,7 @@ func TestFunctionParameterParsing(t *testing.T) {
 		}
 
 		for i, ident := range tt.expectedParams {
-			testLiteralExpression(t, function.Parameters[i], ident)
+			testLiteralExpression(t, function.Parameters[i].Name, ident)
 		}
 	}
 }
@@ -1470,7 +1470,7 @@ func TestBlockParameterParsing(t *testing.T) {
 		}
 
 		for i, ident := range tt.expectedParams {
-			testLiteralExpression(t, block.Parameters[i], ident)
+			testLiteralExpression(t, block.Parameters[i].Name, ident)
 		}
 	}
 }
@@ -1555,7 +1555,7 @@ func TestCallExpressionParsing(t *testing.T) {
 			t.Fatalf("wrong length of arguments. got=%d", len(exp.Block.Parameters))
 		}
 
-		testIdentifier(t, exp.Block.Parameters[0], "x")
+		testIdentifier(t, exp.Block.Parameters[0].Name, "x")
 
 		if exp.Block.Body.String() != "x" {
 			t.Logf("Expected block body to equal\n%s\n\tgot\n%s\n", "x", exp.Block.Body.String())
@@ -2616,6 +2616,8 @@ func testLiteralExpression(
 		return testIdentifier(t, exp, v)
 	case bool:
 		return testBooleanLiteral(t, exp, v)
+	case map[string]string:
+		return testHashLiteral(t, exp, v)
 	}
 	t.Errorf("type of expression not handled. got=%T", exp)
 	return false
