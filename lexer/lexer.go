@@ -216,7 +216,7 @@ func startLexer(l *Lexer) StateFn {
 		} else if isDigit(r) {
 			return lexDigit
 		} else {
-			return l.errorf("Illegal character at %d: '%c'", l.start, r)
+			return l.errorf("Illegal character: '%c'", r)
 		}
 	}
 }
@@ -287,11 +287,11 @@ func lexGlobal(l *Lexer) StateFn {
 	r := l.next()
 
 	if isExpressionDelimiter(r) {
-		return l.errorf("Illegal character at %d: '%c'", l.pos, r)
+		return l.errorf("Illegal character: '%c'", r)
 	}
 
 	if isWhitespace(r) {
-		return l.errorf("Illegal character at %d: '%c'", l.pos, r)
+		return l.errorf("Illegal character: '%c'", r)
 	}
 
 	for !isWhitespace(r) && !isExpressionDelimiter(r) {

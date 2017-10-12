@@ -252,8 +252,12 @@ func (p *parser) parseStatement() ast.Statement {
 	}
 	switch p.curToken.Type {
 	case token.ILLEGAL:
-		msg := fmt.Errorf("%s", p.curToken.Literal)
-		p.errors = append(p.errors, msg)
+		msg := fmt.Sprintf("%s", p.curToken.Literal)
+		epos := p.file.Position(p.pos)
+		if epos.Filename != "" || epos.IsValid() {
+			msg = epos.String() + ": " + msg
+		}
+		p.errors = append(p.errors, fmt.Errorf(msg))
 		return nil
 	case token.EOF:
 		err := &unexpectedTokenError{
