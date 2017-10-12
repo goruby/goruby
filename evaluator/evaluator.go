@@ -111,6 +111,24 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return &hash, nil
 
 	// Expressions
+	case *ast.Assignment:
+		right, err := Eval(node.Right, env)
+		if err != nil {
+			return nil, err
+		}
+		indexExp, ok := node.Left.(*ast.IndexExpression)
+		if ok {
+			left, err := Eval(indexExp.Left, env)
+			if err != nil {
+				return nil, err
+			}
+			index, err := Eval(indexExp.Index, env)
+			if err != nil {
+				return nil, err
+			}
+			return evalIndexExpressionAssignment(left, index, right)
+		}
+		return nil, object.NewSyntaxError(fmt.Errorf("Assignment not supported to %T", node.Left))
 	case *ast.VariableAssignment:
 		val, err := Eval(node.Value, env)
 		if err != nil {
@@ -375,6 +393,30 @@ func evalIfExpression(ie *ast.IfExpression, env object.Environment) (object.Ruby
 		return Eval(ie.Alternative, env)
 	} else {
 		return object.NIL, nil
+	}
+}
+
+func evalIndexExpressionAssignment(left, index, right object.RubyObject) (object.RubyObject, error) {
+	switch target := left.(type) {
+	case *object.Array:
+		integer, ok := index.(*object.Integer)
+		if !ok {
+			return nil, object.NewImplicitConversionTypeError(integer, index)
+		}
+		idx := int(integer.Value)
+		if idx > len(target.Elements) {
+			// enlarge slice
+			for len(target.Elements) <= idx {
+				target.Elements = append(target.Elements, object.NIL)
+			}
+		}
+		target.Elements[idx] = right
+		return right, nil
+	case *object.Hash:
+		target.Set(index, right)
+		return right, nil
+	default:
+		return nil, object.NewException("assignment target not supported: %s", left.Type())
 	}
 }
 

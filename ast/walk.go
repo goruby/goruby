@@ -79,6 +79,10 @@ func Walk(v Visitor, node Node) {
 	case *ExpressionStatement:
 		Walk(v, n.Expression)
 
+	case *Assignment:
+		Walk(v, n.Left)
+		Walk(v, n.Right)
+
 	case *VariableAssignment:
 		Walk(v, n.Name)
 		Walk(v, n.Value)

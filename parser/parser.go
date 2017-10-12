@@ -341,6 +341,14 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 		return p.parseVariableAssignExpression(left)
 	case *ast.Global:
 		return p.parseGlobalAssignment(left)
+	case *ast.IndexExpression:
+		assign := &ast.Assignment{
+			Token: p.curToken,
+			Left:  left,
+		}
+		p.nextToken()
+		assign.Right = p.parseExpression(precLowest)
+		return assign
 	default:
 		msg := fmt.Errorf("could not parse assignment: unexpected lefthandside token '%T'", left)
 		p.errors = append(p.errors, msg)

@@ -11,6 +11,43 @@ import (
 	"github.com/pkg/errors"
 )
 
+func TestAssignment(t *testing.T) {
+	input := `x[:foo] = 3`
+	program, err := parseSource(input)
+	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf(
+			"program.Statements does not contain 1 statements. got=%d",
+			len(program.Statements),
+		)
+	}
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+
+	assign, ok := stmt.Expression.(*ast.Assignment)
+	if !ok {
+		t.Fatalf(
+			"stmt.Expression is not *ast.Assignment. got=%T",
+			stmt.Expression,
+		)
+	}
+
+	if _, ok = assign.Left.(*ast.IndexExpression); !ok {
+		t.Fatalf(
+			"assign.Left is not *ast.IndexExpression. got=%T",
+			stmt.Expression,
+		)
+	}
+
+	testIntegerLiteral(t, assign.Right, 3)
+}
+
 func TestVariableExpression(t *testing.T) {
 	t.Run("valid variable expressions", func(t *testing.T) {
 		tests := []struct {
@@ -44,6 +81,12 @@ func TestVariableExpression(t *testing.T) {
 			}
 
 			variable, ok := stmt.Expression.(*ast.VariableAssignment)
+			if !ok {
+				t.Fatalf(
+					"stmt.Expression is not *ast.VariableAssignment. got=%T",
+					stmt.Expression,
+				)
+			}
 
 			if !testIdentifier(t, variable.Name, tt.expectedIdentifier) {
 				return
@@ -111,6 +154,12 @@ func TestGlobalAssignment(t *testing.T) {
 	}
 
 	variable, ok := stmt.Expression.(*ast.GlobalAssignment)
+	if !ok {
+		t.Fatalf(
+			"stmt.Expression is not *ast.GlobalAssignment. got=%T",
+			stmt.Expression,
+		)
+	}
 
 	expectedGlobal := "$foo"
 
