@@ -279,7 +279,7 @@ func lexGlobal(l *Lexer) StateFn {
 	r := l.next()
 
 	if r == '.' {
-		return l.errorf("Illegal character at %d: '%c'", l.pos, r)
+		return l.errorf("Illegal character: '%c'", r)
 	}
 
 	if isExpressionDelimiter(r) {
