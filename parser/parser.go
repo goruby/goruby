@@ -787,12 +787,20 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 	p.accept(token.IDENT)
 
 	ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
+	if p.peekTokenIs(token.ASSIGN) {
+		p.consume(token.ASSIGN)
+		ident.Default = p.parseExpression(precLowest)
+	}
 	identifiers = append(identifiers, ident)
 
 	for p.peekTokenIs(token.COMMA) {
 		p.accept(token.COMMA)
 		p.accept(token.IDENT)
 		ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
+		if p.peekTokenIs(token.ASSIGN) {
+			p.consume(token.ASSIGN)
+			ident.Default = p.parseExpression(precLowest)
+		}
 		identifiers = append(identifiers, ident)
 	}
 

@@ -3,8 +3,6 @@ package object
 import (
 	"reflect"
 	"testing"
-
-	"github.com/goruby/goruby/ast"
 )
 
 type testRubyObject struct {
@@ -183,8 +181,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.FunctionParameter{
-				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
+			Parameters: []*FunctionParameter{
+				&FunctionParameter{Name: "x"},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -205,8 +203,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.FunctionParameter{
-				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
+			Parameters: []*FunctionParameter{
+				&FunctionParameter{Name: "x"},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -233,8 +231,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.FunctionParameter{
-				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
+			Parameters: []*FunctionParameter{
+				&FunctionParameter{Name: "x"},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -271,8 +269,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.FunctionParameter{
-				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
+			Parameters: []*FunctionParameter{
+				&FunctionParameter{Name: "x"},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -306,8 +304,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.FunctionParameter{
-				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
+			Parameters: []*FunctionParameter{
+				&FunctionParameter{Name: "x"},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,
@@ -366,8 +364,8 @@ func TestAddMethod(t *testing.T) {
 		}
 
 		fn := &Function{
-			Parameters: []*ast.FunctionParameter{
-				&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
+			Parameters: []*FunctionParameter{
+				&FunctionParameter{Name: "x"},
 			},
 			Env:  &environment{store: map[string]RubyObject{}},
 			Body: nil,

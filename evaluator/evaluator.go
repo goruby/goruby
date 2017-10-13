@@ -72,7 +72,14 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			return nil, object.NewSyntaxError(fmt.Errorf("malformed symbol AST: %T", value))
 		}
 	case *ast.FunctionLiteral:
-		params := node.Parameters
+		params := make([]*object.FunctionParameter, len(node.Parameters))
+		for i, param := range node.Parameters {
+			def, err := Eval(param.Default, env)
+			if err != nil {
+				return nil, err
+			}
+			params[i] = &object.FunctionParameter{Name: param.Name.Value, Default: def}
+		}
 		body := node.Body
 		context, _ := env.Get("self")
 		function := &object.Function{
@@ -502,6 +509,7 @@ func evalIdentifier(node *ast.Identifier, env object.Environment) (object.RubyOb
 	return val, nil
 }
 
+// TODO: probably not used anymore
 func applyFunction(fn object.CallContext, args []object.RubyObject) (object.RubyObject, error) {
 	receiver := fn.Receiver()
 	switch fn := receiver.(type) {
@@ -520,10 +528,11 @@ func applyFunction(fn object.CallContext, args []object.RubyObject) (object.Ruby
 	}
 }
 
+// TODO: probably not used anymore
 func extendFunctionEnv(fn *object.Function, args []object.RubyObject) object.Environment {
 	env := object.NewEnclosedEnvironment(fn.Env)
 	for paramIdx, param := range fn.Parameters {
-		env.Set(param.Name.Value, args[paramIdx])
+		env.Set(param.Name, args[paramIdx])
 	}
 	return env
 }

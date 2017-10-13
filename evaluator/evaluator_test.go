@@ -715,26 +715,35 @@ func TestClassObject(t *testing.T) {
 }
 
 func TestFunctionObject(t *testing.T) {
+	type funcParam struct {
+		name         string
+		defaultValue object.RubyObject
+	}
 	tests := []struct {
 		input              string
-		expectedParameters []string
+		expectedParameters []funcParam
 		expectedBody       string
 	}{
 		{
 			"def foo x; x + 2; end",
-			[]string{"x"},
+			[]funcParam{{name: "x"}},
 			"(x + 2)",
 		},
 		{
 			`def foo
 				2
 			end`,
-			[]string{},
+			[]funcParam{},
 			"2",
 		},
 		{
 			"def foo; 2; end",
-			[]string{},
+			[]funcParam{},
+			"2",
+		},
+		{
+			"def foo x = 4; 2; end",
+			[]funcParam{{name: "x", defaultValue: &object.Integer{Value: 4}}},
 			"2",
 		},
 	}
@@ -769,13 +778,16 @@ func TestFunctionObject(t *testing.T) {
 			t.Fatalf("function has wrong parameters. Parameters=%+v", fn.Parameters)
 		}
 
-		parameters := make([]string, len(fn.Parameters))
 		for i, param := range fn.Parameters {
-			parameters[i] = param.String()
-		}
-
-		if !reflect.DeepEqual(tt.expectedParameters, parameters) {
-			t.Fatalf("parameters are not %v. got=%v", tt.expectedParameters, parameters)
+			testParam := tt.expectedParameters[i]
+			if testParam.name != param.Name {
+				t.Logf("Expected parameter %d to have name %q, got %q\n", i+1, testParam.name, param.Name)
+				t.Fail()
+			}
+			if !reflect.DeepEqual(testParam.defaultValue, param.Default) {
+				t.Logf("Expected parameter %d to have default %v, got %v\n", i+1, testParam.defaultValue, param.Default)
+				t.Fail()
+			}
 		}
 
 		if fn.Body.String() != tt.expectedBody {

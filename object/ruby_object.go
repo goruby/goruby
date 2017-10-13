@@ -83,9 +83,66 @@ func (rv *ReturnValue) Inspect() string { return rv.Value.Inspect() }
 // Class reurns the class of the wrapped object
 func (rv *ReturnValue) Class() RubyClass { return rv.Value.Class() }
 
+type functionParameters []*FunctionParameter
+
+func (f functionParameters) defaultParamCount() int {
+	count := 0
+	for _, p := range f {
+		if p.Default != nil {
+			count++
+		}
+	}
+	return count
+}
+func (f functionParameters) mandatoryParams() []*FunctionParameter {
+	params := make([]*FunctionParameter, 0)
+	for _, p := range f {
+		if p.Default == nil {
+			params = append(params, p)
+		}
+	}
+	return params
+}
+func (f functionParameters) optionalParams() []*FunctionParameter {
+	params := make([]*FunctionParameter, 0)
+	for _, p := range f {
+		if p.Default != nil {
+			params = append(params, p)
+		}
+	}
+	return params
+}
+func (f functionParameters) separateDefaultParams() ([]*FunctionParameter, []*FunctionParameter) {
+	mandatory, defaults := make([]*FunctionParameter, 0), make([]*FunctionParameter, 0)
+	for _, p := range f {
+		if p.Default != nil {
+			defaults = append(defaults, p)
+		} else {
+			mandatory = append(mandatory, p)
+		}
+	}
+	return mandatory, defaults
+}
+
+// FunctionParameter represents a parameter within a function
+type FunctionParameter struct {
+	Name    string
+	Default RubyObject
+}
+
+func (f *FunctionParameter) String() string {
+	var out bytes.Buffer
+	out.WriteString(f.Name)
+	if f.Default != nil {
+		out.WriteString(" = ")
+		out.WriteString(f.Default.Inspect())
+	}
+	return out.String()
+}
+
 // A Function represents a user defined function. It is no real Ruby object.
 type Function struct {
-	Parameters       []*ast.FunctionParameter
+	Parameters       []*FunctionParameter
 	Body             *ast.BlockStatement
 	Env              Environment
 	MethodVisibility MethodVisibility
@@ -116,10 +173,17 @@ func (f *Function) Class() RubyClass { return nil }
 // Call implements the RubyMethod interface. It evaluates f.Body and returns its result
 func (f *Function) Call(context CallContext, args ...RubyObject) (RubyObject, error) {
 	block, arguments, _ := extractBlockFromArgs(args)
-	if len(arguments) != len(f.Parameters) {
+	defaultParams := functionParameters(f.Parameters).defaultParamCount()
+	if len(arguments) < len(f.Parameters)-defaultParams || len(arguments) > len(f.Parameters) {
 		return nil, NewWrongNumberOfArgumentsError(len(f.Parameters), len(arguments))
 	}
-	extendedEnv := f.extendFunctionEnv(context.Env(), arguments, block)
+	params, err := f.populateParameters(arguments)
+	if err != nil {
+		return nil, err
+	}
+	contextSelf, _ := context.Env().Get("self")
+	contextSelfObject := contextSelf.(*Self)
+	extendedEnv := f.extendFunctionEnv(contextSelfObject, params, block)
 	evaluated, err := context.Eval(f.Body, extendedEnv)
 	if err != nil {
 		return nil, err
@@ -132,14 +196,44 @@ func (f *Function) Visibility() MethodVisibility {
 	return f.MethodVisibility
 }
 
-func (f *Function) extendFunctionEnv(contextEnv Environment, args []RubyObject, block *Proc) Environment {
-	contextSelf, _ := contextEnv.Get("self")
-	contextSelfObject := contextSelf.(*Self)
-	funcSelf := &Self{RubyObject: contextSelfObject.RubyObject, Name: contextSelfObject.Name, Block: block}
+func (f *Function) populateParameters(args []RubyObject) (map[string]RubyObject, error) {
+	if len(args) > len(f.Parameters) {
+		return nil, NewWrongNumberOfArgumentsError(len(f.Parameters), len(args))
+	}
+	params := make(map[string]RubyObject)
+
+	mandatory, defaults := functionParameters(f.Parameters).separateDefaultParams()
+
+	if len(args) < len(mandatory)-len(defaults) || len(args) > len(f.Parameters) {
+		return nil, NewWrongNumberOfArgumentsError(len(f.Parameters), len(args))
+	}
+
+	if len(args) == len(f.Parameters) {
+		for paramIdx, param := range f.Parameters {
+			params[param.Name] = args[paramIdx]
+		}
+		return params, nil
+	}
+
+	parameters := append(mandatory, defaults...)
+
+	for paramIdx, param := range parameters {
+		if paramIdx >= len(args) {
+			params[param.Name] = param.Default
+			continue
+		}
+		params[param.Name] = args[paramIdx]
+	}
+	return params, nil
+}
+
+func (f *Function) extendFunctionEnv(context *Self, params map[string]RubyObject, block *Proc) Environment {
+	// encapsulate the block within a new self, but with the same object
+	funcSelf := &Self{RubyObject: context.RubyObject, Name: context.Name, Block: block}
 	env := NewEnclosedEnvironment(f.Env)
 	env.Set("self", funcSelf)
-	for paramIdx, param := range f.Parameters {
-		env.Set(param.Name.Value, args[paramIdx])
+	for k, v := range params {
+		env.Set(k, v)
 	}
 	return env
 }

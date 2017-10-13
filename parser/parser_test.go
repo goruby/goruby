@@ -1108,10 +1108,14 @@ func TestIfElseExpression(t *testing.T) {
 }
 
 func TestFunctionLiteralParsing(t *testing.T) {
+	type funcParam struct {
+		name         string
+		defaultValue interface{}
+	}
 	tests := []struct {
 		input         string
 		name          string
-		parameters    []string
+		parameters    []funcParam
 		bodyStatement string
 	}{
 		{
@@ -1119,7 +1123,10 @@ func TestFunctionLiteralParsing(t *testing.T) {
           x + y
           end`,
 			"foo",
-			[]string{"x", "y"},
+			[]funcParam{
+				{name: "x", defaultValue: nil},
+				{name: "y", defaultValue: nil},
+			},
 			"(x + y)",
 		},
 		{
@@ -1127,7 +1134,10 @@ func TestFunctionLiteralParsing(t *testing.T) {
           x + y
           end`,
 			"bar",
-			[]string{"x", "y"},
+			[]funcParam{
+				{name: "x", defaultValue: nil},
+				{name: "y", defaultValue: nil},
+			},
 			"(x + y)",
 		},
 		{
@@ -1135,25 +1145,31 @@ func TestFunctionLiteralParsing(t *testing.T) {
           x + y
           end`,
 			"qux",
-			[]string{},
+			[]funcParam{},
 			"(x + y)",
 		},
 		{
 			"def qux; x + y; end",
 			"qux",
-			[]string{},
+			[]funcParam{},
 			"(x + y)",
 		},
 		{
 			"def foo x, y; x + y; end",
 			"foo",
-			[]string{"x", "y"},
+			[]funcParam{
+				{name: "x", defaultValue: nil},
+				{name: "y", defaultValue: nil},
+			},
 			"(x + y)",
 		},
 		{
 			"def foo(x, y); x + y; end",
 			"foo",
-			[]string{"x", "y"},
+			[]funcParam{
+				{name: "x", defaultValue: nil},
+				{name: "y", defaultValue: nil},
+			},
 			"(x + y)",
 		},
 		{
@@ -1162,7 +1178,19 @@ func TestFunctionLiteralParsing(t *testing.T) {
           end
           `,
 			"qux",
-			[]string{},
+			[]funcParam{},
+			"(x + y)",
+		},
+		{
+			`def foo x = 2, y = 3
+          x + y
+          end
+          `,
+			"foo",
+			[]funcParam{
+				{name: "x", defaultValue: 2},
+				{name: "y", defaultValue: 3},
+			},
 			"(x + y)",
 		},
 	}
@@ -1210,7 +1238,8 @@ func TestFunctionLiteralParsing(t *testing.T) {
 		}
 
 		for i, param := range function.Parameters {
-			testLiteralExpression(t, param.Name, tt.parameters[i])
+			testLiteralExpression(t, param.Name, tt.parameters[i].name)
+			testLiteralExpression(t, param.Default, tt.parameters[i].defaultValue)
 		}
 
 		if len(function.Body.Statements) != 1 {
@@ -1387,16 +1416,38 @@ func TestBlockExpressionParsing(t *testing.T) {
 }
 
 func TestFunctionParameterParsing(t *testing.T) {
+	type funcParam struct {
+		name         string
+		defaultValue interface{}
+	}
 	tests := []struct {
 		input          string
-		expectedParams []string
+		expectedParams []funcParam
 	}{
-		{input: `def fn()
-        end`, expectedParams: []string{}},
-		{input: `def fn(x)
-        end`, expectedParams: []string{"x"}},
-		{input: `def fn(x, y, z)
-        end`, expectedParams: []string{"x", "y", "z"}},
+		{
+			input:          "def fn(); end",
+			expectedParams: []funcParam{},
+		},
+		{
+			input:          "def fn(x); end",
+			expectedParams: []funcParam{{name: "x"}},
+		},
+		{
+			input:          "def fn(x, y, z); end",
+			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
+		},
+		{
+			input:          "def fn(x = 3, y = 18, z); end",
+			expectedParams: []funcParam{{name: "x", defaultValue: 3}, {name: "y", defaultValue: 18}, {name: "z"}},
+		},
+		{
+			input:          "def fn(x, y = 18, z); end",
+			expectedParams: []funcParam{{name: "x"}, {name: "y", defaultValue: 18}, {name: "z"}},
+		},
+		{
+			input:          "def fn(x, y, z = 1); end",
+			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z", defaultValue: 1}},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1415,33 +1466,81 @@ func TestFunctionParameterParsing(t *testing.T) {
 		}
 
 		for i, ident := range tt.expectedParams {
-			testLiteralExpression(t, function.Parameters[i].Name, ident)
+			testLiteralExpression(t, function.Parameters[i].Name, ident.name)
+			testLiteralExpression(t, function.Parameters[i].Default, ident.defaultValue)
 		}
 	}
 }
 
 func TestBlockParameterParsing(t *testing.T) {
+	type funcParam struct {
+		name         string
+		defaultValue interface{}
+	}
 	tests := []struct {
 		input          string
-		expectedParams []string
+		expectedParams []funcParam
 	}{
-		{input: "method {}", expectedParams: []string{}},
-		{input: "method { || }", expectedParams: []string{}},
-		{input: "method { |x| }", expectedParams: []string{"x"}},
-		{input: "method { |x, y, z| }", expectedParams: []string{"x", "y", "z"}},
-		{input: `method do
-        end`, expectedParams: []string{}},
-		{input: `method do ||
-        end`, expectedParams: []string{}},
-		{input: `method do |x|
-        end`, expectedParams: []string{"x"}},
-		{input: `method do |x, y, z|
-        end`, expectedParams: []string{"x", "y", "z"}},
+		{
+			input:          "method {}",
+			expectedParams: []funcParam{},
+		},
+		{
+			input:          "method { || }",
+			expectedParams: []funcParam{},
+		},
+		{
+			input:          "method { |x| }",
+			expectedParams: []funcParam{{name: "x"}},
+		},
+		{
+			input:          "method { |x, y, z| }",
+			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
+		},
+		{
+			input:          "method do; end",
+			expectedParams: []funcParam{},
+		},
+		{
+			input:          "method do ||; end",
+			expectedParams: []funcParam{},
+		},
+		{
+			input:          "method do |x|; end",
+			expectedParams: []funcParam{{name: "x"}},
+		},
+		{
+			input:          "method do |x, y, z|; end",
+			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
+		},
+		{
+			input:          "method { |x = 3, y = 2, z| }",
+			expectedParams: []funcParam{{name: "x", defaultValue: 3}, {name: "y", defaultValue: 2}, {name: "z"}},
+		},
+		{
+			input:          "method do |x = 1, y = 8, z|; end",
+			expectedParams: []funcParam{{name: "x", defaultValue: 1}, {name: "y", defaultValue: 8}, {name: "z"}},
+		},
+		{
+			input:          "method { |x, y = 2, z| }",
+			expectedParams: []funcParam{{name: "x"}, {name: "y", defaultValue: 2}, {name: "z"}},
+		},
+		{
+			input:          "method do |x, y = 8, z|; end",
+			expectedParams: []funcParam{{name: "x"}, {name: "y", defaultValue: 8}, {name: "z"}},
+		},
+		{
+			input:          "method { |x, y, z = 2| }",
+			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z", defaultValue: 2}},
+		},
+		{
+			input:          "method do |x, y, z = 4|; end",
+			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z", defaultValue: 4}},
+		},
 	}
 
 	for _, tt := range tests {
 		program, err := parseSource(tt.input)
-		t.Logf(tt.input)
 		checkParserErrors(t, err)
 
 		stmt := program.Statements[0].(*ast.ExpressionStatement)
@@ -1470,7 +1569,8 @@ func TestBlockParameterParsing(t *testing.T) {
 		}
 
 		for i, ident := range tt.expectedParams {
-			testLiteralExpression(t, block.Parameters[i].Name, ident)
+			testLiteralExpression(t, block.Parameters[i].Name, ident.name)
+			testLiteralExpression(t, block.Parameters[i].Default, ident.defaultValue)
 		}
 	}
 }
@@ -2618,6 +2718,8 @@ func testLiteralExpression(
 		return testBooleanLiteral(t, exp, v)
 	case map[string]string:
 		return testHashLiteral(t, exp, v)
+	case nil:
+		return true
 	}
 	t.Errorf("type of expression not handled. got=%T", exp)
 	return false

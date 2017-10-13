@@ -99,7 +99,7 @@ To run the command as one off run `go run main.go`.
 	- [x] with parens
 	- [x] without parens
 	- [x] return keyword
-	- [ ] default values for parameters
+	- [x] default values for parameters
 	- [ ] keyword arguments
 	- [x] block arguments
 	- [ ] hash as last argument without braces
