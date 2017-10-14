@@ -2462,6 +2462,40 @@ func TestContextCallExpression(t *testing.T) {
 			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
 		}
 	})
+	t.Run("allow `class` as method name", func(t *testing.T) {
+		input := "foo.class;"
+
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Statements does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		expr, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
+				stmt.Expression)
+		}
+
+		if !testIdentifier(t, expr.Context, "foo") {
+			return
+		}
+
+		if !testIdentifier(t, expr.Function, "class") {
+			return
+		}
+	})
 }
 
 func TestStringLiteralExpression(t *testing.T) {

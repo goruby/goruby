@@ -854,8 +854,8 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 		p.nextToken()
 	}
 
-	if !p.currentTokenIs(token.IDENT) {
-		p.peekError(token.IDENT)
+	if !p.currentTokenOneOf(token.IDENT, token.CLASS) {
+		p.peekError(token.IDENT, token.CLASS)
 		return nil
 	}
 
