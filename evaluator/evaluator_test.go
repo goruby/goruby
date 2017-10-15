@@ -348,6 +348,35 @@ func TestScopedIdentifierExpression(t *testing.T) {
 	}
 }
 
+func TestInstanceVariable(t *testing.T) {
+	tests := []struct {
+		input  string
+		output object.RubyObject
+	}{
+		{
+			input: `
+class X
+	@foo
+end`,
+			output: object.NIL,
+		},
+		{
+			input:  "@foo",
+			output: object.NIL,
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated, err := testEval(tt.input, object.NewMainEnvironment())
+		checkError(t, err)
+
+		if evaluated != tt.output {
+			t.Logf("Expected result to equal %v, got %v\n", tt.output, evaluated)
+			t.Fail()
+		}
+	}
+}
+
 func TestAssignment(t *testing.T) {
 	t.Run("assign to hash", func(t *testing.T) {
 		tests := []struct {

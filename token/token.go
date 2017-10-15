@@ -56,6 +56,7 @@ const (
 	PIPE     // |
 
 	SCOPE // ::
+	AT    // @
 
 	// Keywords
 	keyword_beg
@@ -115,6 +116,7 @@ var tokens = [...]string{
 
 	SCOPE:      "::",
 	HASHROCKET: "=>",
+	AT:         "@",
 
 	DEF:             "def",
 	SELF:            "self",

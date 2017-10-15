@@ -38,8 +38,9 @@ func AddMethod(context RubyObject, methodName string, method *Function) RubyObje
 	extended, contextIsExtendable := objectToExtend.(extendableRubyObject)
 	if !contextIsExtendable {
 		extended = &extendedObject{
-			RubyObject: objectToExtend,
-			class:      newEigenclass(context.Class().(RubyClassObject), map[string]RubyMethod{}),
+			RubyObject:  objectToExtend,
+			class:       newEigenclass(context.Class().(RubyClassObject), map[string]RubyMethod{}),
+			Environment: NewEnvironment(),
 		}
 	}
 	extended.addMethod(methodName, method)

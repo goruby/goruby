@@ -1,12 +1,17 @@
 package object
 
 func newEigenclass(wrappedClass RubyClass, methods map[string]RubyMethod) *eigenclass {
-	return &eigenclass{methods: NewMethodSet(methods), wrappedClass: wrappedClass}
+	return &eigenclass{
+		methods:      NewMethodSet(methods),
+		wrappedClass: wrappedClass,
+		Environment:  NewEnvironment(),
+	}
 }
 
 type eigenclass struct {
 	methods      SettableMethodSet
 	wrappedClass RubyClass
+	Environment
 }
 
 func (e *eigenclass) Inspect() string {

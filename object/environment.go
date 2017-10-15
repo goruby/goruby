@@ -6,13 +6,19 @@ import (
 )
 
 var classes = NewEnvironment()
+var mainObj = &Object{}
+var mainObject = &extendedObject{
+	RubyObject:  mainObj,
+	class:       newEigenclass(mainObj.Class().(RubyClassObject), map[string]RubyMethod{}),
+	Environment: NewEnvironment(),
+}
 
 // NewMainEnvironment returns a new Environment populated with all Ruby classes
 // and the Kernel functions
 func NewMainEnvironment() Environment {
 	loadPath := NewArray()
 	env := classes.Clone()
-	env.Set("self", &Self{RubyObject: &Object{}, Name: "main"})
+	env.Set("self", &Self{RubyObject: mainObject, Name: "main"})
 	env.SetGlobal("$LOADED_FEATURES", NewArray())
 	env.SetGlobal("$:", loadPath)
 	env.SetGlobal("$LOAD_PATH", loadPath)

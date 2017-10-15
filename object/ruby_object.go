@@ -264,6 +264,7 @@ func (s *Self) Inspect() string { return s.Name }
 type extendedObject struct {
 	RubyObject
 	class *eigenclass
+	Environment
 }
 
 func (e *extendedObject) Class() RubyClass { return e.class }

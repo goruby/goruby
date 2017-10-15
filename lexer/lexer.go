@@ -213,6 +213,9 @@ func startLexer(l *Lexer) StateFn {
 	case '|':
 		l.emit(token.PIPE)
 		return startLexer
+	case '@':
+		l.emit(token.AT)
+		return startLexer
 
 	default:
 		if isLetter(r) {

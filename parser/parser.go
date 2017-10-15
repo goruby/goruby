@@ -95,6 +95,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.prefixParseFns = make(map[token.Type]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.CONST, p.parseIdentifier)
+	p.registerPrefix(token.AT, p.parseInstanceVariable)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
@@ -387,6 +388,18 @@ func (p *parser) parseVariableAssignExpression(ident *ast.Identifier) ast.Expres
 	p.nextToken()
 	variableExp.Value = p.parseExpression(precLowest)
 	return variableExp
+}
+
+func (p *parser) parseInstanceVariable() ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseInstanceVariable"))
+	}
+	instanceVariable := &ast.InstanceVariable{Token: p.curToken}
+	if !p.accept(token.IDENT) {
+		return nil
+	}
+	instanceVariable.Name = p.parseIdentifier().(*ast.Identifier)
+	return instanceVariable
 }
 
 func (p *parser) parseNilLiteral() ast.Expression {

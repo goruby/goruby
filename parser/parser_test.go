@@ -181,6 +181,34 @@ func TestGlobalAssignment(t *testing.T) {
 	}
 }
 
+func TestInstanceVariable(t *testing.T) {
+	input := "@foo"
+
+	program, err := parseSource(input)
+	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf(
+			"program.Statements does not contain 1 statements. got=%d",
+			len(program.Statements),
+		)
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+	instVar, ok := stmt.Expression.(*ast.InstanceVariable)
+	if !ok {
+		t.Fatalf("Expression not %T. got=%T", instVar, stmt.Expression)
+	}
+
+	testLiteralExpression(t, instVar.Name, "foo")
+}
+
 func TestReturnStatements(t *testing.T) {
 	tests := []struct {
 		input         string

@@ -59,6 +59,7 @@ yield
 A::B
 =>
 __FILE__
+@
 $foo;
 $Foo
 $dotAfter.
@@ -231,6 +232,8 @@ $a`
 		{token.NEWLINE, "\n"},
 		{token.KEYWORD__FILE__, "__FILE__"},
 		{token.NEWLINE, "\n"},
+		{token.AT, "@"},
+		{token.NEWLINE, "\n"},
 		{token.GLOBAL, "$foo"},
 		{token.SEMICOLON, ";"},
 		{token.NEWLINE, "\n"},
@@ -248,6 +251,10 @@ $a`
 	lexer := New(input)
 
 	for pos, testCase := range tests {
+		if !lexer.HasNext() {
+			t.Logf("Unexpected EOF at %d\n", lexer.pos)
+			t.FailNow()
+		}
 		token := lexer.NextToken()
 
 		if token.Type != testCase.expectedType {

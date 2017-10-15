@@ -772,6 +772,7 @@ func TestKernelExtend(t *testing.T) {
 			objectToExtend.Class().(RubyClassObject),
 			[]*Module{module},
 		},
+		NewEnvironment(),
 	}
 
 	if !reflect.DeepEqual(expectedClass, extended.Class()) {

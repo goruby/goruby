@@ -45,6 +45,19 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		return self, nil
 	case (*ast.Keyword__FILE__):
 		return &object.String{Value: node.Filename}, nil
+	case (*ast.InstanceVariable):
+		self, _ := env.Get("self")
+		selfObj := self.(*object.Self)
+		selfAsEnv, ok := selfObj.RubyObject.(object.Environment)
+		if !ok {
+			return nil, object.NewSyntaxError(fmt.Errorf("instance variable not allowed for %s", selfObj.Name))
+		}
+
+		val, ok := selfAsEnv.Get(node.String())
+		if !ok {
+			return object.NIL, nil
+		}
+		return val, nil
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 	case *ast.Global:

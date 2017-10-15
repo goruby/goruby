@@ -175,6 +175,24 @@ func (v *VariableAssignment) expressionNode() {}
 // TokenLiteral returns the literal of the Name token
 func (v *VariableAssignment) TokenLiteral() string { return v.Name.Token.Literal }
 
+// An InstanceVariable represents an instance variable in the AST
+type InstanceVariable struct {
+	Token token.Token
+	Name  *Identifier
+}
+
+func (i *InstanceVariable) String() string {
+	var out bytes.Buffer
+	out.WriteString(i.Token.Literal)
+	out.WriteString(i.Name.String())
+	return out.String()
+}
+func (i *InstanceVariable) literalNode()    {}
+func (i *InstanceVariable) expressionNode() {}
+
+// TokenLiteral returns the literal of the AT token
+func (i *InstanceVariable) TokenLiteral() string { return i.Token.Literal }
+
 // Self represents self in the current context in the program
 type Self struct {
 	Token token.Token // the token.SELF token
