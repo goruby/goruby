@@ -387,10 +387,36 @@ func TestAssignment(t *testing.T) {
 				`{:foo => 3}[:foo] = 5`,
 				5,
 			},
+			{
+				`x = {:foo => 3}; x[:foo] = 5`,
+				5,
+			},
 		}
 
 		for _, tt := range tests {
 			evaluated, err := testEval(tt.input)
+			checkError(t, err)
+
+			testIntegerObject(t, evaluated, tt.expected)
+		}
+	})
+	t.Run("assign to InstanceVariable", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected int64
+		}{
+			{
+				`@foo = 5`,
+				5,
+			},
+			{
+				`@foo = 5; x = @foo; x = 3; x`,
+				3,
+			},
+		}
+
+		for _, tt := range tests {
+			evaluated, err := testEval(tt.input, object.NewMainEnvironment())
 			checkError(t, err)
 
 			testIntegerObject(t, evaluated, tt.expected)

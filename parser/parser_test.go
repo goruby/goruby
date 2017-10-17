@@ -12,40 +12,60 @@ import (
 )
 
 func TestAssignment(t *testing.T) {
-	input := `x[:foo] = 3`
-	program, err := parseSource(input)
-	checkParserErrors(t, err)
-
-	if len(program.Statements) != 1 {
-		t.Fatalf(
-			"program.Statements does not contain 1 statements. got=%d",
-			len(program.Statements),
-		)
-	}
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf(
-			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-			program.Statements[0],
-		)
-	}
-
-	assign, ok := stmt.Expression.(*ast.Assignment)
-	if !ok {
-		t.Fatalf(
-			"stmt.Expression is not *ast.Assignment. got=%T",
-			stmt.Expression,
-		)
+	tests := []struct {
+		input    string
+		leftType reflect.Type
+		output   int
+	}{
+		{
+			input:    `x[:foo] = 3`,
+			leftType: reflect.TypeOf(&ast.IndexExpression{}),
+			output:   3,
+		},
+		{
+			input:    `@x = 3`,
+			leftType: reflect.TypeOf(&ast.InstanceVariable{}),
+			output:   3,
+		},
 	}
 
-	if _, ok = assign.Left.(*ast.IndexExpression); !ok {
-		t.Fatalf(
-			"assign.Left is not *ast.IndexExpression. got=%T",
-			stmt.Expression,
-		)
-	}
+	for _, tt := range tests {
+		program, err := parseSource(tt.input)
+		checkParserErrors(t, err)
 
-	testIntegerLiteral(t, assign.Right, 3)
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Statements does not contain 1 statements. got=%d",
+				len(program.Statements),
+			)
+		}
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		assign, ok := stmt.Expression.(*ast.Assignment)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not *ast.Assignment. got=%T",
+				stmt.Expression,
+			)
+		}
+
+		actual := reflect.TypeOf(assign.Left)
+		if tt.leftType != actual {
+			t.Fatalf(
+				"assign.Left is not %T. got=%T",
+				tt.leftType,
+				stmt.Expression,
+			)
+		}
+
+		testIntegerLiteral(t, assign.Right, 3)
+	}
 }
 
 func TestVariableExpression(t *testing.T) {

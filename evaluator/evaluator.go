@@ -150,6 +150,18 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			}
 			return evalIndexExpressionAssignment(left, index, right)
 		}
+		instanceVar, ok := node.Left.(*ast.InstanceVariable)
+		if ok {
+			self, _ := env.Get("self")
+			selfObj := self.(*object.Self)
+			selfAsEnv, ok := selfObj.RubyObject.(object.Environment)
+			if !ok {
+				return nil, object.NewSyntaxError(fmt.Errorf("instance variable not allowed for %s", selfObj.Name))
+			}
+
+			selfAsEnv.Set(instanceVar.String(), right)
+			return right, nil
+		}
 		return nil, object.NewSyntaxError(fmt.Errorf("Assignment not supported to %T", node.Left))
 	case *ast.VariableAssignment:
 		val, err := Eval(node.Value, env)

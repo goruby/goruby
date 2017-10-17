@@ -354,6 +354,14 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 		p.nextToken()
 		assign.Right = p.parseExpression(precLowest)
 		return assign
+	case *ast.InstanceVariable:
+		assign := &ast.Assignment{
+			Token: p.curToken,
+			Left:  left,
+		}
+		p.nextToken()
+		assign.Right = p.parseExpression(precLowest)
+		return assign
 	case *ast.Keyword__FILE__:
 		epos := p.file.Position(p.pos)
 		msg := fmt.Errorf("%s: Can't assign to __FILE__", epos.String())
