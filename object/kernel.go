@@ -162,6 +162,7 @@ func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) 
 			newPath := path.Join(p.(*String).Value, filename)
 			file, err = ioutil.ReadFile(newPath)
 			if !os.IsNotExist(err) {
+				absolutePath = newPath
 				found = true
 				break
 			}
@@ -171,7 +172,7 @@ func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) 
 		}
 	}
 
-	prog, err := parser.ParseFile(token.NewFileSet(), filename, file, 0)
+	prog, err := parser.ParseFile(token.NewFileSet(), absolutePath, file, 0)
 	if err != nil {
 		return nil, NewSyntaxError(err)
 	}
