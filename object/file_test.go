@@ -48,3 +48,19 @@ func TestFileExpandPath(t *testing.T) {
 		checkResult(t, result, expected)
 	})
 }
+
+func TestFileDirname(t *testing.T) {
+	context := &callContext{
+		receiver: &Self{RubyObject: fileClass, Name: "File"},
+		env:      NewEnvironment(),
+	}
+	filename := &String{Value: "/var/log/foo.log"}
+
+	result, err := fileDirname(context, filename)
+
+	checkError(t, err, nil)
+
+	expected := &String{Value: "/var/log"}
+
+	checkResult(t, result, expected)
+}

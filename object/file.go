@@ -35,6 +35,7 @@ func (f *File) Class() RubyClass { return fileClass }
 
 var fileClassMethods = map[string]RubyMethod{
 	"expand_path": publicMethod(fileExpandPath),
+	"dirname":     publicMethod(fileDirname),
 }
 
 var fileMethods = map[string]RubyMethod{}
@@ -72,4 +73,18 @@ func fileExpandPath(context CallContext, args ...RubyObject) (RubyObject, error)
 	default:
 		return nil, NewWrongNumberOfArgumentsError(1, len(args))
 	}
+}
+
+func fileDirname(context CallContext, args ...RubyObject) (RubyObject, error) {
+	if len(args) != 1 {
+		return nil, NewWrongNumberOfArgumentsError(1, len(args))
+	}
+	filename, ok := args[0].(*String)
+	if !ok {
+		return nil, NewImplicitConversionTypeError(filename, args[0])
+	}
+
+	dirname := filepath.Dir(filename.Value)
+
+	return &String{Value: dirname}, nil
 }
