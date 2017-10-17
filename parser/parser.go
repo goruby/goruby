@@ -76,6 +76,7 @@ type parser struct {
 	indent int  // indentation used for tracing output
 
 	pos       gotoken.Pos
+	lastLine  string
 	curToken  token.Token
 	peekToken token.Token
 
@@ -196,8 +197,10 @@ func (p *parser) nextToken() {
 		}
 	}
 	p.curToken = p.peekToken
+	p.lastLine += p.curToken.Literal
 	if p.curToken.Type == token.NEWLINE {
 		p.file.AddLine(int(p.pos))
+		p.lastLine = ""
 	}
 	if p.l.HasNext() {
 		p.peekToken = p.l.NextToken()
