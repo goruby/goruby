@@ -177,6 +177,26 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		}
 		env.SetGlobal(node.Name.Value, val)
 		return val, nil
+	case *ast.MultiAssignment:
+		values := make([]object.RubyObject, 0)
+		for _, v := range node.Values {
+			val, err := Eval(v, env)
+			if err != nil {
+				return nil, err
+			}
+			values = append(values, val)
+		}
+		lastVal := values[len(values)-1]
+		if len(node.Variables) > len(node.Values) {
+			// enlarge slice
+			for len(values) <= len(node.Variables) {
+				values = append(values, object.NIL)
+			}
+		}
+		for i, ident := range node.Variables {
+			env.Set(ident.Value, values[i])
+		}
+		return lastVal, nil
 	case *ast.ModuleExpression:
 		module, ok := env.Get(node.Name.Value)
 		if !ok {

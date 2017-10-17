@@ -17,6 +17,12 @@ func walkParameterList(v Visitor, list []*FunctionParameter) {
 	}
 }
 
+func walkIdentifierList(v Visitor, list []*Identifier) {
+	for _, x := range list {
+		Walk(v, x)
+	}
+}
+
 func walkExprList(v Visitor, list []Expression) {
 	for _, x := range list {
 		Walk(v, x)
@@ -79,6 +85,10 @@ func Walk(v Visitor, node Node) {
 	case *InfixExpression:
 		Walk(v, n.Left)
 		Walk(v, n.Right)
+
+	case *MultiAssignment:
+		walkIdentifierList(v, n.Variables)
+		walkExprList(v, n.Values)
 
 	// Types
 	case *ArrayLiteral:

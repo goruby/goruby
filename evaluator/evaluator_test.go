@@ -463,6 +463,48 @@ func TestAssignment(t *testing.T) {
 	})
 }
 
+func TestMultiAssignment(t *testing.T) {
+	tests := []struct {
+		input  string
+		output object.RubyObject
+	}{
+		{
+			input: "x, y, z = 1, 2, 3; [x, y, z]",
+			output: &object.Array{Elements: []object.RubyObject{
+				&object.Integer{Value: 1},
+				&object.Integer{Value: 2},
+				&object.Integer{Value: 3},
+			}},
+		},
+		{
+			input: "x, y, z = 1, 2; [x, y, z]",
+			output: &object.Array{Elements: []object.RubyObject{
+				&object.Integer{Value: 1},
+				&object.Integer{Value: 2},
+				object.NIL,
+			}},
+		},
+		{
+			input: "x, y, z = 1; [x, y, z]",
+			output: &object.Array{Elements: []object.RubyObject{
+				&object.Integer{Value: 1},
+				object.NIL,
+				object.NIL,
+			}},
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated, err := testEval(tt.input)
+		checkError(t, err)
+
+		if !reflect.DeepEqual(tt.output, evaluated) {
+			t.Logf("Expected result to equal\n%+v\n\tgot\n%+v\n", tt.output, evaluated)
+			t.Fail()
+		}
+	}
+}
+
 func TestVariableAssignmentExpression(t *testing.T) {
 	tests := []struct {
 		input    string

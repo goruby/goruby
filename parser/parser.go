@@ -16,6 +16,7 @@ import (
 const (
 	_ int = iota
 	precLowest
+	precMultiVars   // x, y
 	precBlockDo     // do
 	precBlockBraces // { |x| }
 	precEquals      // ==
@@ -29,6 +30,7 @@ const (
 	precIndex       // array[index]
 	precScope       // A::B
 	precSymbol      // :Symbol
+	precHighest
 )
 
 var precedences = map[token.Type]int{
@@ -51,6 +53,7 @@ var precedences = map[token.Type]int{
 	token.DO:       precBlockDo,
 	token.SCOPE:    precScope,
 	token.COLON:    precSymbol,
+	token.COMMA:    precMultiVars,
 }
 
 type (
@@ -133,6 +136,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.STRING, p.parseCallExpression)
 	p.registerInfix(token.DOT, p.parseContextCallExpression)
 	p.registerInfix(token.COLON, p.parseCallExpression)
+	p.registerInfix(token.COMMA, p.parseMultiVars)
 	p.registerInfix(token.RBRACKET, p.parseCallExpression)
 	p.registerInfix(token.LBRACE, p.parseCallExpression)
 	p.registerInfix(token.DO, p.parseCallExpression)
@@ -413,6 +417,49 @@ func (p *parser) parseInstanceVariable() ast.Expression {
 	return instanceVariable
 }
 
+func (p *parser) parseMultiVars(left ast.Expression) ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseMultiVars"))
+	}
+	ident, ok := left.(*ast.Identifier)
+	if !ok {
+		msg := fmt.Sprintf("multi vars not possible for type %s", left)
+		epos := p.file.Position(p.pos)
+		if epos.Filename != "" || epos.IsValid() {
+			msg = epos.String() + ": " + msg
+		}
+		p.errors = append(p.errors, errors.Errorf(msg))
+		return nil
+	}
+	vars := make([]*ast.Identifier, 2)
+	vars[0] = ident
+	p.accept(token.IDENT)
+	secondVar := p.parseIdentifier().(*ast.Identifier)
+	vars[1] = secondVar
+	for p.peekTokenIs(token.COMMA) {
+		p.accept(token.COMMA)
+		if !p.accept(token.IDENT) {
+			return nil
+		}
+		nextVar := p.parseIdentifier().(*ast.Identifier)
+		vars = append(vars, nextVar)
+	}
+	if !p.accept(token.ASSIGN) {
+		return nil
+	}
+	p.nextToken()
+	values := make([]ast.Expression, 1)
+	firstExpr := p.parseExpression(precMultiVars)
+	values[0] = firstExpr
+	for p.peekTokenIs(token.COMMA) {
+		p.accept(token.COMMA)
+		p.nextToken()
+		nextVal := p.parseExpression(precMultiVars)
+		values = append(values, nextVal)
+	}
+	return &ast.MultiAssignment{Variables: vars, Values: values}
+}
+
 func (p *parser) parseNilLiteral() ast.Expression {
 	if p.trace {
 		defer un(trace(p, "parseNilLiteral"))
@@ -581,7 +628,7 @@ func (p *parser) parseKeyValue() (ast.Expression, ast.Expression, bool) {
 	if !p.consume(token.HASHROCKET) {
 		return nil, nil, false
 	}
-	val := p.parseExpression(precLowest)
+	val := p.parseExpression(precMultiVars)
 	return key, val, true
 }
 
@@ -813,7 +860,7 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 	ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
 	if p.peekTokenIs(token.ASSIGN) {
 		p.consume(token.ASSIGN)
-		ident.Default = p.parseExpression(precLowest)
+		ident.Default = p.parseExpression(precMultiVars)
 	}
 	identifiers = append(identifiers, ident)
 
@@ -823,7 +870,7 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 		ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
 		if p.peekTokenIs(token.ASSIGN) {
 			p.consume(token.ASSIGN)
-			ident.Default = p.parseExpression(precLowest)
+			ident.Default = p.parseExpression(precMultiVars)
 		}
 		identifiers = append(identifiers, ident)
 	}
@@ -966,7 +1013,7 @@ func (p *parser) parseExpressionList(end ...token.Type) []ast.Expression {
 		return list
 	}
 
-	list = append(list, p.parseExpression(precLowest))
+	list = append(list, p.parseExpression(precMultiVars))
 
 	for p.peekTokenIs(token.COMMA) {
 		p.consume(token.COMMA)

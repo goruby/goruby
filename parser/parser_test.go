@@ -201,6 +201,72 @@ func TestGlobalAssignment(t *testing.T) {
 	}
 }
 
+func TestParseMultiAssignment(t *testing.T) {
+	tests := []struct {
+		input     string
+		variables []string
+		values    []string
+	}{
+		{
+			input:     "x, y, z = 3, 4, 5;",
+			variables: []string{"x", "y", "z"},
+			values:    []string{"3", "4", "5"},
+		},
+		{
+			input:     "x, y = 3, 4;",
+			variables: []string{"x", "y"},
+			values:    []string{"3", "4"},
+		},
+		{
+			input:     "x, y, z = 3, 4;",
+			variables: []string{"x", "y", "z"},
+			values:    []string{"3", "4"},
+		},
+		{
+			input:     "x, y, z = 3;",
+			variables: []string{"x", "y", "z"},
+			values:    []string{"3"},
+		},
+	}
+
+	for _, tt := range tests {
+		program, err := parseSource(tt.input)
+		checkParserErrors(t, err)
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Logf("Expected first statement to be *ast.ExpressionStatement, got %T\n", stmt)
+			t.FailNow()
+		}
+
+		multi, ok := stmt.Expression.(*ast.MultiAssignment)
+		if !ok {
+			t.Logf("Expected expression to be *ast.MultiAssignment, got %T\n", stmt.Expression)
+			t.FailNow()
+		}
+
+		actualVars := make([]string, len(multi.Variables))
+		for i, v := range multi.Variables {
+			actualVars[i] = v.Value
+		}
+
+		if !reflect.DeepEqual(tt.variables, actualVars) {
+			t.Logf("Expected variable identifiers to equal %s, got %s\n", tt.variables, actualVars)
+			t.Fail()
+		}
+
+		actualVals := make([]string, len(multi.Values))
+		for i, v := range multi.Values {
+			actualVals[i] = v.String()
+		}
+
+		if !reflect.DeepEqual(tt.values, actualVals) {
+			t.Logf("Expected variable values to equal %s, got %s\n", tt.values, actualVals)
+			t.Fail()
+		}
+	}
+}
+
 func TestInstanceVariable(t *testing.T) {
 	input := "@foo"
 
