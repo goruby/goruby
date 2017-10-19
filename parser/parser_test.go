@@ -2025,7 +2025,7 @@ func TestContextCallExpression(t *testing.T) {
 		testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
 	})
 	t.Run("context call with multiple args with parens and block", func(t *testing.T) {
-		input := "foo.add(1, 2 * 3, 4 + 5) { x };"
+		input := "foo.add(1, 2 * 3, 4 + 5) { |x|x.to_s };"
 
 		program, err := parseSource(input)
 		checkParserErrors(t, err)

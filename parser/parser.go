@@ -952,6 +952,10 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 		return contextCallExpression
 	}
 
+	if p.peekTokenIs(token.RBRACE) {
+		return contextCallExpression
+	}
+
 	p.nextToken()
 	contextCallExpression.Arguments = p.parseExpressionList(
 		token.SEMICOLON, token.NEWLINE, token.EOF, token.LBRACE, token.DO,
