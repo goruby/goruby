@@ -45,9 +45,11 @@ func readSource(filename string, src interface{}) ([]byte, error) {
 //
 type Mode uint
 
+// parser modes
 const (
-	Trace     = 1 << iota // print a trace of parsed productions
-	AllErrors             // report all errors (not just the first 10 on different lines)
+	ParseComments = 1 << iota // parse comments and add them to AST
+	Trace                     // print a trace of parsed productions
+	AllErrors                 // report all errors (not just the first 10 on different lines)
 )
 
 // ParseFile parses the source code of a single Ruby source file and returns

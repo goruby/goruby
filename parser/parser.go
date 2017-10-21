@@ -284,7 +284,10 @@ func (p *parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	case token.HASH:
-		return p.parseComment()
+		if p.mode&ParseComments != 0 {
+			return p.parseComment()
+		}
+		return nil
 	default:
 		return p.parseExpressionStatement()
 	}

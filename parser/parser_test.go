@@ -3088,7 +3088,7 @@ func testHashLiteral(t *testing.T, expr ast.Expression, value map[string]string)
 }
 
 func parseSource(src string) (*ast.Program, *Errors) {
-	prog, err := ParseFile(gotoken.NewFileSet(), "", src, 0)
+	prog, err := ParseFile(gotoken.NewFileSet(), "", src, ParseComments)
 	var parserErrors *Errors
 	if err != nil {
 		parserErrors = err.(*Errors)

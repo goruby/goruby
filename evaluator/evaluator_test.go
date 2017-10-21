@@ -1266,7 +1266,7 @@ func testEval(input string, context ...object.Environment) (object.RubyObject, e
 	if len(context) > 0 {
 		env = context[0]
 	}
-	program, err := parser.ParseFile(token.NewFileSet(), "", input, 0)
+	program, err := parser.ParseFile(token.NewFileSet(), "", input, parser.ParseComments)
 	if err != nil {
 		return nil, object.NewSyntaxError(err)
 	}
