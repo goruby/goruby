@@ -398,9 +398,11 @@ func evalInfixExpression(operator string, left, right object.RubyObject, env obj
 		context := &callContext{object.NewCallContext(env, left)}
 		return object.Send(context, operator, right)
 	case operator == "==":
-		return nativeBoolToBooleanObject(left == right), nil
+		context := &callContext{object.NewCallContext(env, left)}
+		return object.Send(context, operator, right)
 	case operator == "!=":
-		return nativeBoolToBooleanObject(left != right), nil
+		context := &callContext{object.NewCallContext(env, left)}
+		return object.Send(context, operator, right)
 	case left.Type() != right.Type():
 		return nil, object.NewException("type mismatch: %s %s %s", left.Type(), operator, right.Type())
 	default:
