@@ -51,7 +51,14 @@ func Walk(v Visitor, node Node) {
 	// of the corresponding node types in ast.go)
 	switch n := node.(type) {
 	// Expressions
-	case *Identifier, *Global, *IntegerLiteral, *StringLiteral, *SymbolLiteral, *Boolean, *Nil:
+	case *Identifier,
+		*Global,
+		*IntegerLiteral,
+		*StringLiteral,
+		*SymbolLiteral,
+		*Boolean,
+		*Nil,
+		*Comment:
 		// nothing to do
 
 	case *BlockExpression:

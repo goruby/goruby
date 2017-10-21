@@ -369,6 +369,19 @@ func (sl *StringLiteral) literalNode()    {}
 func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
 func (sl *StringLiteral) String() string       { return sl.Value }
 
+// Comment represents a double quoted string in the AST
+type Comment struct {
+	Token token.Token // the #
+	Value string
+}
+
+func (c *Comment) statementNode() {}
+func (c *Comment) literalNode()   {}
+
+// TokenLiteral returns the literal from token token.STRING
+func (c *Comment) TokenLiteral() string { return c.Token.Literal }
+func (c *Comment) String() string       { return c.Value }
+
 // SymbolLiteral represents a symbol within the AST
 type SymbolLiteral struct {
 	Token token.Token // the ':'

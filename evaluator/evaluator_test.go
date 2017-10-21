@@ -9,6 +9,16 @@ import (
 	"github.com/goruby/goruby/parser"
 )
 
+func TestEvalComment(t *testing.T) {
+	input := "5 # five"
+
+	evaluated, err := testEval(input)
+	checkError(t, err)
+
+	var expected int64 = 5
+	testIntegerObject(t, evaluated, expected)
+}
+
 func TestEvalIntegerExpression(t *testing.T) {
 	tests := []struct {
 		input    string

@@ -325,6 +325,9 @@ func evalProgram(stmts []ast.Statement, env object.Environment) (object.RubyObje
 	var result object.RubyObject
 	var err error
 	for _, statement := range stmts {
+		if _, ok := statement.(*ast.Comment); ok {
+			continue
+		}
 		result, err = Eval(statement, env)
 
 		if err != nil {

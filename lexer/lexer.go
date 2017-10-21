@@ -302,12 +302,14 @@ func lexGlobal(l *Lexer) StateFn {
 }
 
 func commentLexer(l *Lexer) StateFn {
+	l.emit(token.HASH)
 	r := l.next()
-	for r != '\n' {
+
+	for r != '\n' && r != eof {
 		r = l.next()
 	}
-
-	l.ignore()
+	l.backup()
+	l.emit(token.STRING)
 	return startLexer
 }
 

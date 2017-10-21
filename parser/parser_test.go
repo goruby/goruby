@@ -333,6 +333,93 @@ func TestReturnStatements(t *testing.T) {
 	}
 }
 
+func TestParseComment(t *testing.T) {
+	t.Run("line comment newline", func(t *testing.T) {
+		tests := []struct {
+			input        string
+			commentValue string
+		}{
+			{
+				input:        "# a comment\n",
+				commentValue: " a comment",
+			},
+			{
+				input:        "# a comment",
+				commentValue: " a comment",
+			},
+			{
+				input:        "# a comment;",
+				commentValue: " a comment;",
+			},
+		}
+
+		for _, tt := range tests {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
+
+			if len(program.Statements) != 1 {
+				t.Fatalf(
+					"program has not enough statements. got=%d",
+					len(program.Statements),
+				)
+			}
+
+			comment, ok := program.Statements[0].(*ast.Comment)
+			if !ok {
+				t.Logf("Expected program.Statements[0] to be %T, got %T\n", comment, program.Statements[0])
+				t.FailNow()
+			}
+
+			if comment.Value != tt.commentValue {
+				t.Logf("Expected comment value to equal %q, got %q\n", tt.commentValue, comment.Value)
+				t.Fail()
+			}
+		}
+	})
+	t.Run("inline comment", func(t *testing.T) {
+		tests := []struct {
+			input        string
+			commentValue string
+		}{
+			{
+				input:        "foo # a comment\n",
+				commentValue: " a comment",
+			},
+			{
+				input:        "foo # a comment",
+				commentValue: " a comment",
+			},
+			{
+				input:        "foo # a comment;",
+				commentValue: " a comment;",
+			},
+		}
+
+		for _, tt := range tests {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
+
+			if len(program.Statements) != 2 {
+				t.Fatalf(
+					"program has not enough statements. got=%d",
+					len(program.Statements),
+				)
+			}
+
+			comment, ok := program.Statements[1].(*ast.Comment)
+			if !ok {
+				t.Logf("Expected program.Statements[1] to be %T, got %T\n", comment, program.Statements[1])
+				t.FailNow()
+			}
+
+			if comment.Value != tt.commentValue {
+				t.Logf("Expected comment value to equal %q, got %q\n", tt.commentValue, comment.Value)
+				t.Fail()
+			}
+		}
+	})
+}
+
 func TestIdentifierExpression(t *testing.T) {
 	t.Run("local variable", func(t *testing.T) {
 		input := "foobar;"

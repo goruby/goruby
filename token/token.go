@@ -44,6 +44,7 @@ const (
 	NEWLINE // \n
 	COMMA
 	SEMICOLON
+	HASH // #
 
 	DOT      // .
 	COLON    // :
@@ -103,6 +104,7 @@ var tokens = [...]string{
 	NEWLINE:   "NEWLINE",
 	COMMA:     ",",
 	SEMICOLON: ";",
+	HASH:      "#",
 
 	DOT:      ".",
 	COLON:    ":",

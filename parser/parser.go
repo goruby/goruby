@@ -283,6 +283,8 @@ func (p *parser) parseStatement() ast.Statement {
 		return nil
 	case token.RETURN:
 		return p.parseReturnStatement()
+	case token.HASH:
+		return p.parseComment()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -342,6 +344,21 @@ func (p *parser) parseExpression(precedence int) ast.Expression {
 		leftExp = infix(leftExp)
 	}
 	return leftExp
+}
+
+func (p *parser) parseComment() *ast.Comment {
+	comment := &ast.Comment{Token: p.curToken}
+	if !p.accept(token.STRING) {
+		return nil
+	}
+	comment.Value = p.curToken.Literal
+	if !p.peekTokenOneOf(token.NEWLINE, token.EOF) {
+		epos := p.file.Position(p.pos)
+		msg := fmt.Errorf("%s: Expected newline or eof after comment", epos.String())
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	return comment
 }
 
 func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
