@@ -36,6 +36,7 @@ var stringClassMethods = map[string]RubyMethod{}
 var stringMethods = map[string]RubyMethod{
 	"initialize": privateMethod(stringInitialize),
 	"to_s":       withArity(0, publicMethod(stringToS)),
+	"+":          withArity(1, publicMethod(stringAdd)),
 }
 
 func stringInitialize(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -59,4 +60,13 @@ func stringInitialize(context CallContext, args ...RubyObject) (RubyObject, erro
 func stringToS(context CallContext, args ...RubyObject) (RubyObject, error) {
 	str := context.Receiver().(*String)
 	return &String{str.Value}, nil
+}
+
+func stringAdd(context CallContext, args ...RubyObject) (RubyObject, error) {
+	s := context.Receiver().(*String)
+	add, ok := args[0].(*String)
+	if !ok {
+		return nil, NewImplicitConversionTypeError(add, args[0])
+	}
+	return &String{s.Value + add.Value}, nil
 }

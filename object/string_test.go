@@ -20,3 +20,32 @@ func TestString_hashKey(t *testing.T) {
 		t.Errorf("strings with different content have same hash keys")
 	}
 }
+
+func TestStringAdd(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{&String{Value: " bar"}},
+			&String{Value: "foo bar"},
+			nil,
+		},
+		{
+			[]RubyObject{&Integer{Value: 3}},
+			nil,
+			NewImplicitConversionTypeError(&String{}, &Integer{}),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: &String{Value: "foo"}}
+
+		result, err := stringAdd(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}

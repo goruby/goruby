@@ -395,7 +395,8 @@ func evalInfixExpression(operator string, left, right object.RubyObject, env obj
 		context := &callContext{object.NewCallContext(env, left)}
 		return object.Send(context, operator, right)
 	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
-		return evalStringInfixExpression(operator, left, right)
+		context := &callContext{object.NewCallContext(env, left)}
+		return object.Send(context, operator, right)
 	case operator == "==":
 		return nativeBoolToBooleanObject(left == right), nil
 	case operator == "!=":
@@ -405,18 +406,6 @@ func evalInfixExpression(operator string, left, right object.RubyObject, env obj
 	default:
 		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
-}
-
-func evalStringInfixExpression(
-	operator string,
-	left, right object.RubyObject,
-) (object.RubyObject, error) {
-	if operator != "+" {
-		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
-	}
-	leftVal := left.(*object.String).Value
-	rightVal := right.(*object.String).Value
-	return &object.String{Value: leftVal + rightVal}, nil
 }
 
 func evalIfExpression(ie *ast.IfExpression, env object.Environment) (object.RubyObject, error) {

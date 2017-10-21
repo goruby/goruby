@@ -183,7 +183,7 @@ func TestErrorHandling(t *testing.T) {
 		},
 		{
 			`"Hello" - "World"`,
-			"Exception: unknown operator: STRING - STRING",
+			"NoMethodError: undefined method `-' for Hello:String",
 		},
 		{
 			"if (10 > 1); true + false; end",
