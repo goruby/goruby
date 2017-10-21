@@ -116,6 +116,200 @@ func TestIntegerAdd(t *testing.T) {
 	}
 }
 
+func TestIntegerSub(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(3)},
+			NewInteger(1),
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewCoercionTypeError(&String{}, &Integer{}),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerSub(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerModulo(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(3)},
+			NewInteger(1),
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewCoercionTypeError(&String{}, &Integer{}),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerModulo(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerLt(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(6)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewArgumentError("comparison of Integer with String failed"),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerLt(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerGt(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(6)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewArgumentError("comparison of Integer with String failed"),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerGt(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerEq(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(6)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(4)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewArgumentError("comparison of Integer with String failed"),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerEq(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerNeq(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(6)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(4)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewArgumentError("comparison of Integer with String failed"),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerNeq(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
 func checkError(t *testing.T, actual, expected error) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Logf("Expected error to equal %T:%v, got %T:%v\n", expected, expected, actual, actual)

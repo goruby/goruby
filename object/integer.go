@@ -39,6 +39,13 @@ var integerMethods = map[string]RubyMethod{
 	"div": withArity(1, publicMethod(integerDiv)),
 	"/":   withArity(1, publicMethod(integerDiv)),
 	"*":   withArity(1, publicMethod(integerMul)),
+	"+":   withArity(1, publicMethod(integerAdd)),
+	"-":   withArity(1, publicMethod(integerSub)),
+	"%":   withArity(1, publicMethod(integerModulo)),
+	"<":   withArity(1, publicMethod(integerLt)),
+	">":   withArity(1, publicMethod(integerGt)),
+	"==":  withArity(1, publicMethod(integerEq)),
+	"!=":  withArity(1, publicMethod(integerNeq)),
 }
 
 func integerDiv(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -69,4 +76,82 @@ func integerAdd(context CallContext, args ...RubyObject) (RubyObject, error) {
 		return nil, NewCoercionTypeError(args[0], i)
 	}
 	return NewInteger(i.Value + add.Value), nil
+}
+
+func integerSub(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	sub, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewCoercionTypeError(args[0], i)
+	}
+	return NewInteger(i.Value - sub.Value), nil
+}
+
+func integerModulo(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	mod, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewCoercionTypeError(args[0], i)
+	}
+	return NewInteger(i.Value % mod.Value), nil
+}
+
+func integerLt(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewArgumentError(
+			"comparison of Integer with %s failed",
+			args[0].Class().(RubyObject).Inspect(),
+		)
+	}
+	if i.Value < right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
+}
+
+func integerGt(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewArgumentError(
+			"comparison of Integer with %s failed",
+			args[0].Class().(RubyObject).Inspect(),
+		)
+	}
+	if i.Value > right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
+}
+
+func integerEq(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewArgumentError(
+			"comparison of Integer with %s failed",
+			args[0].Class().(RubyObject).Inspect(),
+		)
+	}
+	if i.Value == right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
+}
+
+func integerNeq(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewArgumentError(
+			"comparison of Integer with %s failed",
+			args[0].Class().(RubyObject).Inspect(),
+		)
+	}
+	if i.Value != right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
 }

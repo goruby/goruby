@@ -147,6 +147,15 @@ func NewWrongNumberOfArgumentsError(expected, actual int) *ArgumentError {
 	}
 }
 
+// NewArgumentError creates an ArgumentError. It has the same API as fmt.Errorf
+func NewArgumentError(format string, args ...interface{}) *ArgumentError {
+	return &ArgumentError{
+		&exception{
+			Message: fmt.Sprintf(format, args...),
+		},
+	}
+}
+
 // ArgumentError represents an error in method call arguments
 type ArgumentError struct {
 	*exception

@@ -172,7 +172,7 @@ func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) 
 		}
 	}
 
-	prog, err := parser.ParseFile(token.NewFileSet(), absolutePath, file, parser.Trace)
+	prog, err := parser.ParseFile(token.NewFileSet(), absolutePath, file, parser.ParseComments)
 	if err != nil {
 		return nil, NewSyntaxError(err)
 	}

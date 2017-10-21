@@ -43,7 +43,7 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated, err := testEval(tt.input)
+		evaluated, err := testEval(tt.input, object.NewMainEnvironment())
 		checkError(t, err)
 		testIntegerObject(t, evaluated, tt.expected)
 	}

@@ -294,7 +294,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err != nil {
 			return nil, err
 		}
-		return evalInfixExpression(node.Operator, left, right)
+		return evalInfixExpression(node.Operator, left, right, env)
 	case *ast.IfExpression:
 		return evalIfExpression(node, env)
 	case *ast.ScopedIdentifier:
@@ -389,10 +389,11 @@ func evalMinusPrefixOperatorExpression(right object.RubyObject) (object.RubyObje
 	}
 }
 
-func evalInfixExpression(operator string, left, right object.RubyObject) (object.RubyObject, error) {
+func evalInfixExpression(operator string, left, right object.RubyObject, env object.Environment) (object.RubyObject, error) {
 	switch {
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
-		return evalIntegerInfixExpression(operator, left, right)
+		context := &callContext{object.NewCallContext(env, left)}
+		return object.Send(context, operator, right)
 	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
 		return evalStringInfixExpression(operator, left, right)
 	case operator == "==":
@@ -401,33 +402,6 @@ func evalInfixExpression(operator string, left, right object.RubyObject) (object
 		return nativeBoolToBooleanObject(left != right), nil
 	case left.Type() != right.Type():
 		return nil, object.NewException("type mismatch: %s %s %s", left.Type(), operator, right.Type())
-	default:
-		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
-	}
-}
-
-func evalIntegerInfixExpression(operator string, left, right object.RubyObject) (object.RubyObject, error) {
-	leftVal := left.(*object.Integer).Value
-	rightVal := right.(*object.Integer).Value
-	switch operator {
-	case "+":
-		return &object.Integer{Value: leftVal + rightVal}, nil
-	case "-":
-		return &object.Integer{Value: leftVal - rightVal}, nil
-	case "*":
-		return &object.Integer{Value: leftVal * rightVal}, nil
-	case "/":
-		return &object.Integer{Value: leftVal / rightVal}, nil
-	case "%":
-		return &object.Integer{Value: leftVal % rightVal}, nil
-	case "<":
-		return nativeBoolToBooleanObject(leftVal < rightVal), nil
-	case ">":
-		return nativeBoolToBooleanObject(leftVal > rightVal), nil
-	case "==":
-		return nativeBoolToBooleanObject(leftVal == rightVal), nil
-	case "!=":
-		return nativeBoolToBooleanObject(leftVal != rightVal), nil
 	default:
 		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
