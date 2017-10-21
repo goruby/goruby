@@ -294,7 +294,8 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err != nil {
 			return nil, err
 		}
-		return evalInfixExpression(node.Operator, left, right, env)
+		context := &callContext{object.NewCallContext(env, left)}
+		return object.Send(context, node.Operator, right)
 	case *ast.IfExpression:
 		return evalIfExpression(node, env)
 	case *ast.ScopedIdentifier:
@@ -386,27 +387,6 @@ func evalMinusPrefixOperatorExpression(right object.RubyObject) (object.RubyObje
 		return &object.Integer{Value: -right.Value}, nil
 	default:
 		return nil, object.NewException("unknown operator: -%s", right.Type())
-	}
-}
-
-func evalInfixExpression(operator string, left, right object.RubyObject, env object.Environment) (object.RubyObject, error) {
-	switch {
-	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
-		context := &callContext{object.NewCallContext(env, left)}
-		return object.Send(context, operator, right)
-	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
-		context := &callContext{object.NewCallContext(env, left)}
-		return object.Send(context, operator, right)
-	case operator == "==":
-		context := &callContext{object.NewCallContext(env, left)}
-		return object.Send(context, operator, right)
-	case operator == "!=":
-		context := &callContext{object.NewCallContext(env, left)}
-		return object.Send(context, operator, right)
-	case left.Type() != right.Type():
-		return nil, object.NewException("type mismatch: %s %s %s", left.Type(), operator, right.Type())
-	default:
-		return nil, object.NewException("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }
 

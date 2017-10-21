@@ -159,11 +159,11 @@ func TestErrorHandling(t *testing.T) {
 	}{
 		{
 			"5 + true;",
-			"Exception: type mismatch: INTEGER + BOOLEAN",
+			"TypeError: Integer can't be coerced into Boolean",
 		},
 		{
 			"5 + true; 5;",
-			"Exception: type mismatch: INTEGER + BOOLEAN",
+			"TypeError: Integer can't be coerced into Boolean",
 		},
 		{
 			"-true",
@@ -171,15 +171,15 @@ func TestErrorHandling(t *testing.T) {
 		},
 		{
 			"true + false;",
-			"Exception: unknown operator: BOOLEAN + BOOLEAN",
+			"NoMethodError: undefined method `+' for true:TrueClass",
 		},
 		{
 			"true + false + true + false;",
-			"Exception: unknown operator: BOOLEAN + BOOLEAN",
+			"NoMethodError: undefined method `+' for true:TrueClass",
 		},
 		{
 			"5; true + false; 5",
-			"Exception: unknown operator: BOOLEAN + BOOLEAN",
+			"NoMethodError: undefined method `+' for true:TrueClass",
 		},
 		{
 			`"Hello" - "World"`,
@@ -187,11 +187,11 @@ func TestErrorHandling(t *testing.T) {
 		},
 		{
 			"if (10 > 1); true + false; end",
-			"Exception: unknown operator: BOOLEAN + BOOLEAN",
+			"NoMethodError: undefined method `+' for true:TrueClass",
 		},
 		{
 			"if (10 > 1); true + false; end",
-			"Exception: unknown operator: BOOLEAN + BOOLEAN",
+			"NoMethodError: undefined method `+' for true:TrueClass",
 		},
 		{
 			`
@@ -202,7 +202,7 @@ if (10 > 1)
 	return 1;
 end
 `,
-			"Exception: unknown operator: BOOLEAN + BOOLEAN",
+			"NoMethodError: undefined method `+' for true:TrueClass",
 		},
 		{
 			"foobar",
