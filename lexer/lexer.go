@@ -175,6 +175,9 @@ func startLexer(l *Lexer) StateFn {
 	case '*':
 		l.emit(token.ASTERISK)
 		return startLexer
+	case '%':
+		l.emit(token.MODULO)
+		return startLexer
 	case '<':
 		l.emit(token.LT)
 		return startLexer

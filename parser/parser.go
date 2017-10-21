@@ -23,7 +23,7 @@ const (
 	precLessGreater // > or <
 	precAssignment  // x = 5
 	precSum         // + or -
-	precProduct     // * or /
+	precProduct     // *, /, %
 	precPrefix      // -X or !X
 	precCall        // myFunction(X)
 	precContext     // foo.myFunction(X)
@@ -42,6 +42,7 @@ var precedences = map[token.Type]int{
 	token.MINUS:    precSum,
 	token.SLASH:    precProduct,
 	token.ASTERISK: precProduct,
+	token.MODULO:   precProduct,
 	token.ASSIGN:   precAssignment,
 	token.LPAREN:   precCall,
 	token.IDENT:    precCall,
@@ -126,6 +127,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
+	p.registerInfix(token.MODULO, p.parseInfixExpression)
 	p.registerInfix(token.EQ, p.parseInfixExpression)
 	p.registerInfix(token.NOTEQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)

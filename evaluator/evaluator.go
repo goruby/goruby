@@ -418,6 +418,8 @@ func evalIntegerInfixExpression(operator string, left, right object.RubyObject) 
 		return &object.Integer{Value: leftVal * rightVal}, nil
 	case "/":
 		return &object.Integer{Value: leftVal / rightVal}, nil
+	case "%":
+		return &object.Integer{Value: leftVal % rightVal}, nil
 	case "<":
 		return nativeBoolToBooleanObject(leftVal < rightVal), nil
 	case ">":

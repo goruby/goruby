@@ -30,6 +30,7 @@ const (
 	BANG     // !
 	ASTERISK // *
 	SLASH    // /
+	MODULO   // %
 
 	LT    // <
 	GT    // >
@@ -95,6 +96,7 @@ var tokens = [...]string{
 	BANG:     "!",
 	ASTERISK: "*",
 	SLASH:    "/",
+	MODULO:   "%",
 
 	LT:    "<",
 	GT:    ">",

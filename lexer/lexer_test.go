@@ -17,7 +17,7 @@ def add(x, y)
 end
 
 result = add(five, ten)
-!-/*5;
+!-/*%5;
 5 < 10 > 5
 return
 if 5 < 10 then
@@ -114,6 +114,7 @@ $a`
 		{token.MINUS, "-"},
 		{token.SLASH, "/"},
 		{token.ASTERISK, "*"},
+		{token.MODULO, "%"},
 		{token.INT, "5"},
 		{token.SEMICOLON, ";"},
 		{token.NEWLINE, "\n"},
