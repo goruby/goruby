@@ -28,6 +28,9 @@ end
 
 10 == 10
 10 != 9
+10 <= 9
+10 >= 9
+10 <=> 9
 ""
 "foobar"
 'foobar'
@@ -147,6 +150,18 @@ $a`
 		{token.NEWLINE, "\n"},
 		{token.INT, "10"},
 		{token.NOTEQ, "!="},
+		{token.INT, "9"},
+		{token.NEWLINE, "\n"},
+		{token.INT, "10"},
+		{token.LTE, "<="},
+		{token.INT, "9"},
+		{token.NEWLINE, "\n"},
+		{token.INT, "10"},
+		{token.GTE, ">="},
+		{token.INT, "9"},
+		{token.NEWLINE, "\n"},
+		{token.INT, "10"},
+		{token.SPACESHIP, "<=>"},
 		{token.INT, "9"},
 		{token.NEWLINE, "\n"},
 		{token.STRING, ""},

@@ -46,6 +46,9 @@ var integerMethods = map[string]RubyMethod{
 	">":   withArity(1, publicMethod(integerGt)),
 	"==":  withArity(1, publicMethod(integerEq)),
 	"!=":  withArity(1, publicMethod(integerNeq)),
+	">=":  withArity(1, publicMethod(integerGte)),
+	"<=":  withArity(1, publicMethod(integerLte)),
+	"<=>": withArity(1, publicMethod(integerSpaceship)),
 }
 
 func integerDiv(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -151,6 +154,54 @@ func integerNeq(context CallContext, args ...RubyObject) (RubyObject, error) {
 		)
 	}
 	if i.Value != right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
+}
+
+func integerSpaceship(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return NIL, nil
+	}
+	switch {
+	case i.Value > right.Value:
+		return &Integer{Value: 1}, nil
+	case i.Value < right.Value:
+		return &Integer{Value: -1}, nil
+	case i.Value == right.Value:
+		return &Integer{Value: 0}, nil
+	default:
+		panic("not reachable")
+	}
+}
+
+func integerGte(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewArgumentError(
+			"comparison of Integer with %s failed",
+			args[0].Class().(RubyObject).Inspect(),
+		)
+	}
+	if i.Value >= right.Value {
+		return TRUE, nil
+	}
+	return FALSE, nil
+}
+
+func integerLte(context CallContext, args ...RubyObject) (RubyObject, error) {
+	i := context.Receiver().(*Integer)
+	right, ok := args[0].(*Integer)
+	if !ok {
+		return nil, NewArgumentError(
+			"comparison of Integer with %s failed",
+			args[0].Class().(RubyObject).Inspect(),
+		)
+	}
+	if i.Value <= right.Value {
 		return TRUE, nil
 	}
 	return FALSE, nil

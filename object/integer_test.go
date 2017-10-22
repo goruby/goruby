@@ -310,6 +310,123 @@ func TestIntegerNeq(t *testing.T) {
 	}
 }
 
+func TestIntegerGte(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(6)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(4)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewArgumentError("comparison of Integer with String failed"),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerGte(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerLte(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(6)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(4)},
+			TRUE,
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			FALSE,
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			nil,
+			NewArgumentError("comparison of Integer with String failed"),
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerLte(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
+func TestIntegerSpaceship(t *testing.T) {
+	tests := []struct {
+		arguments []RubyObject
+		result    RubyObject
+		err       error
+	}{
+		{
+			[]RubyObject{NewInteger(6)},
+			&Integer{Value: -1},
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(4)},
+			&Integer{Value: 0},
+			nil,
+		},
+		{
+			[]RubyObject{NewInteger(2)},
+			&Integer{Value: 1},
+			nil,
+		},
+		{
+			[]RubyObject{&String{""}},
+			NIL,
+			nil,
+		},
+	}
+
+	for _, testCase := range tests {
+		context := &callContext{receiver: NewInteger(4)}
+
+		result, err := integerSpaceship(context, testCase.arguments...)
+
+		checkError(t, err, testCase.err)
+
+		checkResult(t, result, testCase.result)
+	}
+}
+
 func checkError(t *testing.T, actual, expected error) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Logf("Expected error to equal %T:%v, got %T:%v\n", expected, expected, actual, actual)

@@ -179,9 +179,24 @@ func startLexer(l *Lexer) StateFn {
 		l.emit(token.MODULO)
 		return startLexer
 	case '<':
+		if l.peek() == '=' {
+			l.next()
+			if l.peek() == '>' {
+				l.next()
+				l.emit(token.SPACESHIP)
+				return startLexer
+			}
+			l.emit(token.LTE)
+			return startLexer
+		}
 		l.emit(token.LT)
 		return startLexer
 	case '>':
+		if l.peek() == '=' {
+			l.next()
+			l.emit(token.GTE)
+			return startLexer
+		}
 		l.emit(token.GT)
 		return startLexer
 	case '(':

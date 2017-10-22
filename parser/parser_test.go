@@ -792,8 +792,11 @@ func TestParsingInfixExpressions(t *testing.T) {
 		{"5 % 5;", 5, "%", 5},
 		{"5 > 5;", 5, ">", 5},
 		{"5 < 5;", 5, "<", 5},
+		{"5 >= 5;", 5, ">=", 5},
+		{"5 <= 5;", 5, "<=", 5},
 		{"5 == 5;", 5, "==", 5},
 		{"5 != 5;", 5, "!=", 5},
+		{"5 <=> 5;", 5, "<=>", 5},
 		{"foobar + barfoo;", "foobar", "+", "barfoo"},
 		{"foobar - barfoo;", "foobar", "-", "barfoo"},
 		{"foobar * barfoo;", "foobar", "*", "barfoo"},
@@ -1393,6 +1396,15 @@ func TestFunctionLiteralParsing(t *testing.T) {
 				{name: "x", defaultValue: 2},
 				{name: "y", defaultValue: 3},
 			},
+			"(x + y)",
+		},
+		{
+			`def <=>
+          x + y
+          end
+          `,
+			"<=>",
+			[]funcParam{},
 			"(x + y)",
 		},
 	}

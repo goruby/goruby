@@ -32,10 +32,13 @@ const (
 	SLASH    // /
 	MODULO   // %
 
-	LT    // <
-	GT    // >
-	EQ    // ==
-	NOTEQ // !=
+	LT        // <
+	LTE       // <=
+	GT        // >
+	GTE       // >=
+	EQ        // ==
+	NOTEQ     // !=
+	SPACESHIP // <=>
 	operator_end
 
 	HASHROCKET // =>
@@ -98,10 +101,13 @@ var tokens = [...]string{
 	SLASH:    "/",
 	MODULO:   "%",
 
-	LT:    "<",
-	GT:    ">",
-	EQ:    "==",
-	NOTEQ: "!=",
+	LT:        "<",
+	LTE:       "<=",
+	GT:        ">",
+	GTE:       ">=",
+	EQ:        "==",
+	NOTEQ:     "!=",
+	SPACESHIP: "<=>",
 
 	NEWLINE:   "NEWLINE",
 	COMMA:     ",",

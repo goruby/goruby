@@ -19,8 +19,8 @@ const (
 	precMultiVars   // x, y
 	precBlockDo     // do
 	precBlockBraces // { |x| }
-	precEquals      // ==
-	precLessGreater // > or <
+	precEquals      // ==, !=, <=>
+	precLessGreater // >, <, >=, <=
 	precAssignment  // x = 5
 	precSum         // + or -
 	precProduct     // *, /, %
@@ -34,27 +34,30 @@ const (
 )
 
 var precedences = map[token.Type]int{
-	token.EQ:       precEquals,
-	token.NOTEQ:    precEquals,
-	token.LT:       precLessGreater,
-	token.GT:       precLessGreater,
-	token.PLUS:     precSum,
-	token.MINUS:    precSum,
-	token.SLASH:    precProduct,
-	token.ASTERISK: precProduct,
-	token.MODULO:   precProduct,
-	token.ASSIGN:   precAssignment,
-	token.LPAREN:   precCall,
-	token.IDENT:    precCall,
-	token.INT:      precCall,
-	token.STRING:   precCall,
-	token.DOT:      precContext,
-	token.LBRACKET: precIndex,
-	token.LBRACE:   precBlockBraces,
-	token.DO:       precBlockDo,
-	token.SCOPE:    precScope,
-	token.COLON:    precSymbol,
-	token.COMMA:    precMultiVars,
+	token.EQ:        precEquals,
+	token.NOTEQ:     precEquals,
+	token.SPACESHIP: precEquals,
+	token.LT:        precLessGreater,
+	token.GT:        precLessGreater,
+	token.LTE:       precLessGreater,
+	token.GTE:       precLessGreater,
+	token.PLUS:      precSum,
+	token.MINUS:     precSum,
+	token.SLASH:     precProduct,
+	token.ASTERISK:  precProduct,
+	token.MODULO:    precProduct,
+	token.ASSIGN:    precAssignment,
+	token.LPAREN:    precCall,
+	token.IDENT:     precCall,
+	token.INT:       precCall,
+	token.STRING:    precCall,
+	token.DOT:       precContext,
+	token.LBRACKET:  precIndex,
+	token.LBRACE:    precBlockBraces,
+	token.DO:        precBlockDo,
+	token.SCOPE:     precScope,
+	token.COLON:     precSymbol,
+	token.COMMA:     precMultiVars,
 }
 
 type (
@@ -132,6 +135,9 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.NOTEQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
+	p.registerInfix(token.LTE, p.parseInfixExpression)
+	p.registerInfix(token.GTE, p.parseInfixExpression)
+	p.registerInfix(token.SPACESHIP, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpressionWithParens)
 	p.registerInfix(token.IDENT, p.parseCallExpression)
 	p.registerInfix(token.INT, p.parseCallExpression)
@@ -825,9 +831,12 @@ func (p *parser) parseFunctionLiteral() ast.Expression {
 	}
 	lit := &ast.FunctionLiteral{Token: p.curToken}
 
-	if !p.accept(token.IDENT) {
+	if !p.peekTokenIs(token.IDENT) && !p.peekToken.Type.IsOperator() {
+		p.peekError(token.IDENT)
 		return nil
 	}
+	p.nextToken()
+
 	lit.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
 	lit.Parameters = p.parseParameters(token.LPAREN, token.RPAREN)
