@@ -58,6 +58,7 @@ func Walk(v Visitor, node Node) {
 		*SymbolLiteral,
 		*Boolean,
 		*Nil,
+		*Self,
 		*Comment:
 		// nothing to do
 
