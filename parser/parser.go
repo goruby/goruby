@@ -58,6 +58,8 @@ var precedences = map[token.Type]int{
 	token.SCOPE:     precScope,
 	token.COLON:     precSymbol,
 	token.COMMA:     precMultiVars,
+	token.THEN:      precHighest,
+	token.NEWLINE:   precHighest,
 }
 
 type (
@@ -233,6 +235,16 @@ func (p *parser) peekError(t ...token.Type) {
 		Pos:            epos,
 		expectedTokens: t,
 		actualToken:    p.peekToken.Type,
+	}
+	p.errors = append(p.errors, errors.WithStack(err))
+}
+
+func (p *parser) expectError(t ...token.Type) {
+	epos := p.file.Position(p.pos)
+	err := &unexpectedTokenError{
+		Pos:            epos,
+		expectedTokens: t,
+		actualToken:    p.curToken.Type,
 	}
 	p.errors = append(p.errors, errors.WithStack(err))
 }
@@ -748,6 +760,7 @@ func (p *parser) parseIfExpression() ast.Expression {
 	if p.peekTokenIs(token.THEN) {
 		p.accept(token.THEN)
 	}
+
 	if !p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
 		msg := fmt.Sprintf(
 			"could not parse if expression: unexpected token %s: '%s'",
@@ -948,8 +961,8 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 		defer un(trace(p, "parseContextCallExpression"))
 	}
 	contextCallExpression := &ast.ContextCallExpression{Token: p.curToken, Context: context}
-	if _, ok := context.(*ast.Self); ok && !p.currentTokenIs(token.DOT) {
-		p.peekError(p.curToken.Type)
+	if _, ok := context.(*ast.Self); ok && !p.currentTokenOneOf(token.DOT, token.SCOPE) {
+		p.expectError(token.DOT, token.SCOPE)
 		return nil
 	}
 	if p.currentTokenOneOf(token.DOT, token.SCOPE) {
@@ -957,7 +970,7 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 	}
 
 	if !p.currentTokenOneOf(token.IDENT, token.CLASS) {
-		p.peekError(token.IDENT, token.CLASS)
+		p.expectError(token.IDENT, token.CLASS)
 		return nil
 	}
 
@@ -989,7 +1002,7 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 
 	p.nextToken()
 	contextCallExpression.Arguments = p.parseExpressionList(
-		token.SEMICOLON, token.NEWLINE, token.EOF, token.LBRACE, token.DO,
+		token.SEMICOLON, token.LBRACE, token.DO,
 	)
 	if p.currentTokenOneOf(token.LBRACE, token.DO) {
 		contextCallExpression.Block = p.parseBlock().(*ast.BlockExpression)

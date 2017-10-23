@@ -4,6 +4,7 @@ import (
 	"fmt"
 	gotoken "go/token"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/goruby/goruby/ast"
@@ -1162,92 +1163,204 @@ func TestNilExpression(t *testing.T) {
 }
 
 func TestIfExpression(t *testing.T) {
-	tests := []struct {
-		input                         string
-		expectedConditionLeft         string
-		expectedConditionOperator     string
-		expectedConditionRight        string
-		expectedConsequenceExpression string
-	}{
-		{`if x < y
-        x
-        end`, "x", "<", "y", "x"},
-		{`if x < y then
-        x
-        end`, "x", "<", "y", "x"},
-		{`if x < y; x
-        end`, "x", "<", "y", "x"},
-		{`if x < y
-        if x == 3
-        y
-        end
-        x
-        end`, "x", "<", "y", "if(x == 3) y endx"},
-	}
-
-	for _, tt := range tests {
-		program, err := parseSource(tt.input)
-		checkParserErrors(t, err)
-
-		if len(program.Statements) != 1 {
-			t.Fatalf(
-				"program.Body does not contain %d statements. got=%d\n",
-				1,
-				len(program.Statements),
-			)
+	t.Run("with operator expression", func(t *testing.T) {
+		tests := []struct {
+			input                         string
+			expectedConditionLeft         string
+			expectedConditionOperator     string
+			expectedConditionRight        string
+			expectedConsequenceExpression string
+		}{
+			{`if x < y
+			x
+			end`, "x", "<", "y", "x"},
+			{`if x < y then
+			x
+			end`, "x", "<", "y", "x"},
+			{`if x < y; x
+			end`, "x", "<", "y", "x"},
+			{`if x < y
+			if x == 3
+			y
+			end
+			x
+			end`, "x", "<", "y", "if(x == 3) y endx"},
+			{`if x < y
+			x = Object x
+			end`, "x", "<", "y", "x = Object x"},
 		}
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf(
-				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-				program.Statements[0],
-			)
-		}
+		for _, tt := range tests {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		exp, ok := stmt.Expression.(*ast.IfExpression)
-		if !ok {
-			t.Fatalf(
-				"stmt.Expression is not ast.IfExpression. got=%T",
-				stmt.Expression,
-			)
-		}
-
-		if !testInfixExpression(
-			t,
-			exp.Condition,
-			tt.expectedConditionLeft,
-			tt.expectedConditionOperator,
-			tt.expectedConditionRight,
-		) {
-			return
-		}
-
-		consequenceBody := ""
-		for _, stmt := range exp.Consequence.Statements {
-			consequence, ok := stmt.(*ast.ExpressionStatement)
-			if !ok {
+			if len(program.Statements) != 1 {
 				t.Fatalf(
-					"Statements[0] is not ast.ExpressionStatement. got=%T",
-					exp.Consequence.Statements[0],
+					"program.Body does not contain %d statements. got=%d\n",
+					1,
+					len(program.Statements),
 				)
 			}
 
-			consequenceBody += consequence.Expression.String()
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0],
+				)
+			}
+
+			exp, ok := stmt.Expression.(*ast.IfExpression)
+			if !ok {
+				t.Fatalf(
+					"stmt.Expression is not ast.IfExpression. got=%T",
+					stmt.Expression,
+				)
+			}
+
+			if !testInfixExpression(
+				t,
+				exp.Condition,
+				tt.expectedConditionLeft,
+				tt.expectedConditionOperator,
+				tt.expectedConditionRight,
+			) {
+				return
+			}
+
+			consequenceBody := ""
+			for _, stmt := range exp.Consequence.Statements {
+				consequence, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Fatalf(
+						"Statements[0] is not ast.ExpressionStatement. got=%T",
+						exp.Consequence.Statements[0],
+					)
+				}
+
+				consequenceBody += consequence.Expression.String()
+			}
+
+			if consequenceBody != tt.expectedConsequenceExpression {
+				t.Logf(
+					"Expected consequence to equal %q, got %q\n",
+					tt.expectedConsequenceExpression,
+					consequenceBody,
+				)
+			}
+
+			if exp.Alternative != nil {
+				t.Errorf("exp.Alternative.Statements was not nil. got=%+v", exp.Alternative)
+			}
+		}
+	})
+	t.Run("with method call expression", func(t *testing.T) {
+		tests := []struct {
+			input       string
+			condContext string
+			condMethod  string
+			condArg     string
+			consequence string
+		}{
+			{`if x.exist? :y
+			x
+			end`, "x", "exist?", "y", "x"},
+			{`if x.exist? :y
+			x = Object x
+			end`, "x", "exist?", "y", "x = Object x"},
 		}
 
-		if consequenceBody != tt.expectedConsequenceExpression {
-			t.Logf(
-				"Expected consequence to equal %q, got %q\n",
-				tt.expectedConsequenceExpression,
-				consequenceBody,
-			)
-		}
+		for _, tt := range tests {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		if exp.Alternative != nil {
-			t.Errorf("exp.Alternative.Statements was not nil. got=%+v", exp.Alternative)
+			if len(program.Statements) != 1 {
+				t.Fatalf(
+					"program.Body does not contain %d statements. got=%d\n",
+					1,
+					len(program.Statements),
+				)
+			}
+
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0],
+				)
+			}
+
+			exp, ok := stmt.Expression.(*ast.IfExpression)
+			if !ok {
+				t.Fatalf(
+					"stmt.Expression is not ast.IfExpression. got=%T",
+					stmt.Expression,
+				)
+			}
+
+			call, ok := exp.Condition.(*ast.ContextCallExpression)
+			if !ok {
+				t.Fatalf(
+					"exp.Condition is not %T. got=%T",
+					call,
+					exp.Condition,
+				)
+			}
+
+			if call.Function.String() != tt.condMethod {
+				t.Logf(
+					"Expected condition call method to equal %q, got %q\n",
+					tt.condMethod,
+					call.Function.String(),
+				)
+			}
+
+			args := []string{}
+			for _, a := range call.Arguments {
+				args = append(args, a.String())
+			}
+			if strings.Join(args, " ") != tt.condArg {
+				t.Logf(
+					"Expected condition call args to equal %q, got %q\n",
+					tt.condArg,
+					strings.Join(args, " "),
+				)
+			}
+
+			if call.Context.String() != tt.condContext {
+				t.Logf(
+					"Expected condition call context to equal %q, got %q\n",
+					tt.condContext,
+					call.Context.String(),
+				)
+			}
+
+			consequenceBody := ""
+			for _, stmt := range exp.Consequence.Statements {
+				consequence, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Fatalf(
+						"Statements[0] is not ast.ExpressionStatement. got=%T",
+						exp.Consequence.Statements[0],
+					)
+				}
+
+				consequenceBody += consequence.Expression.String()
+			}
+
+			if consequenceBody != tt.consequence {
+				t.Logf(
+					"Expected consequence to equal %q, got %q\n",
+					tt.consequence,
+					consequenceBody,
+				)
+			}
+
+			if exp.Alternative != nil {
+				t.Errorf("exp.Alternative.Statements was not nil. got=%+v", exp.Alternative)
+			}
 		}
-	}
+	})
 }
 
 func TestIfElseExpression(t *testing.T) {
@@ -2457,6 +2570,41 @@ func TestContextCallExpression(t *testing.T) {
 		}
 
 		if !testIdentifier(t, exp.Function, "foo") {
+			return
+		}
+
+		if len(exp.Arguments) != 1 {
+			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
+		}
+
+		if !testIdentifier(t, exp.Arguments[0], "add") {
+			return
+		}
+	})
+	t.Run("context call on const with no dot", func(t *testing.T) {
+		input := "Integer add;"
+
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
+				1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
+				stmt.Expression)
+		}
+
+		if !testIdentifier(t, exp.Function, "Integer") {
 			return
 		}
 
