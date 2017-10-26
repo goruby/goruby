@@ -19,14 +19,14 @@ const (
 	precMultiVars   // x, y
 	precBlockDo     // do
 	precBlockBraces // { |x| }
+	precCallArg     // func x
 	precEquals      // ==, !=, <=>
 	precLessGreater // >, <, >=, <=
 	precAssignment  // x = 5
 	precSum         // + or -
 	precProduct     // *, /, %
 	precPrefix      // -X or !X
-	precCall        // myFunction(X)
-	precContext     // foo.myFunction(X)
+	precCall        // foo.myFunction(X)
 	precIndex       // array[index]
 	precScope       // A::B
 	precSymbol      // :Symbol
@@ -48,10 +48,10 @@ var precedences = map[token.Type]int{
 	token.MODULO:    precProduct,
 	token.ASSIGN:    precAssignment,
 	token.LPAREN:    precCall,
-	token.IDENT:     precCall,
-	token.INT:       precCall,
-	token.STRING:    precCall,
-	token.DOT:       precContext,
+	token.DOT:       precCall,
+	token.IDENT:     precCallArg,
+	token.INT:       precCallArg,
+	token.STRING:    precCallArg,
 	token.LBRACKET:  precIndex,
 	token.LBRACE:    precBlockBraces,
 	token.DO:        precBlockDo,
@@ -60,6 +60,17 @@ var precedences = map[token.Type]int{
 	token.COMMA:     precMultiVars,
 	token.THEN:      precHighest,
 	token.NEWLINE:   precHighest,
+}
+
+var operatorsNotPossibleInCallArgs = []token.Type{
+	token.ASSIGN,
+	token.LT,
+	token.LTE,
+	token.GT,
+	token.GTE,
+	token.SPACESHIP,
+	token.EQ,
+	token.NOTEQ,
 }
 
 type (
@@ -284,7 +295,7 @@ func (p *parser) parseStatement() ast.Statement {
 	}
 	switch p.curToken.Type {
 	case token.ILLEGAL:
-		msg := fmt.Sprintf("%s", p.curToken.Literal)
+		msg := p.curToken.Literal
 		epos := p.file.Position(p.pos)
 		if epos.Filename != "" || epos.IsValid() {
 			msg = epos.String() + ": " + msg
@@ -292,12 +303,7 @@ func (p *parser) parseStatement() ast.Statement {
 		p.errors = append(p.errors, fmt.Errorf(msg))
 		return nil
 	case token.EOF:
-		err := &unexpectedTokenError{
-			expectedTokens: []token.Type{token.NEWLINE},
-			actualToken:    token.EOF,
-		}
-		p.errors = append(p.errors, err)
-
+		p.expectError(token.NEWLINE)
 		return nil
 	case token.NEWLINE:
 		return nil
@@ -607,7 +613,7 @@ func (p *parser) parseSymbolLiteral() ast.Expression {
 	if !p.acceptOneOf(token.IDENT, token.STRING) {
 		return nil
 	}
-	val := p.parseExpression(precLowest)
+	val := p.parseExpression(precHighest)
 	symbol.Value = val
 	return symbol
 }
@@ -978,10 +984,8 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 	ident := function.(*ast.Identifier)
 	contextCallExpression.Function = ident
 
-	args := []ast.Expression{}
-
 	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE, token.DOT, token.SCOPE) {
-		contextCallExpression.Arguments = args
+		contextCallExpression.Arguments = []ast.Expression{}
 		return contextCallExpression
 	}
 
@@ -996,12 +1000,12 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 		return contextCallExpression
 	}
 
-	if p.peekTokenIs(token.RBRACE) {
+	if p.peekTokenOneOf(append(operatorsNotPossibleInCallArgs, token.RBRACE)...) {
 		return contextCallExpression
 	}
 
 	p.nextToken()
-	contextCallExpression.Arguments = p.parseExpressionList(
+	contextCallExpression.Arguments = p.parseCallArguments(
 		token.SEMICOLON, token.LBRACE, token.DO,
 	)
 	if p.currentTokenOneOf(token.LBRACE, token.DO) {
@@ -1052,6 +1056,29 @@ func (p *parser) parseCallExpressionWithParens(function ast.Expression) ast.Expr
 	return exp
 }
 
+func (p *parser) parseCallArguments(end ...token.Type) []ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseCallArguments"))
+	}
+	list := []ast.Expression{}
+	if p.currentTokenOneOf(end...) {
+		return list
+	}
+
+	list = append(list, p.parseExpression(precAssignment))
+
+	for p.peekTokenIs(token.COMMA) {
+		p.consume(token.COMMA)
+		list = append(list, p.parseExpression(precAssignment))
+	}
+
+	if p.peekTokenOneOf(end...) {
+		p.acceptOneOf(end...)
+	}
+
+	return list
+}
+
 func (p *parser) parseExpressionList(end ...token.Type) []ast.Expression {
 	if p.trace {
 		defer un(trace(p, "parseExpressionList"))
@@ -1076,15 +1103,16 @@ func (p *parser) parseExpressionList(end ...token.Type) []ast.Expression {
 }
 
 func (p *parser) peekPrecedence() int {
-	if p, ok := precedences[p.peekToken.Type]; ok {
-		return p
-	}
-	return precLowest
+	return precedenceForToken(p.peekToken.Type)
 }
 
 func (p *parser) curPrecedence() int {
-	if p, ok := precedences[p.curToken.Type]; ok {
-		return p
+	return precedenceForToken(p.curToken.Type)
+}
+
+func precedenceForToken(t token.Type) int {
+	if prec, ok := precedences[t]; ok {
+		return prec
 	}
 	return precLowest
 }

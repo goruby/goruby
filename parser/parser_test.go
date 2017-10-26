@@ -780,39 +780,69 @@ func TestParsingPrefixExpressions(t *testing.T) {
 }
 
 func TestParsingInfixExpressions(t *testing.T) {
-	infixTests := []struct {
-		input      string
-		leftValue  interface{}
-		operator   string
-		rightValue interface{}
-	}{
-		{"5 + 5;", 5, "+", 5},
-		{"5 - 5;", 5, "-", 5},
-		{"5 * 5;", 5, "*", 5},
-		{"5 / 5;", 5, "/", 5},
-		{"5 % 5;", 5, "%", 5},
-		{"5 > 5;", 5, ">", 5},
-		{"5 < 5;", 5, "<", 5},
-		{"5 >= 5;", 5, ">=", 5},
-		{"5 <= 5;", 5, "<=", 5},
-		{"5 == 5;", 5, "==", 5},
-		{"5 != 5;", 5, "!=", 5},
-		{"5 <=> 5;", 5, "<=>", 5},
-		{"foobar + barfoo;", "foobar", "+", "barfoo"},
-		{"foobar - barfoo;", "foobar", "-", "barfoo"},
-		{"foobar * barfoo;", "foobar", "*", "barfoo"},
-		{"foobar / barfoo;", "foobar", "/", "barfoo"},
-		{"foobar > barfoo;", "foobar", ">", "barfoo"},
-		{"foobar < barfoo;", "foobar", "<", "barfoo"},
-		{"foobar == barfoo;", "foobar", "==", "barfoo"},
-		{"foobar != barfoo;", "foobar", "!=", "barfoo"},
-		{"true == true", true, "==", true},
-		{"true != false", true, "!=", false},
-		{"false == false", false, "==", false},
-	}
+	t.Run("literal expressions", func(t *testing.T) {
+		infixTests := []struct {
+			input      string
+			leftValue  interface{}
+			operator   string
+			rightValue interface{}
+		}{
+			{"5 + 5;", 5, "+", 5},
+			{"5 - 5;", 5, "-", 5},
+			{"5 * 5;", 5, "*", 5},
+			{"5 / 5;", 5, "/", 5},
+			{"5 % 5;", 5, "%", 5},
+			{"5 > 5;", 5, ">", 5},
+			{"5 < 5;", 5, "<", 5},
+			{"5 >= 5;", 5, ">=", 5},
+			{"5 <= 5;", 5, "<=", 5},
+			{"5 == 5;", 5, "==", 5},
+			{"5 != 5;", 5, "!=", 5},
+			{"5 <=> 5;", 5, "<=>", 5},
+			{"foobar + barfoo;", "foobar", "+", "barfoo"},
+			{"foobar - barfoo;", "foobar", "-", "barfoo"},
+			{"foobar * barfoo;", "foobar", "*", "barfoo"},
+			{"foobar / barfoo;", "foobar", "/", "barfoo"},
+			{"foobar > barfoo;", "foobar", ">", "barfoo"},
+			{"foobar < barfoo;", "foobar", "<", "barfoo"},
+			{"foobar == barfoo;", "foobar", "==", "barfoo"},
+			{"foobar <=> barfoo;", "foobar", "<=>", "barfoo"},
+			{"foobar != barfoo;", "foobar", "!=", "barfoo"},
+			{"true == true", true, "==", true},
+			{"true != false", true, "!=", false},
+			{"false == false", false, "==", false},
+		}
 
-	for _, tt := range infixTests {
-		program, err := parseSource(tt.input)
+		for _, tt := range infixTests {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
+
+			if len(program.Statements) != 1 {
+				t.Fatalf(
+					"program.Statements does not contain %d statements. got=%d\n",
+					1,
+					len(program.Statements),
+				)
+			}
+
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0],
+				)
+			}
+
+			if !testInfixExpression(t, stmt.Expression, tt.leftValue,
+				tt.operator, tt.rightValue) {
+				return
+			}
+		}
+	})
+	t.Run("symbols expressions", func(t *testing.T) {
+		input := ":bar <=> 13"
+
+		program, err := parseSource(input)
 		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {
@@ -831,11 +861,108 @@ func TestParsingInfixExpressions(t *testing.T) {
 			)
 		}
 
-		if !testInfixExpression(t, stmt.Expression, tt.leftValue,
-			tt.operator, tt.rightValue) {
-			return
+		infix, ok := stmt.Expression.(*ast.InfixExpression)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not %T. got=%T",
+				infix,
+				stmt.Expression,
+			)
 		}
-	}
+	})
+	t.Run("call expression no args", func(t *testing.T) {
+		input := "foo.bar <=> 13"
+
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Statements does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		infix, ok := stmt.Expression.(*ast.InfixExpression)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not %T. got=%T",
+				infix,
+				stmt.Expression,
+			)
+		}
+	})
+	t.Run("call expression with one arg", func(t *testing.T) {
+		input := "foo.bar 3 <=> 13"
+
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Statements does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		infix, ok := stmt.Expression.(*ast.InfixExpression)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not %T. got=%T",
+				infix,
+				stmt.Expression,
+			)
+		}
+	})
+	t.Run("call expression with two args", func(t *testing.T) {
+		input := "foo.bar 3, 5 <=> 13"
+
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Statements does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		infix, ok := stmt.Expression.(*ast.InfixExpression)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not %T. got=%T",
+				infix,
+				stmt.Expression,
+			)
+		}
+	})
 }
 
 func TestOperatorPrecedenceParsing(t *testing.T) {
