@@ -47,9 +47,9 @@ type Mode uint
 
 // parser modes
 const (
-	ParseComments = 1 << iota // parse comments and add them to AST
-	Trace                     // print a trace of parsed productions
-	AllErrors                 // report all errors (not just the first 10 on different lines)
+	ParseComments Mode = 1 << iota // parse comments and add them to AST
+	Trace                          // print a trace of parsed productions
+	AllErrors                      // report all errors (not just the first 10 on different lines)
 )
 
 // ParseFile parses the source code of a single Ruby source file and returns

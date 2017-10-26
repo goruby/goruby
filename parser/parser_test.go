@@ -3248,8 +3248,12 @@ func testHashLiteral(t *testing.T, expr ast.Expression, value map[string]string)
 	return true
 }
 
-func parseSource(src string) (*ast.Program, *Errors) {
-	prog, err := ParseFile(gotoken.NewFileSet(), "", src, ParseComments)
+func parseSource(src string, modes ...Mode) (*ast.Program, *Errors) {
+	mode := ParseComments
+	for _, m := range modes {
+		mode = mode | m
+	}
+	prog, err := ParseFile(gotoken.NewFileSet(), "", src, mode)
 	var parserErrors *Errors
 	if err != nil {
 		parserErrors = err.(*Errors)
