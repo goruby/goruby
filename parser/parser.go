@@ -50,6 +50,7 @@ var precedences = map[token.Type]int{
 	token.LPAREN:    precCall,
 	token.DOT:       precCall,
 	token.IDENT:     precCallArg,
+	token.CONST:     precCallArg,
 	token.INT:       precCallArg,
 	token.STRING:    precCallArg,
 	token.LBRACKET:  precIndex,
@@ -152,15 +153,16 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.GTE, p.parseInfixExpression)
 	p.registerInfix(token.SPACESHIP, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpressionWithParens)
-	p.registerInfix(token.IDENT, p.parseCallExpression)
-	p.registerInfix(token.INT, p.parseCallExpression)
-	p.registerInfix(token.STRING, p.parseCallExpression)
-	p.registerInfix(token.DOT, p.parseContextCallExpression)
-	p.registerInfix(token.COLON, p.parseCallExpression)
+	p.registerInfix(token.IDENT, p.parseCallArgument)
+	p.registerInfix(token.CONST, p.parseCallArgument)
+	p.registerInfix(token.INT, p.parseCallArgument)
+	p.registerInfix(token.STRING, p.parseCallArgument)
+	p.registerInfix(token.COLON, p.parseCallArgument)
+	p.registerInfix(token.DOT, p.parseMethodCall)
 	p.registerInfix(token.COMMA, p.parseMultiVars)
-	p.registerInfix(token.RBRACKET, p.parseCallExpression)
-	p.registerInfix(token.LBRACE, p.parseCallExpression)
-	p.registerInfix(token.DO, p.parseCallExpression)
+	p.registerInfix(token.RBRACKET, p.parseCallArgument)
+	p.registerInfix(token.LBRACE, p.parseCallArgument)
+	p.registerInfix(token.DO, p.parseCallArgument)
 	p.registerInfix(token.ASSIGN, p.parseAssignment)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	p.registerInfix(token.SCOPE, p.parseScopedIdentifierExpression)
@@ -310,10 +312,7 @@ func (p *parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	case token.HASH:
-		if p.mode&ParseComments != 0 {
-			return p.parseComment()
-		}
-		return nil
+		return p.parseComment()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -375,7 +374,7 @@ func (p *parser) parseExpression(precedence int) ast.Expression {
 	return leftExp
 }
 
-func (p *parser) parseComment() *ast.Comment {
+func (p *parser) parseComment() ast.Statement {
 	comment := &ast.Comment{Token: p.curToken}
 	if !p.accept(token.STRING) {
 		return nil
@@ -385,6 +384,10 @@ func (p *parser) parseComment() *ast.Comment {
 		epos := p.file.Position(p.pos)
 		msg := fmt.Errorf("%s: Expected newline or eof after comment", epos.String())
 		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	if p.mode&ParseComments == 0 {
 		return nil
 	}
 	return comment
@@ -533,7 +536,7 @@ func (p *parser) parseScopedIdentifierExpression(outer ast.Expression) ast.Expre
 	}
 	ident, ok := outer.(*ast.Identifier)
 	if !ok {
-		return p.parseContextCallExpression(outer)
+		return p.parseMethodCall(outer)
 	}
 
 	scopedIdent := &ast.ScopedIdentifier{Token: p.curToken, Outer: ident}
@@ -944,7 +947,6 @@ func (p *parser) parseBlockStatement(t ...token.Type) *ast.BlockStatement {
 	terminatorTokens := append(
 		[]token.Type{
 			token.END,
-			token.EOF,
 		},
 		t...,
 	)
@@ -952,6 +954,10 @@ func (p *parser) parseBlockStatement(t ...token.Type) *ast.BlockStatement {
 	block.Statements = []ast.Statement{}
 
 	for !p.peekTokenOneOf(terminatorTokens...) {
+		if p.peekTokenIs(token.EOF) {
+			p.peekError(token.EOF)
+			return block
+		}
 		p.nextToken()
 		stmt := p.parseStatement()
 		if stmt != nil {
@@ -960,6 +966,53 @@ func (p *parser) parseBlockStatement(t ...token.Type) *ast.BlockStatement {
 	}
 
 	return block
+}
+
+func (p *parser) parseMethodCall(context ast.Expression) ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseMethodCall"))
+	}
+	contextCallExpression := &ast.ContextCallExpression{Token: p.curToken, Context: context}
+
+	p.nextToken()
+
+	if !p.currentTokenOneOf(token.IDENT, token.CLASS) && !p.curToken.Type.IsOperator() {
+		p.expectError(token.IDENT, token.CLASS)
+		return nil
+	}
+
+	function := p.parseIdentifier()
+	ident := function.(*ast.Identifier)
+	contextCallExpression.Function = ident
+
+	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE, token.EOF, token.DOT, token.SCOPE) {
+		contextCallExpression.Arguments = []ast.Expression{}
+		return contextCallExpression
+	}
+
+	if p.peekTokenIs(token.LPAREN) {
+		p.accept(token.LPAREN)
+		p.nextToken()
+		contextCallExpression.Arguments = p.parseExpressionList(token.RPAREN)
+		if p.peekTokenOneOf(token.LBRACE, token.DO) {
+			p.acceptOneOf(token.LBRACE, token.DO)
+			contextCallExpression.Block = p.parseBlock().(*ast.BlockExpression)
+		}
+		return contextCallExpression
+	}
+
+	if p.peekTokenOneOf(append(operatorsNotPossibleInCallArgs, token.RBRACE)...) {
+		return contextCallExpression
+	}
+
+	p.nextToken()
+	contextCallExpression.Arguments = p.parseCallArguments(
+		token.SEMICOLON, token.LBRACE, token.DO,
+	)
+	if p.currentTokenOneOf(token.LBRACE, token.DO) {
+		contextCallExpression.Block = p.parseBlock().(*ast.BlockExpression)
+	}
+	return contextCallExpression
 }
 
 func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expression {
@@ -1014,12 +1067,13 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 	return contextCallExpression
 }
 
-func (p *parser) parseCallExpression(function ast.Expression) ast.Expression {
+func (p *parser) parseCallArgument(function ast.Expression) ast.Expression {
 	if p.trace {
-		defer un(trace(p, "parseCallExpression"))
+		defer un(trace(p, "parseCallArgument"))
 	}
 	ident, ok := function.(*ast.Identifier)
 	if !ok {
+		// method call on any other object
 		return p.parseContextCallExpression(function)
 	}
 	exp := &ast.ContextCallExpression{Token: ident.Token, Function: ident}
