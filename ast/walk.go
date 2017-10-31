@@ -130,7 +130,7 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Outer)
 		Walk(v, n.Inner)
 
-	case *IfExpression:
+	case *ConditionalExpression:
 		Walk(v, n.Condition)
 		Walk(v, n.Consequence)
 		if n.Alternative != nil {

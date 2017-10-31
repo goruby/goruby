@@ -71,6 +71,7 @@ const (
 	IF
 	THEN
 	ELSE
+	UNLESS
 	TRUE
 	FALSE
 	RETURN
@@ -131,6 +132,7 @@ var tokens = [...]string{
 	DEF:             "def",
 	SELF:            "self",
 	END:             "end",
+	UNLESS:          "unless",
 	IF:              "if",
 	THEN:            "then",
 	ELSE:            "else",

@@ -126,6 +126,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
+	p.registerPrefix(token.UNLESS, p.parseIfExpression)
 	p.registerPrefix(token.DEF, p.parseFunctionLiteral)
 	p.registerPrefix(token.COLON, p.parseSymbolLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
@@ -763,7 +764,7 @@ func (p *parser) parseIfExpression() ast.Expression {
 	if p.trace {
 		defer un(trace(p, "parseIfExpression"))
 	}
-	expression := &ast.IfExpression{Token: p.curToken}
+	expression := &ast.ConditionalExpression{Token: p.curToken}
 	p.nextToken()
 	expression.Condition = p.parseExpression(precLowest)
 	if p.peekTokenIs(token.THEN) {

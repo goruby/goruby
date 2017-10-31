@@ -395,27 +395,32 @@ func (s *SymbolLiteral) literalNode()    {}
 func (s *SymbolLiteral) TokenLiteral() string { return s.Token.Literal }
 func (s *SymbolLiteral) String() string       { return ":" + s.Value.String() }
 
-// IfExpression represents an if expression within the AST
-type IfExpression struct {
-	Token       token.Token // The 'if' token
+// ConditionalExpression represents an if expression within the AST
+type ConditionalExpression struct {
+	Token       token.Token // The 'if' or 'unless' token
 	Condition   Expression
 	Consequence *BlockStatement
 	Alternative *BlockStatement
 }
 
-func (ie *IfExpression) expressionNode() {}
+// IsNegated indicates if the condition uses unless, i.e. is negated
+func (ce *ConditionalExpression) IsNegated() bool {
+	return ce.Token.Type == token.UNLESS
+}
 
-// TokenLiteral returns the literal from token token.IF
-func (ie *IfExpression) TokenLiteral() string { return ie.Token.Literal }
-func (ie *IfExpression) String() string {
+func (ce *ConditionalExpression) expressionNode() {}
+
+// TokenLiteral returns the literal from token token.IF or token.UNLESS
+func (ce *ConditionalExpression) TokenLiteral() string { return ce.Token.Literal }
+func (ce *ConditionalExpression) String() string {
 	var out bytes.Buffer
-	out.WriteString("if")
-	out.WriteString(ie.Condition.String())
+	out.WriteString(ce.Token.Literal)
+	out.WriteString(ce.Condition.String())
 	out.WriteString(" ")
-	out.WriteString(ie.Consequence.String())
-	if ie.Alternative != nil {
+	out.WriteString(ce.Consequence.String())
+	if ce.Alternative != nil {
 		out.WriteString("else ")
-		out.WriteString(ie.Alternative.String())
+		out.WriteString(ce.Alternative.String())
 	}
 	out.WriteString(" end")
 	return out.String()

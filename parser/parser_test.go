@@ -1289,7 +1289,7 @@ func TestNilExpression(t *testing.T) {
 	}
 }
 
-func TestIfExpression(t *testing.T) {
+func TestConditionalExpression(t *testing.T) {
 	t.Run("with operator expression", func(t *testing.T) {
 		tests := []struct {
 			input                         string
@@ -1315,6 +1315,23 @@ func TestIfExpression(t *testing.T) {
 			{`if x < y
 			x = Object x
 			end`, "x", "<", "y", "x = Object x"},
+			{`unless x < y
+			x
+			end`, "x", "<", "y", "x"},
+			{`unless x < y then
+			x
+			end`, "x", "<", "y", "x"},
+			{`unless x < y; x
+			end`, "x", "<", "y", "x"},
+			{`unless x < y
+			if x == 3
+			y
+			end
+			x
+			end`, "x", "<", "y", "if(x == 3) y endx"},
+			{`unless x < y
+			x = Object x
+			end`, "x", "<", "y", "x = Object x"},
 		}
 
 		for _, tt := range tests {
@@ -1337,10 +1354,11 @@ func TestIfExpression(t *testing.T) {
 				)
 			}
 
-			exp, ok := stmt.Expression.(*ast.IfExpression)
+			exp, ok := stmt.Expression.(*ast.ConditionalExpression)
 			if !ok {
 				t.Fatalf(
-					"stmt.Expression is not ast.IfExpression. got=%T",
+					"stmt.Expression is not %T. got=%T",
+					exp,
 					stmt.Expression,
 				)
 			}
@@ -1389,10 +1407,16 @@ func TestIfExpression(t *testing.T) {
 			condArg     string
 			consequence string
 		}{
-			{`if x.exist? :y
+			{`unless x.exist? :y
 			x
 			end`, "x", "exist?", "y", "x"},
-			{`if x.exist? :y
+			{`unless x.exist? :y
+			x = Object x
+			end`, "x", "exist?", "y", "x = Object x"},
+			{`unless x.exist? :y
+			x
+			end`, "x", "exist?", "y", "x"},
+			{`unless x.exist? :y
 			x = Object x
 			end`, "x", "exist?", "y", "x = Object x"},
 		}
@@ -1417,10 +1441,11 @@ func TestIfExpression(t *testing.T) {
 				)
 			}
 
-			exp, ok := stmt.Expression.(*ast.IfExpression)
+			exp, ok := stmt.Expression.(*ast.ConditionalExpression)
 			if !ok {
 				t.Fatalf(
-					"stmt.Expression is not ast.IfExpression. got=%T",
+					"stmt.Expression is not %T. got=%T",
+					exp,
 					stmt.Expression,
 				)
 			}
@@ -1490,7 +1515,7 @@ func TestIfExpression(t *testing.T) {
 	})
 }
 
-func TestIfElseExpression(t *testing.T) {
+func TestConditionalExpressionWithAlternative(t *testing.T) {
 	input := `
       if x < y
       x
@@ -1512,7 +1537,7 @@ func TestIfElseExpression(t *testing.T) {
 			program.Statements[0])
 	}
 
-	exp, ok := stmt.Expression.(*ast.IfExpression)
+	exp, ok := stmt.Expression.(*ast.ConditionalExpression)
 	if !ok {
 		t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
 	}

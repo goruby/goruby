@@ -102,7 +102,7 @@ func TestBangOperator(t *testing.T) {
 	}
 }
 
-func TestIfElseExpressions(t *testing.T) {
+func TestConditionalExpression(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected interface{}
@@ -114,6 +114,13 @@ func TestIfElseExpressions(t *testing.T) {
 		{"if 1 > 2; 10; end", nil},
 		{"if 1 > 2; 10; else\n 20; end", 20},
 		{"if 1 < 2; 10; else\n 20; end", 10},
+		{"unless true; 10; end", nil},
+		{"unless false; 10; end", 10},
+		{"unless 1; 10; end", nil},
+		{"unless 1 < 2; 10; end", nil},
+		{"unless 1 > 2; 10; end", 10},
+		{"unless 1 > 2; 10; else\n 20; end", 10},
+		{"unless 1 < 2; 10; else\n 20; end", 20},
 	}
 
 	for _, tt := range tests {

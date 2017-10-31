@@ -296,8 +296,8 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		}
 		context := &callContext{object.NewCallContext(env, left)}
 		return object.Send(context, node.Operator, right)
-	case *ast.IfExpression:
-		return evalIfExpression(node, env)
+	case *ast.ConditionalExpression:
+		return evalConditionalExpression(node, env)
 	case *ast.ScopedIdentifier:
 		self, _ := env.Get("self")
 		outer, ok := env.Get(node.Outer.Value)
@@ -390,15 +390,19 @@ func evalMinusPrefixOperatorExpression(right object.RubyObject) (object.RubyObje
 	}
 }
 
-func evalIfExpression(ie *ast.IfExpression, env object.Environment) (object.RubyObject, error) {
-	condition, err := Eval(ie.Condition, env)
+func evalConditionalExpression(ce *ast.ConditionalExpression, env object.Environment) (object.RubyObject, error) {
+	condition, err := Eval(ce.Condition, env)
 	if err != nil {
 		return nil, err
 	}
-	if isTruthy(condition) {
-		return Eval(ie.Consequence, env)
-	} else if ie.Alternative != nil {
-		return Eval(ie.Alternative, env)
+	evaluateConsequence := isTruthy(condition)
+	if ce.IsNegated() {
+		evaluateConsequence = !evaluateConsequence
+	}
+	if evaluateConsequence {
+		return Eval(ce.Consequence, env)
+	} else if ce.Alternative != nil {
+		return Eval(ce.Alternative, env)
 	} else {
 		return object.NIL, nil
 	}
