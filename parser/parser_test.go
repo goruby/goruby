@@ -1314,7 +1314,7 @@ func TestConditionalExpression(t *testing.T) {
 			end`, "x", "<", "y", "if(x == 3) y endx"},
 			{`if x < y
 			x = Object x
-			end`, "x", "<", "y", "x = Object x"},
+			end`, "x", "<", "y", "x = Object.x()"},
 			{`unless x < y
 			x
 			end`, "x", "<", "y", "x"},
@@ -1331,7 +1331,11 @@ func TestConditionalExpression(t *testing.T) {
 			end`, "x", "<", "y", "if(x == 3) y endx"},
 			{`unless x < y
 			x = Object x
-			end`, "x", "<", "y", "x = Object x"},
+			end`, "x", "<", "y", "x = Object.x()"},
+			{"x = 3 if x < y", "x", "<", "y", "x = 3"},
+			{"@x = 3 if x < y", "x", "<", "y", "@x = 3"},
+			{"x = 3 unless x < y", "x", "<", "y", "x = 3"},
+			{"@x = 3 unless x < y", "x", "<", "y", "@x = 3"},
 		}
 
 		for _, tt := range tests {
@@ -1392,6 +1396,7 @@ func TestConditionalExpression(t *testing.T) {
 					tt.expectedConsequenceExpression,
 					consequenceBody,
 				)
+				t.Fail()
 			}
 
 			if exp.Alternative != nil {
@@ -3088,7 +3093,7 @@ func TestContextCallExpression(t *testing.T) {
 	t.Run("allow operators as method name", func(t *testing.T) {
 		input := "foo.<=>;"
 
-		program, err := parseSource(input, Trace)
+		program, err := parseSource(input)
 		checkParserErrors(t, err)
 
 		if len(program.Statements) != 1 {

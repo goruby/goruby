@@ -20,6 +20,7 @@ const (
 	precBlockDo     // do
 	precBlockBraces // { |x| }
 	precCallArg     // func x
+	precIfUnless    // modifier-if, modifier-unless
 	precEquals      // ==, !=, <=>
 	precLessGreater // >, <, >=, <=
 	precAssignment  // x = 5
@@ -34,6 +35,8 @@ const (
 )
 
 var precedences = map[token.Type]int{
+	token.IF:        precIfUnless,
+	token.UNLESS:    precIfUnless,
 	token.EQ:        precEquals,
 	token.NOTEQ:     precEquals,
 	token.SPACESHIP: precEquals,
@@ -72,6 +75,8 @@ var operatorsNotPossibleInCallArgs = []token.Type{
 	token.SPACESHIP,
 	token.EQ,
 	token.NOTEQ,
+	token.IF,
+	token.UNLESS,
 }
 
 type (
@@ -152,6 +157,8 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LTE, p.parseInfixExpression)
 	p.registerInfix(token.GTE, p.parseInfixExpression)
+	p.registerInfix(token.IF, p.parseModifierConditionalExpression)
+	p.registerInfix(token.UNLESS, p.parseModifierConditionalExpression)
 	p.registerInfix(token.SPACESHIP, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpressionWithParens)
 	p.registerInfix(token.IDENT, p.parseCallArgument)
@@ -409,7 +416,7 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 			Left:  left,
 		}
 		p.nextToken()
-		assign.Right = p.parseExpression(precLowest)
+		assign.Right = p.parseExpression(precIfUnless)
 		return assign
 	case *ast.InstanceVariable:
 		assign := &ast.Assignment{
@@ -417,7 +424,7 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 			Left:  left,
 		}
 		p.nextToken()
-		assign.Right = p.parseExpression(precLowest)
+		assign.Right = p.parseExpression(precIfUnless)
 		return assign
 	case *ast.Keyword__FILE__:
 		epos := p.file.Position(p.pos)
@@ -439,7 +446,7 @@ func (p *parser) parseGlobalAssignment(global *ast.Global) ast.Expression {
 		Name: global,
 	}
 	p.nextToken()
-	assign.Value = p.parseExpression(precLowest)
+	assign.Value = p.parseExpression(precIfUnless)
 	return assign
 }
 
@@ -451,7 +458,7 @@ func (p *parser) parseVariableAssignExpression(ident *ast.Identifier) ast.Expres
 		Name: ident,
 	}
 	p.nextToken()
-	variableExp.Value = p.parseExpression(precLowest)
+	variableExp.Value = p.parseExpression(precIfUnless)
 	return variableExp
 }
 
@@ -796,6 +803,22 @@ func (p *parser) parseIfExpression() ast.Expression {
 		expression.Alternative = p.parseBlockStatement()
 	}
 	p.accept(token.END)
+	return expression
+}
+
+func (p *parser) parseModifierConditionalExpression(left ast.Expression) ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseModifierConditionalExpression"))
+	}
+	expression := &ast.ConditionalExpression{Token: p.curToken}
+	p.nextToken()
+	expression.Condition = p.parseExpression(precLowest)
+
+	expression.Consequence = &ast.BlockStatement{
+		Statements: []ast.Statement{
+			&ast.ExpressionStatement{Expression: left},
+		},
+	}
 	return expression
 }
 
