@@ -1,6 +1,10 @@
 package object
 
-import "hash/fnv"
+import (
+	"bytes"
+	"hash/fnv"
+	"unicode"
+)
 
 var moduleClass RubyClassObject = &class{name: "Module", instanceMethods: NewMethodSet(moduleMethods)}
 
@@ -64,6 +68,8 @@ var moduleMethods = map[string]RubyMethod{
 	"public_instance_methods":    publicMethod(modulePublicInstanceMethods),
 	"protected_instance_methods": publicMethod(moduleProtectedInstanceMethods),
 	"private_instance_methods":   publicMethod(modulePrivateInstanceMethods),
+	"include":                    publicMethod(moduleInclude),
+	"append_features":            withArity(1, privateMethod(moduleAppendFeatures)),
 }
 
 func moduleAncestors(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -151,4 +157,58 @@ func modulePrivateInstanceMethods(context CallContext, args ...RubyObject) (Ruby
 	class := context.Receiver().(RubyClass)
 
 	return getMethods(class, PRIVATE_METHOD, showSuperClassInstanceMethods), nil
+}
+
+func moduleInclude(context CallContext, args ...RubyObject) (RubyObject, error) {
+	if len(args) == 0 {
+		return nil, NewWrongNumberOfArgumentsError(1, 0)
+	}
+	modules := []RubyObject{}
+	for _, a := range args {
+		mod, ok := a.(*Module)
+		if !ok {
+			return nil, NewWrongArgumentTypeError(&Module{}, a)
+		}
+		modules = append([]RubyObject{mod}, modules...)
+	}
+	for _, m := range modules {
+		_, err := Send(context, "append_features", m)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return context.Receiver(), nil
+}
+
+func moduleAppendFeatures(context CallContext, args ...RubyObject) (RubyObject, error) {
+	module, ok := args[0].(*Module)
+	if !ok {
+		return nil, NewWrongArgumentTypeError(module, args[0])
+	}
+	self, ok := context.Receiver().(*Self)
+	if !ok {
+		return nil, NewPrivateNoMethodError(context.Receiver(), "append_features")
+	}
+	receiverEnv, ok := self.RubyObject.(Environment)
+	if !ok {
+		return nil, NewNoMethodError(context.Receiver(), "append_features")
+	}
+	envs := []Environment{receiverEnv}
+	env := receiverEnv.Outer()
+	for env != nil {
+		envs = append([]Environment{env}, envs...)
+		env = env.Outer()
+	}
+	for _, e := range envs {
+		for k, v := range e.GetAll() {
+			firstChar := bytes.Runes([]byte(k))[0]
+			if unicode.IsUpper(firstChar) || firstChar == '@' {
+				module.Set(k, v)
+			}
+		}
+	}
+	for k, v := range self.RubyObject.Class().Methods().GetAll() {
+		module.addMethod(k, v)
+	}
+	return module, nil
 }

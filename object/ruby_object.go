@@ -2,6 +2,7 @@ package object
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"github.com/goruby/goruby/ast"
@@ -66,6 +67,16 @@ type extendable interface {
 type extendableRubyObject interface {
 	RubyObject
 	extendable
+}
+
+type objects []RubyObject
+
+func (o objects) String() string {
+	out := []string{}
+	for _, v := range o {
+		out = append(out, v.Inspect())
+	}
+	return fmt.Sprintf("%s", out)
 }
 
 // ReturnValue represents a wrapper object for a return statement. It is no
