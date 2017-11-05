@@ -1,9 +1,10 @@
-package interpreter
+package interpreter_test
 
 import (
 	"reflect"
 	"testing"
 
+	"github.com/goruby/goruby/interpreter"
 	"github.com/goruby/goruby/object"
 	"github.com/pkg/errors"
 )
@@ -52,7 +53,7 @@ func TestMainMethodCalls(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			i := New()
+			i := interpreter.New()
 
 			evaluated, err := i.Interpret("", tt.input)
 			if err != nil {
@@ -91,7 +92,7 @@ func TestMethodBlockLeakage(t *testing.T) {
 
 		sub 10, 4
 		`
-		i := New()
+		i := interpreter.New()
 
 		_, err := i.Interpret("", input)
 
@@ -120,7 +121,7 @@ func TestMethodBlockLeakage(t *testing.T) {
 
 		foo.sub 10, 4
 		`
-		i := New()
+		i := interpreter.New()
 
 		_, err := i.Interpret("", input)
 
@@ -138,7 +139,7 @@ func TestKernelTap(t *testing.T) {
 		x = []
 		x.tap {|z|z.push(true)}
 	`
-	i := New()
+	i := interpreter.New()
 
 	evaluated, err := i.Interpret("", input)
 	if err != nil {

@@ -1,4 +1,4 @@
-package interpreter
+package interpreter_test
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/goruby/goruby/interpreter"
 	"github.com/goruby/goruby/object"
 	"github.com/pkg/errors"
 )
@@ -33,7 +34,7 @@ func TestLoadPath(t *testing.T) {
 		$foo
 		`, tmpAbsPath)
 
-		i := New()
+		i := interpreter.New()
 
 		_, err = i.Interpret("", input)
 
@@ -48,7 +49,7 @@ func TestLoadPath(t *testing.T) {
 		$foo
 		`, tmpBase)
 
-		i := New()
+		i := interpreter.New()
 
 		_, err = i.Interpret("", input)
 
@@ -67,7 +68,7 @@ func TestLoadPath(t *testing.T) {
 		$foo
 		`, tmpAbsPath, tmpBase)
 
-		i := New()
+		i := interpreter.New()
 
 		_, err = i.Interpret("", input)
 
