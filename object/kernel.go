@@ -177,7 +177,7 @@ func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) 
 	if err != nil {
 		return nil, NewSyntaxError(err)
 	}
-	_, err = context.Eval(prog, NewEnclosedEnvironment(context.Env()))
+	_, err = context.Eval(prog, WithScopedLocalVariables(context.Env()))
 	if err != nil {
 		return nil, errors.WithMessage(err, "require")
 	}

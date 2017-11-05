@@ -492,6 +492,106 @@ func TestKernelRequire(t *testing.T) {
 			t.Fail()
 		}
 	})
+	t.Run("env side effects constants", func(t *testing.T) {
+		env := NewMainEnvironment()
+		var eval func(node ast.Node, env Environment) (RubyObject, error)
+		// TODO: a bit messy and error prone to duplicate the code from evaluator.
+		// Move out to integration tests.
+		eval = func(node ast.Node, env Environment) (RubyObject, error) {
+			switch node := node.(type) {
+			case *ast.Program:
+				var result RubyObject
+				var err error
+				for _, statement := range node.Statements {
+					result, err = eval(statement, env)
+
+					if err != nil {
+						return nil, err
+					}
+				}
+				return result, nil
+			case *ast.ModuleExpression:
+				module, ok := env.Get(node.Name.Value)
+				if !ok {
+					module = NewModule(node.Name.Value, env)
+				}
+				moduleEnv := module.(Environment)
+				moduleEnv.Set("self", &Self{RubyObject: module, Name: node.Name.Value})
+				selfObject, _ := moduleEnv.Get("self")
+				self := selfObject.(*Self)
+				env.Set(node.Name.Value, self.RubyObject)
+				return module, nil
+			case *ast.ClassExpression:
+				superClassName := "Object"
+				if node.SuperClass != nil {
+					superClassName = node.SuperClass.Value
+				}
+				superClass, ok := env.Get(superClassName)
+				if !ok {
+					return nil, errors.Wrap(
+						NewUninitializedConstantNameError(superClassName),
+						"eval class superclass",
+					)
+				}
+				class, ok := env.Get(node.Name.Value)
+				if !ok {
+					class = NewClass(node.Name.Value, superClass.(RubyClassObject), env)
+				}
+				classEnv := class.(Environment)
+				classEnv.Set("self", &Self{RubyObject: class, Name: node.Name.Value})
+				selfObject, _ := classEnv.Get("self")
+				self := selfObject.(*Self)
+				env.Set(node.Name.Value, self.RubyObject)
+				return class, nil
+			case *ast.ExpressionStatement:
+				return eval(node.Expression, env)
+			case *ast.VariableAssignment:
+				val, err := eval(node.Value, env)
+				if err != nil {
+					return nil, err
+				}
+				env.Set(node.Name.Value, val)
+				return val, nil
+			}
+			return TRUE, nil
+		}
+
+		context := &callContext{
+			env:      env,
+			eval:     eval,
+			receiver: &Object{},
+		}
+		name := &String{"./fixtures/testfile_constants.rb"}
+
+		_, err := kernelRequire(context, name)
+		if err != nil {
+			panic(err)
+		}
+
+		module, ok := env.Get("A")
+		if !ok {
+			t.Logf("Expected env to contain object for 'A'")
+			t.Fail()
+		}
+
+		m, ok := module.(*Module)
+		if !ok {
+			t.Logf("Expected env value 'A' to be %T, got %T", m, module)
+			t.Fail()
+		}
+
+		cl, ok := env.Get("B")
+		if !ok {
+			t.Logf("Expected env to contain object for 'B'")
+			t.Fail()
+		}
+
+		c, ok := cl.(*class)
+		if !ok {
+			t.Logf("Expected env value 'B' to be %T, got %T", c, cl)
+			t.Fail()
+		}
+	})
 	t.Run("env side effects local variables", func(t *testing.T) {
 		env := NewEnvironment()
 		var eval func(node ast.Node, env Environment) (RubyObject, error)
