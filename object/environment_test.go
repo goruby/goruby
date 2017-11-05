@@ -1,6 +1,9 @@
 package object
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestEnvStat(t *testing.T) {
 	t.Run("top level env", func(t *testing.T) {
@@ -276,4 +279,297 @@ func TestEnvironmentGet(t *testing.T) {
 			t.Fail()
 		}
 	})
+}
+
+func TestWithScopedLocalVariables(t *testing.T) {
+	env := &environment{store: map[string]RubyObject{
+		"foo": TRUE,
+		"Bar": TRUE,
+	}}
+
+	scopedEnv := WithScopedLocalVariables(env)
+
+	localVarsGuard, ok := scopedEnv.(*localVariableGuard)
+	if !ok {
+		t.Logf("Expected to get a %T environent, got %T\n", localVarsGuard, scopedEnv)
+		t.FailNow()
+	}
+
+	if !reflect.DeepEqual(env, localVarsGuard.Environment) {
+		t.Logf("Expected embedded env to equal\n%+#v\n\tgot\n%+#v\n", env, localVarsGuard.Environment)
+		t.Fail()
+	}
+
+	expected := &environment{store: map[string]RubyObject{}}
+
+	if !reflect.DeepEqual(expected, localVarsGuard.localVariables) {
+		t.Logf("Expected local variable env to equal\n%+#v\n\tgot\n%+#v\n", expected, localVarsGuard.localVariables)
+		t.Fail()
+	}
+}
+
+func Test_localVariableGuardSet(t *testing.T) {
+	env := &localVariableGuard{
+		Environment:    &environment{store: map[string]RubyObject{}},
+		localVariables: &environment{store: map[string]RubyObject{}},
+	}
+
+	t.Run("local variables", func(t *testing.T) {
+		env.Set("foo", TRUE)
+
+		_, ok := env.Environment.Get("foo")
+		if ok {
+			t.Logf("Expected embedded env not to contain 'foo'")
+			t.Fail()
+		}
+
+		_, ok = env.localVariables.Get("foo")
+		if !ok {
+			t.Logf("Expected localVariables env to contain 'foo'")
+			t.Fail()
+		}
+	})
+	t.Run("instance variables", func(t *testing.T) {
+		env.Set("@foo", TRUE)
+
+		_, ok := env.Environment.Get("@foo")
+		if !ok {
+			t.Logf("Expected embedded env to contain '@foo'")
+			t.Fail()
+		}
+
+		_, ok = env.localVariables.Get("@foo")
+		if ok {
+			t.Logf("Expected localVariables env not to contain '@foo'")
+			t.Fail()
+		}
+	})
+	t.Run("constants", func(t *testing.T) {
+		env.Set("Foo", TRUE)
+
+		_, ok := env.Environment.Get("Foo")
+		if !ok {
+			t.Logf("Expected embedded env to contain 'Foo'")
+			t.Fail()
+		}
+
+		_, ok = env.localVariables.Get("Foo")
+		if ok {
+			t.Logf("Expected localVariables env not to contain 'Foo'")
+			t.Fail()
+		}
+	})
+}
+
+func Test_localVariableGuardGet(t *testing.T) {
+	embeddedEnv := &environment{store: map[string]RubyObject{
+		"self": TRUE,
+		"foo":  TRUE,
+		"qux":  TRUE,
+		"Foo":  TRUE,
+		"Qux":  TRUE,
+		"@foo": TRUE,
+	}}
+	env := &localVariableGuard{
+		Environment: embeddedEnv,
+		localVariables: &environment{store: map[string]RubyObject{
+			"foo": FALSE,
+			"bar": TRUE,
+		}},
+	}
+
+	t.Run("constants", func(t *testing.T) {
+		val, ok := env.Get("Foo")
+		if !ok {
+			t.Logf("Expected env to contain 'Foo'")
+			t.Fail()
+		}
+
+		checkResult(t, TRUE, val)
+	})
+
+	t.Run("instance variables", func(t *testing.T) {
+		val, ok := env.Get("@foo")
+		if !ok {
+			t.Logf("Expected env to contain '@foo'")
+			t.Fail()
+		}
+
+		checkResult(t, TRUE, val)
+	})
+
+	t.Run("self", func(t *testing.T) {
+		self, ok := env.Get("self")
+		if !ok {
+			t.Logf("Expected env to contain 'self'")
+			t.Fail()
+		}
+
+		checkResult(t, TRUE, self)
+	})
+
+	t.Run("local variables", func(t *testing.T) {
+		val, ok := env.Get("foo")
+		if !ok {
+			t.Logf("Expected env to contain 'foo'")
+			t.Fail()
+		}
+
+		checkResult(t, FALSE, val)
+
+		_, ok = env.Get("bar")
+		if !ok {
+			t.Logf("Expected env to contain 'bar'")
+			t.Fail()
+		}
+
+		_, ok = env.Get("qux")
+		if ok {
+			t.Logf("Expected env not to contain 'qux'")
+			t.Fail()
+		}
+	})
+}
+
+func Test_localVariableGuardGetAll(t *testing.T) {
+	embeddedEnv := &environment{store: map[string]RubyObject{
+		"foo":  TRUE,
+		"qux":  TRUE,
+		"Foo":  TRUE,
+		"Qux":  TRUE,
+		"@foo": TRUE,
+	}}
+	env := &localVariableGuard{
+		Environment: embeddedEnv,
+		localVariables: &environment{store: map[string]RubyObject{
+			"foo": FALSE,
+			"bar": TRUE,
+		}},
+	}
+
+	result := env.GetAll()
+
+	expected := map[string]RubyObject{
+		"foo":  FALSE,
+		"bar":  TRUE,
+		"qux":  TRUE,
+		"Foo":  TRUE,
+		"Qux":  TRUE,
+		"@foo": TRUE,
+	}
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Logf("Expected result to equal\n%+#v\n\tgot\n%+#v\n", expected, result)
+		t.Fail()
+	}
+}
+
+func Test_localVariableGuardUnset(t *testing.T) {
+	embeddedEnv := &environment{store: map[string]RubyObject{
+		"foo":  TRUE,
+		"qux":  TRUE,
+		"Foo":  TRUE,
+		"Qux":  TRUE,
+		"@foo": TRUE,
+	}}
+	env := &localVariableGuard{
+		Environment: embeddedEnv,
+		localVariables: &environment{store: map[string]RubyObject{
+			"foo": FALSE,
+			"bar": TRUE,
+		}},
+	}
+
+	t.Run("constants", func(t *testing.T) {
+		env.Unset("Foo")
+
+		_, ok := env.Get("Foo")
+		if ok {
+			t.Logf("Expected env not to contain 'Foo'")
+			t.Fail()
+		}
+	})
+
+	t.Run("instance variables", func(t *testing.T) {
+		env.Unset("@foo")
+
+		_, ok := env.Get("@foo")
+		if ok {
+			t.Logf("Expected env not to contain '@foo'")
+			t.Fail()
+		}
+	})
+
+	t.Run("local variables", func(t *testing.T) {
+		env.Unset("foo")
+
+		_, ok := env.Get("foo")
+		if ok {
+			t.Logf("Expected env not to contain 'foo'")
+			t.Fail()
+		}
+
+		_, ok = env.Environment.Get("foo")
+		if !ok {
+			t.Logf("Expected embedded env to contain 'foo'")
+			t.Fail()
+		}
+
+		env.Unset("bar")
+
+		_, ok = env.Get("bar")
+		if ok {
+			t.Logf("Expected env not to contain 'bar'")
+			t.Fail()
+		}
+
+		env.Unset("qux")
+
+		_, ok = env.Get("qux")
+		if ok {
+			t.Logf("Expected env not to contain 'qux'")
+			t.Fail()
+		}
+
+		_, ok = env.Environment.Get("qux")
+		if !ok {
+			t.Logf("Expected embedded env to contain 'qux'")
+			t.Fail()
+		}
+	})
+}
+
+func Test_localVariableGuardClone(t *testing.T) {
+	embeddedEnv := &environment{store: map[string]RubyObject{
+		"foo":  TRUE,
+		"qux":  TRUE,
+		"Foo":  TRUE,
+		"Qux":  TRUE,
+		"@foo": TRUE,
+	}}
+	env := &localVariableGuard{
+		Environment: embeddedEnv,
+		localVariables: &environment{store: map[string]RubyObject{
+			"foo": FALSE,
+			"bar": TRUE,
+		}},
+	}
+
+	result := env.Clone()
+
+	actual := result.GetAll()
+
+	expected := map[string]RubyObject{
+		"foo":  FALSE,
+		"bar":  TRUE,
+		"qux":  TRUE,
+		"Foo":  TRUE,
+		"Qux":  TRUE,
+		"@foo": TRUE,
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Logf("Expected result to equal\n%+#v\n\tgot\n%+#v\n", expected, actual)
+		t.Fail()
+	}
 }

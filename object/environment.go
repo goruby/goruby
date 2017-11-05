@@ -3,6 +3,7 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"unicode"
 )
 
 var classes = NewEnvironment()
@@ -37,6 +38,15 @@ func NewEnclosedEnvironment(outer Environment) Environment {
 func NewEnvironment() Environment {
 	s := make(map[string]RubyObject)
 	return &environment{store: s, outer: nil}
+}
+
+// WithScopedLocalVariables returns an Environment which scopes the local variables
+// within another env so they cannot leak out
+func WithScopedLocalVariables(e Environment) Environment {
+	return &localVariableGuard{
+		Environment:    e,
+		localVariables: &environment{store: make(map[string]RubyObject)},
+	}
 }
 
 // Environment holds Ruby object referenced by strings
@@ -94,6 +104,53 @@ func EnvStat(env Environment, obj RubyObject) (EnvEntryInfo, bool) {
 	}
 
 	return EnvStat(outer, obj)
+}
+
+type localVariableGuard struct {
+	Environment
+	localVariables *environment
+}
+
+func (l *localVariableGuard) isLocalVariable(name string) bool {
+	firstChar := bytes.Runes([]byte(name))[0]
+	// TODO: encapsulate this logic somewhere where the choice is first done, e.g. parser
+	return unicode.IsLower(firstChar) && firstChar != '@' && name != "self"
+}
+
+func (l *localVariableGuard) Set(name string, value RubyObject) RubyObject {
+	if l.isLocalVariable(name) {
+		return l.localVariables.Set(name, value)
+	}
+	return l.Environment.Set(name, value)
+}
+
+func (l *localVariableGuard) Get(name string) (RubyObject, bool) {
+	if l.isLocalVariable(name) {
+		return l.localVariables.Get(name)
+	}
+	return l.Environment.Get(name)
+}
+
+func (l *localVariableGuard) GetAll() map[string]RubyObject {
+	store := l.Environment.Clone().GetAll()
+	for k, v := range l.localVariables.clone().store {
+		store[k] = v
+	}
+	return store
+}
+
+func (l *localVariableGuard) Unset(key string) RubyObject {
+	if l.isLocalVariable(key) {
+		return l.localVariables.Unset(key)
+	}
+	return l.Environment.Unset(key)
+}
+
+func (l *localVariableGuard) Clone() Environment {
+	return &localVariableGuard{
+		Environment:    l.Environment.Clone(),
+		localVariables: l.localVariables.clone(),
+	}
 }
 
 type environment struct {
