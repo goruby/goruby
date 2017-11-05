@@ -1,5 +1,7 @@
 package object
 
+import "github.com/pkg/errors"
+
 // Send sends message method with args to context and returns its result
 func Send(context CallContext, method string, args ...RubyObject) (RubyObject, error) {
 	receiver := context.Receiver()
@@ -14,7 +16,7 @@ func Send(context CallContext, method string, args ...RubyObject) (RubyObject, e
 		}
 
 		if fn.Visibility() == PRIVATE_METHOD && receiver.Type() != SELF {
-			return nil, NewPrivateNoMethodError(receiver, method)
+			return nil, errors.WithStack(NewPrivateNoMethodError(receiver, method))
 		}
 
 		return fn.Call(context, args...)

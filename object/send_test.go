@@ -3,6 +3,8 @@ package object
 import (
 	"reflect"
 	"testing"
+
+	"github.com/pkg/errors"
 )
 
 type testRubyObject struct {
@@ -94,7 +96,7 @@ func TestSend(t *testing.T) {
 		for _, testCase := range tests {
 			result, err := Send(context, testCase.method)
 
-			checkError(t, err, testCase.expectedError)
+			checkError(t, errors.Cause(err), testCase.expectedError)
 
 			checkResult(t, result, testCase.expectedResult)
 		}

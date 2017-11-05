@@ -8,6 +8,7 @@ import (
 
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/parser"
+	"github.com/pkg/errors"
 )
 
 func TestKernelMethods(t *testing.T) {
@@ -657,7 +658,7 @@ func TestKernelRequire(t *testing.T) {
 		}
 
 		expectedErr := NewException("something went wrong")
-		if !reflect.DeepEqual(expectedErr, err) {
+		if !reflect.DeepEqual(expectedErr, errors.Cause(err)) {
 			t.Logf("Expected error to equal\n%q\n\tgot\n%q", expectedErr, err)
 			t.Fail()
 		}

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/goruby/goruby/object"
+	"github.com/pkg/errors"
 )
 
 func TestMainMethodCalls(t *testing.T) {
@@ -96,7 +97,7 @@ func TestMethodBlockLeakage(t *testing.T) {
 
 		expected := object.NewNoBlockGivenLocalJumpError()
 
-		if !reflect.DeepEqual(expected, err) {
+		if !reflect.DeepEqual(expected, errors.Cause(err)) {
 			t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, err)
 			t.Fail()
 		}
@@ -125,7 +126,7 @@ func TestMethodBlockLeakage(t *testing.T) {
 
 		expected := object.NewNoBlockGivenLocalJumpError()
 
-		if !reflect.DeepEqual(expected, err) {
+		if !reflect.DeepEqual(expected, errors.Cause(err)) {
 			t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, err)
 			t.Fail()
 		}

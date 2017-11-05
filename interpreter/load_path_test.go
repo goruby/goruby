@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/goruby/goruby/object"
+	"github.com/pkg/errors"
 )
 
 func TestLoadPath(t *testing.T) {
@@ -53,7 +54,7 @@ func TestLoadPath(t *testing.T) {
 
 		expectedError := object.NewNoSuchFileLoadError(tmpBase)
 
-		if !reflect.DeepEqual(expectedError, err) {
+		if !reflect.DeepEqual(expectedError, errors.Cause(err)) {
 			t.Logf("Expected err to equal\n%s\n\tgot\n%s\n", expectedError, err)
 			t.Fail()
 		}

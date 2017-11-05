@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/goruby/goruby/parser"
+	"github.com/pkg/errors"
 )
 
 var kernelModule = newModule("Kernel", kernelMethodSet, nil)
@@ -178,7 +179,7 @@ func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) 
 	}
 	_, err = context.Eval(prog, NewEnclosedEnvironment(context.Env()))
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "require")
 	}
 	arr.Elements = append(arr.Elements, &String{Value: absolutePath})
 	return TRUE, nil

@@ -7,6 +7,7 @@ import (
 
 	"github.com/goruby/goruby/object"
 	"github.com/goruby/goruby/parser"
+	"github.com/pkg/errors"
 )
 
 func TestEvalComment(t *testing.T) {
@@ -243,7 +244,7 @@ end
 			)
 		}
 
-		actual, ok := err.(object.RubyObject)
+		actual, ok := errors.Cause(err).(object.RubyObject)
 		if !ok {
 			t.Logf("Error is not a RubyObject, got %T:%v\n", err, err)
 			t.FailNow()

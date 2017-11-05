@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/goruby/goruby/interpreter"
+	"github.com/pkg/errors"
 )
 
 type multiString []string
@@ -35,7 +36,7 @@ func main() {
 		input := strings.Join(onelineScripts, "\n")
 		_, err := interpreter.Interpret("", input)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Printf("%v\n", errors.Cause(err))
 			os.Exit(1)
 		}
 		return
@@ -52,7 +53,7 @@ func main() {
 	}
 	_, err = interpreter.Interpret(args[0], fileBytes)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("%v\n", errors.Cause(err))
 		os.Exit(1)
 	}
 	return

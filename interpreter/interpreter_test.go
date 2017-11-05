@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/goruby/goruby/object"
+	"github.com/pkg/errors"
 )
 
 func TestInterpreterInterpret(t *testing.T) {
@@ -228,7 +229,7 @@ func TestInterpretModules(t *testing.T) {
 
 		expected := object.NewUninitializedConstantNameError("Bar")
 
-		if err.Error() != expected.Error() {
+		if errors.Cause(err).Error() != expected.Error() {
 			t.Logf("Expected error to equal %T:%v, got %T:%v", expected, expected.Error(), err, err)
 			t.Fail()
 		}
@@ -397,7 +398,7 @@ func TestInterpretClasses(t *testing.T) {
 
 		expected := object.NewUninitializedConstantNameError("Bar")
 
-		if err.Error() != expected.Error() {
+		if errors.Cause(err).Error() != expected.Error() {
 			t.Logf("Expected error to equal %T:%v, got %T:%v", expected, expected.Error(), err, err)
 			t.Fail()
 		}
