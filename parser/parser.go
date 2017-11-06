@@ -877,13 +877,29 @@ func (p *parser) parseFunctionLiteral() ast.Expression {
 	}
 	lit := &ast.FunctionLiteral{Token: p.curToken}
 
-	if !p.peekTokenIs(token.IDENT) && !p.peekToken.Type.IsOperator() {
-		p.peekError(token.IDENT)
+	if !p.peekTokenOneOf(token.IDENT, token.SELF, token.CONST) && !p.peekToken.Type.IsOperator() {
+		p.peekError(token.IDENT, token.CONST)
 		return nil
 	}
-	p.nextToken()
 
-	lit.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	if p.peekTokenOneOf(token.IDENT, token.SELF, token.CONST) {
+		p.acceptOneOf(token.IDENT, token.SELF, token.CONST)
+		if p.peekTokenIs(token.DOT) {
+			lit.Receiver = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+			p.accept(token.DOT)
+			if !p.peekTokenOneOf(token.IDENT, token.SELF, token.CONST) && !p.peekToken.Type.IsOperator() {
+				p.peekError(token.IDENT, token.CONST)
+				return nil
+			}
+			p.nextToken()
+			lit.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		} else {
+			lit.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		}
+	} else {
+		p.nextToken()
+		lit.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	}
 
 	lit.Parameters = p.parseParameters(token.LPAREN, token.RPAREN)
 

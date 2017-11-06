@@ -94,6 +94,20 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			)
 		}
 	case *ast.FunctionLiteral:
+		context, _ := env.Get("self")
+		_, inClassOrModule := context.(*object.Self).RubyObject.(object.Environment)
+		if node.Receiver != nil {
+			rec, err := Eval(node.Receiver, env)
+			if err != nil {
+				return nil, errors.WithMessage(err, "eval function receiver")
+			}
+			context = rec
+			_, recIsEnv := context.(object.Environment)
+			if recIsEnv || inClassOrModule {
+				inClassOrModule = true
+				context = context.Class().(object.RubyClassObject)
+			}
+		}
 		params := make([]*object.FunctionParameter, len(node.Parameters))
 		for i, param := range node.Parameters {
 			def, err := Eval(param.Default, env)
@@ -103,13 +117,16 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			params[i] = &object.FunctionParameter{Name: param.Name.Value, Default: def}
 		}
 		body := node.Body
-		context, _ := env.Get("self")
 		function := &object.Function{
 			Parameters: params,
 			Env:        env,
 			Body:       body,
 		}
-		object.AddMethod(context, node.Name.Value, function)
+		extended := object.AddMethod(context, node.Name.Value, function)
+		if node.Receiver != nil && !inClassOrModule {
+			envInfo, _ := object.EnvStat(env, context)
+			envInfo.Env().Set(node.Receiver.Value, extended)
+		}
 		return &object.Symbol{Value: node.Name.Value}, nil
 	case *ast.BlockExpression:
 		params := node.Parameters

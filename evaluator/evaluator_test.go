@@ -835,81 +835,198 @@ func TestFunctionObject(t *testing.T) {
 		name         string
 		defaultValue object.RubyObject
 	}
-	tests := []struct {
-		input              string
-		expectedParameters []funcParam
-		expectedBody       string
-	}{
-		{
-			"def foo x; x + 2; end",
-			[]funcParam{{name: "x"}},
-			"(x + 2)",
-		},
-		{
-			`def foo
+	t.Run("methods without receiver", func(t *testing.T) {
+		tests := []struct {
+			input              string
+			expectedParameters []funcParam
+			expectedBody       string
+		}{
+			{
+				"def foo x; x + 2; end",
+				[]funcParam{{name: "x"}},
+				"(x + 2)",
+			},
+			{
+				`def foo
 				2
-			end`,
-			[]funcParam{},
-			"2",
-		},
-		{
-			"def foo; 2; end",
-			[]funcParam{},
-			"2",
-		},
-		{
-			"def foo x = 4; 2; end",
-			[]funcParam{{name: "x", defaultValue: &object.Integer{Value: 4}}},
-			"2",
-		},
-	}
+				end`,
+				[]funcParam{},
+				"2",
+			},
+			{
+				"def foo; 2; end",
+				[]funcParam{},
+				"2",
+			},
+			{
+				"def foo x = 4; 2; end",
+				[]funcParam{{name: "x", defaultValue: &object.Integer{Value: 4}}},
+				"2",
+			},
+		}
 
-	for _, tt := range tests {
+		for _, tt := range tests {
+			env := object.NewEnvironment()
+			env.Set("self", &object.Self{RubyObject: &object.Object{}, Name: "main"})
+			evaluated, err := testEval(tt.input, env)
+			checkError(t, err)
+			sym, ok := evaluated.(*object.Symbol)
+			if !ok {
+				t.Fatalf("object is not Symbol. got=%T (%+v)", evaluated, evaluated)
+			}
+			if sym.Value != "foo" {
+				t.Logf("Expected returned symbol to have value %q, got %q", "foo", sym.Value)
+				t.Fail()
+			}
+
+			self, _ := env.Get("self")
+			method, ok := self.Class().Methods().Get("foo")
+			if !ok {
+				t.Logf("Expected function to be added to self")
+				t.Fail()
+			}
+			fn, ok := method.(*object.Function)
+			if !ok {
+				t.Logf("self method is not Function, got=%T (%+v)", method, method)
+				t.Fail()
+			}
+
+			if len(fn.Parameters) != len(tt.expectedParameters) {
+				t.Fatalf("function has wrong parameters. Parameters=%+v", fn.Parameters)
+			}
+
+			for i, param := range fn.Parameters {
+				testParam := tt.expectedParameters[i]
+				if testParam.name != param.Name {
+					t.Logf("Expected parameter %d to have name %q, got %q\n", i+1, testParam.name, param.Name)
+					t.Fail()
+				}
+				if !reflect.DeepEqual(testParam.defaultValue, param.Default) {
+					t.Logf("Expected parameter %d to have default %v, got %v\n", i+1, testParam.defaultValue, param.Default)
+					t.Fail()
+				}
+			}
+
+			if fn.Body.String() != tt.expectedBody {
+				t.Fatalf("body is not %q. got=%q", tt.expectedBody, fn.Body.String())
+			}
+		}
+	})
+	t.Run("methods with variable receiver", func(t *testing.T) {
 		env := object.NewEnvironment()
 		env.Set("self", &object.Self{RubyObject: &object.Object{}, Name: "main"})
-		evaluated, err := testEval(tt.input, env)
+		input := `a = "foo"
+def a.truth
+	42
+end
+`
+
+		_, err := testEval(input, env)
 		checkError(t, err)
-		sym, ok := evaluated.(*object.Symbol)
+
+		a, ok := env.Get("a")
 		if !ok {
-			t.Fatalf("object is not Symbol. got=%T (%+v)", evaluated, evaluated)
-		}
-		if sym.Value != "foo" {
-			t.Logf("Expected returned symbol to have value %q, got %q", "foo", sym.Value)
-			t.Fail()
+			t.Logf("Expected env to have 'a'")
+			t.FailNow()
 		}
 
-		self, _ := env.Get("self")
-		method, ok := self.Class().Methods().Get("foo")
+		method, ok := a.Class().Methods().Get("truth")
 		if !ok {
-			t.Logf("Expected function to be added to self")
+			t.Logf("Expected function to be added to 'a'")
 			t.Fail()
 		}
 		fn, ok := method.(*object.Function)
 		if !ok {
-			t.Logf("self method is not Function, got=%T (%+v)", method, method)
+			t.Logf("method is not %T, got=%T (%+v)", fn, method, method)
 			t.Fail()
 		}
+	})
+	t.Run("methods with const receiver", func(t *testing.T) {
+		env := object.NewMainEnvironment()
+		env.Set("self", &object.Self{RubyObject: &object.Object{}, Name: "main"})
+		input := `class A
+end
 
-		if len(fn.Parameters) != len(tt.expectedParameters) {
-			t.Fatalf("function has wrong parameters. Parameters=%+v", fn.Parameters)
+def A.truth
+	42
+end
+`
+
+		_, err := testEval(input, env)
+		checkError(t, err)
+
+		A, ok := env.Get("A")
+		if !ok {
+			t.Logf("Expected env to have 'A'")
+			t.FailNow()
 		}
 
-		for i, param := range fn.Parameters {
-			testParam := tt.expectedParameters[i]
-			if testParam.name != param.Name {
-				t.Logf("Expected parameter %d to have name %q, got %q\n", i+1, testParam.name, param.Name)
-				t.Fail()
-			}
-			if !reflect.DeepEqual(testParam.defaultValue, param.Default) {
-				t.Logf("Expected parameter %d to have default %v, got %v\n", i+1, testParam.defaultValue, param.Default)
-				t.Fail()
-			}
+		method, ok := A.Class().Methods().Get("truth")
+		if !ok {
+			t.Logf("Expected function to be added to 'A'")
+			t.Fail()
+		}
+		fn, ok := method.(*object.Function)
+		if !ok {
+			t.Logf("method is not %T, got=%T (%+v)", fn, method, method)
+			t.Fail()
+		}
+	})
+	t.Run("methods with self in main", func(t *testing.T) {
+		env := object.NewEnvironment()
+		env.Set("self", &object.Self{RubyObject: &object.Object{}, Name: "main"})
+		input := `
+def self.truth
+	42
+end
+`
+
+		_, err := testEval(input, env)
+		checkError(t, err)
+
+		self, _ := env.Get("self")
+
+		method, ok := self.Class().Methods().Get("truth")
+		if !ok {
+			t.Logf("Expected function to be added to 'main'")
+			t.Fail()
+		}
+		fn, ok := method.(*object.Function)
+		if !ok {
+			t.Logf("method is not %T, got=%T (%+v)", fn, method, method)
+			t.Fail()
+		}
+	})
+	t.Run("methods with self in class", func(t *testing.T) {
+		env := object.NewMainEnvironment()
+		input := `
+class A
+	def self.truth
+		42
+	end
+end
+`
+
+		_, err := testEval(input, env)
+		checkError(t, err)
+
+		A, ok := env.Get("A")
+		if !ok {
+			t.Logf("Expected env to have 'A'")
+			t.FailNow()
 		}
 
-		if fn.Body.String() != tt.expectedBody {
-			t.Fatalf("body is not %q. got=%q", tt.expectedBody, fn.Body.String())
+		method, ok := A.Class().Methods().Get("truth")
+		if !ok {
+			t.Logf("Expected function to be added to 'A'")
+			t.Fail()
 		}
-	}
+		fn, ok := method.(*object.Function)
+		if !ok {
+			t.Logf("method is not %T, got=%T (%+v)", fn, method, method)
+			t.Fail()
+		}
+	})
 }
 
 func TestFunctionApplication(t *testing.T) {

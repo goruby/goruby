@@ -67,6 +67,7 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Body)
 
 	case *FunctionLiteral:
+		Walk(v, n.Receiver)
 		Walk(v, n.Name)
 		walkParameterList(v, n.Parameters)
 		Walk(v, n.Body)
@@ -83,6 +84,8 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Context)
 		Walk(v, n.Function)
 		walkExprList(v, n.Arguments)
+		// TODO: examine why it is not working
+		// Walk(v, n.Block)
 
 	case *YieldExpression:
 		walkExprList(v, n.Arguments)

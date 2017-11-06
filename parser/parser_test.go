@@ -1589,6 +1589,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 	}
 	tests := []struct {
 		input         string
+		receiver      string
 		name          string
 		parameters    []funcParam
 		bodyStatement string
@@ -1597,6 +1598,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			`def foo(x, y)
           x + y
           end`,
+			"",
 			"foo",
 			[]funcParam{
 				{name: "x", defaultValue: nil},
@@ -1608,6 +1610,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			`def bar x, y
           x + y
           end`,
+			"",
 			"bar",
 			[]funcParam{
 				{name: "x", defaultValue: nil},
@@ -1619,18 +1622,21 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			`def qux
           x + y
           end`,
+			"",
 			"qux",
 			[]funcParam{},
 			"(x + y)",
 		},
 		{
 			"def qux; x + y; end",
+			"",
 			"qux",
 			[]funcParam{},
 			"(x + y)",
 		},
 		{
 			"def foo x, y; x + y; end",
+			"",
 			"foo",
 			[]funcParam{
 				{name: "x", defaultValue: nil},
@@ -1640,6 +1646,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 		},
 		{
 			"def foo(x, y); x + y; end",
+			"",
 			"foo",
 			[]funcParam{
 				{name: "x", defaultValue: nil},
@@ -1648,10 +1655,21 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			`def Qux
+          x + y
+          end
+          `,
+			"",
+			"Qux",
+			[]funcParam{},
+			"(x + y)",
+		},
+		{
 			`def qux
           x + y
           end
           `,
+			"",
 			"qux",
 			[]funcParam{},
 			"(x + y)",
@@ -1661,6 +1679,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
           x + y
           end
           `,
+			"",
 			"foo",
 			[]funcParam{
 				{name: "x", defaultValue: 2},
@@ -1673,7 +1692,44 @@ func TestFunctionLiteralParsing(t *testing.T) {
           x + y
           end
           `,
+			"",
 			"<=>",
+			[]funcParam{},
+			"(x + y)",
+		},
+		{
+			`def a.qux
+          x + y
+          end`,
+			"a",
+			"qux",
+			[]funcParam{},
+			"(x + y)",
+		},
+		{
+			`def A.qux
+          x + y
+          end`,
+			"A",
+			"qux",
+			[]funcParam{},
+			"(x + y)",
+		},
+		{
+			`def A.Qux
+          x + y
+          end`,
+			"A",
+			"Qux",
+			[]funcParam{},
+			"(x + y)",
+		},
+		{
+			`def self.qux
+          x + y
+          end`,
+			"self",
+			"qux",
 			[]funcParam{},
 			"(x + y)",
 		},
@@ -1707,7 +1763,16 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			)
 		}
 
-		functionName := function.Name.Token.Literal
+		receiver := ""
+		if function.Receiver != nil {
+			receiver = function.Receiver.Value
+		}
+		if receiver != tt.receiver {
+			t.Logf("function receiver wrong, want %q, got %q", tt.receiver, receiver)
+			t.Fail()
+		}
+
+		functionName := function.Name.Value
 		if functionName != tt.name {
 			t.Logf("function name wrong, want %q, got %q", tt.name, functionName)
 			t.Fail()

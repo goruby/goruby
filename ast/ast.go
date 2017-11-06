@@ -475,6 +475,7 @@ func (hl *HashLiteral) String() string {
 // A FunctionLiteral represents a function definition in the AST
 type FunctionLiteral struct {
 	Token      token.Token // The 'def' token
+	Receiver   *Identifier
 	Name       *Identifier
 	Parameters []*FunctionParameter
 	Body       *BlockStatement
@@ -493,6 +494,10 @@ func (fl *FunctionLiteral) String() string {
 	}
 	out.WriteString(fl.TokenLiteral())
 	out.WriteString(" ")
+	if fl.Receiver != nil {
+		out.WriteString(fl.Receiver.String())
+		out.WriteString(".")
+	}
 	out.WriteString(fl.Name.String())
 	out.WriteString("(")
 	out.WriteString(strings.Join(params, ", "))
