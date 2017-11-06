@@ -8,6 +8,7 @@ import (
 	"github.com/goruby/goruby/interpreter"
 	"github.com/goruby/goruby/object"
 	"github.com/goruby/goruby/parser"
+	"github.com/pkg/errors"
 )
 
 const prompt = "girb:%03d> "
@@ -35,7 +36,7 @@ func Start(in io.Reader, out chan<- string) {
 				buffer += "\n"
 				continue
 			}
-			out <- fmt.Sprintf("%s\n", err.Error())
+			out <- fmt.Sprintf("%s\n", errors.Cause(err).Error())
 			buffer = ""
 			continue
 		}
