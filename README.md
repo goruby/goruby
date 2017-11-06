@@ -91,7 +91,7 @@ To run the command as one off run `go run main.go`.
 ### Supported language feature
 - [ ] everything is an object
 	- [x] allow method calls on everything
-	- [ ] operators are method calls
+	- [x] operators are method calls
 - [ ] full UTF8 support
 	- [ ] Unicode identifier
 	- [ ] Unicode symbols
@@ -217,7 +217,7 @@ To run the command as one off run `go run main.go`.
 	- [x] `<`
 	- [x] `>`
 	- [ ] `**` (pow)
-	- [ ] `%` (modulus)
+	- [x] `%` (modulus)
 	- [ ] `&` (AND)
 	- [ ] `^` (XOR)
 	- [ ] `>>` (right shift)
@@ -227,9 +227,9 @@ To run the command as one off run `go run main.go`.
 	- [ ] `===` (case equality)
 	- [ ] `=~` (pattern match)
 	- [ ] `!~` (does not match)
-	- [ ] `<=>` (comparison or spaceship operator)
-	- [ ] `<=` (less or equal)
-	- [ ] `>=` (greater or equal)
+	- [x] `<=>` (comparison or spaceship operator)
+	- [x] `<=` (less or equal)
+	- [x] `>=` (greater or equal)
 	- [ ] assignment operators
 		- [ ] `+=`
 		- [ ] `-=`
@@ -250,7 +250,7 @@ To run the command as one off run `go run main.go`.
 - [ ] classes
 	- [x] class objects
 	- [x] class Class
-	- [ ] instance variables
+	- [x] instance variables
 	- [ ] class variables
 	- [x] class methods
 	- [x] instance methods
@@ -259,13 +259,13 @@ To run the command as one off run `go run main.go`.
 	- [ ] protected
 	- [ ] public
 	- [x] inheritance
-	- [ ] constructors
+	- [x] constructors
 	- [x] new
 	- [x] `self`
 	- [ ] singleton classes (also known as the metaclass or eigenclass) `class << self`
 	- [ ] assigment methods
-	- [ ] self defined classes
-	- [ ] self defined classes with inheritance
+	- [x] self defined classes
+	- [x] self defined classes with inheritance
 - [x] modules
 - [x] object main
 - [x] comments '#'
