@@ -284,7 +284,7 @@ func (p *parser) noPrefixParseFnError(t token.Type) {
 // and callers should always check if they can handle the error with providing
 // more input by checking with e.g. IsEOFError.
 func (p *parser) ParseProgram() (*ast.Program, error) {
-	program := &ast.Program{}
+	program := &ast.Program{File: p.file}
 	program.Statements = []ast.Statement{}
 	for !p.currentTokenIs(token.EOF) {
 		stmt := p.parseStatement()

@@ -3,6 +3,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
+	gotoken "go/token"
 	"strings"
 
 	"github.com/goruby/goruby/token"
@@ -41,6 +42,7 @@ type literal interface {
 
 // A Program node is the root node within the AST.
 type Program struct {
+	File       *gotoken.File
 	Statements []Statement
 }
 
