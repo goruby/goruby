@@ -640,7 +640,7 @@ func TestModuleObject(t *testing.T) {
 			methods := module.Class().Methods().GetAll()
 			for name, method := range methods {
 				if function, ok := method.(*object.Function); ok {
-					actualMethods[name] = function.Inspect()
+					actualMethods[name] = function.String()
 				}
 			}
 
@@ -714,7 +714,7 @@ func TestModuleObject(t *testing.T) {
 		methods := module.Class().Methods().GetAll()
 		for name, method := range methods {
 			if function, ok := method.(*object.Function); ok {
-				actualMethods[name] = function.Inspect()
+				actualMethods[name] = function.String()
 			}
 		}
 
@@ -815,7 +815,7 @@ func TestClassObject(t *testing.T) {
 		methods := classClass.Methods().GetAll()
 		for name, method := range methods {
 			if function, ok := method.(*object.Function); ok {
-				actualMethods[name] = function.Inspect()
+				actualMethods[name] = function.String()
 			}
 		}
 

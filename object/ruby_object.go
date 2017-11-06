@@ -159,11 +159,8 @@ type Function struct {
 	MethodVisibility MethodVisibility
 }
 
-// Type returns FUNCTION_OBJ
-func (f *Function) Type() Type { return FUNCTION_OBJ }
-
-// Inspect returns the function body
-func (f *Function) Inspect() string {
+// String returns the function literal
+func (f *Function) String() string {
 	var out bytes.Buffer
 	params := []string{}
 	for _, p := range f.Parameters {
@@ -177,9 +174,6 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 	return out.String()
 }
-
-// Class returns nil
-func (f *Function) Class() RubyClass { return nil }
 
 // Call implements the RubyMethod interface. It evaluates f.Body and returns its result
 func (f *Function) Call(context CallContext, args ...RubyObject) (RubyObject, error) {
