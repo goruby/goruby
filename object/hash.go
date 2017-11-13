@@ -11,8 +11,8 @@ var hashClass RubyClassObject = newClass(
 	objectClass,
 	hashMethods,
 	hashClassMethods,
-	func(RubyClassObject) RubyObject {
-		return &Hash{hashMap: make(map[hashKey]hashPair)}
+	func(RubyClassObject, ...RubyObject) (RubyObject, error) {
+		return &Hash{hashMap: make(map[hashKey]hashPair)}, nil
 	},
 )
 

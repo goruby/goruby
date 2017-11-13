@@ -1,7 +1,13 @@
 package object
 
 var objectClass = newMixin(newClass(
-	"Object", basicObjectClass, objectMethods, objectClassMethods, func(RubyClassObject) RubyObject { return &Object{} },
+	"Object",
+	basicObjectClass,
+	objectMethods,
+	objectClassMethods,
+	func(RubyClassObject, ...RubyObject) (RubyObject, error) {
+		return &Object{}, nil
+	},
 ), kernelModule)
 
 func init() {

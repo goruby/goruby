@@ -3,7 +3,13 @@ package object
 import "hash/fnv"
 
 var stringClass RubyClassObject = newClass(
-	"String", objectClass, stringMethods, stringClassMethods, func(RubyClassObject) RubyObject { return &String{} },
+	"String",
+	objectClass,
+	stringMethods,
+	stringClassMethods,
+	func(RubyClassObject, ...RubyObject) (RubyObject, error) {
+		return &String{}, nil
+	},
 )
 
 func init() {

@@ -47,7 +47,8 @@ type RubyObject interface {
 type RubyClass interface {
 	Methods() MethodSet
 	SuperClass() RubyClass
-	New() RubyObject
+	New(args ...RubyObject) (RubyObject, error)
+	Name() string
 }
 
 // RubyClassObject represents a class object in Ruby

@@ -9,7 +9,9 @@ var fileClass RubyClassObject = newClass(
 	objectClass,
 	fileMethods,
 	fileClassMethods,
-	func(RubyClassObject) RubyObject { return &File{make(map[RubyObject]RubyObject)} },
+	func(RubyClassObject, ...RubyObject) (RubyObject, error) {
+		return &File{make(map[RubyObject]RubyObject)}, nil
+	},
 )
 
 func init() {

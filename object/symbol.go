@@ -3,7 +3,13 @@ package object
 import "hash/fnv"
 
 var symbolClass RubyClassObject = newClass(
-	"Symbol", objectClass, symbolMethods, symbolClassMethods, func(RubyClassObject) RubyObject { return &Symbol{} },
+	"Symbol",
+	objectClass,
+	symbolMethods,
+	symbolClassMethods,
+	func(RubyClassObject, ...RubyObject) (RubyObject, error) {
+		return &Symbol{}, nil
+	},
 )
 
 func init() {

@@ -9,7 +9,7 @@ var basicObjectClass RubyClassObject = newClass(
 	nil,
 	basicObjectMethods,
 	basicObjectClassMethods,
-	func(RubyClassObject) RubyObject { return &basicObject{} },
+	func(RubyClassObject, ...RubyObject) (RubyObject, error) { return &basicObject{}, nil },
 )
 
 func init() {

@@ -12,8 +12,8 @@ var classClass RubyClassObject = &class{
 	builder:         defaultBuilder,
 }
 
-var notInstantiatable = func(RubyClassObject) RubyObject { return nil }
-var defaultBuilder = func(c RubyClassObject) RubyObject { return &classInstance{class: c} }
+var notInstantiatable = func(RubyClassObject, ...RubyObject) (RubyObject, error) { return nil, nil }
+var defaultBuilder = func(c RubyClassObject, args ...RubyObject) (RubyObject, error) { return &classInstance{class: c}, nil }
 
 func init() {
 	classClass.(*class).class = classClass
@@ -33,7 +33,7 @@ func newClass(
 	superClass RubyClass,
 	instanceMethods,
 	classMethods map[string]RubyMethod,
-	builder func(RubyClassObject) RubyObject,
+	builder func(RubyClassObject, ...RubyObject) (RubyObject, error),
 ) *class {
 	return newClassWithEnv(
 		name,
@@ -51,7 +51,7 @@ func newClassWithEnv(
 	superClass RubyClass,
 	instanceMethods,
 	classMethods map[string]RubyMethod,
-	builder func(RubyClassObject) RubyObject,
+	builder func(RubyClassObject, ...RubyObject) (RubyObject, error),
 	env Environment,
 ) *class {
 	return &class{
@@ -70,7 +70,7 @@ type class struct {
 	superClass      RubyClass
 	class           RubyClass
 	instanceMethods SettableMethodSet
-	builder         func(RubyClassObject) RubyObject
+	builder         func(RubyClassObject, ...RubyObject) (RubyObject, error)
 	Environment
 }
 
@@ -98,9 +98,10 @@ func (c *class) hashKey() hashKey {
 func (c *class) addMethod(name string, method RubyMethod) {
 	c.instanceMethods.Set(name, method)
 }
-func (c *class) New() RubyObject {
+func (c *class) New(args ...RubyObject) (RubyObject, error) {
 	return c.builder(c)
 }
+func (c *class) Name() string { return c.name }
 
 var classClassMethods = map[string]RubyMethod{}
 
@@ -132,7 +133,7 @@ func classSuperclass(context CallContext, args ...RubyObject) (RubyObject, error
 
 func classNew(context CallContext, args ...RubyObject) (RubyObject, error) {
 	classObject := context.Receiver().(RubyClassObject)
-	instance := classObject.New()
+	instance, _ := classObject.New()
 	if instance == nil {
 		return nil, NewNoMethodError(context.Receiver(), "new")
 	}

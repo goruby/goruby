@@ -9,7 +9,9 @@ import (
 
 var procClass RubyClassObject = newClass(
 	"Proc", objectClass, procMethods, procClassMethods,
-	func(c RubyClassObject) RubyObject { return &Proc{} },
+	func(RubyClassObject, ...RubyObject) (RubyObject, error) {
+		return &Proc{}, nil
+	},
 )
 
 func init() {

@@ -10,7 +10,7 @@ var arrayClass RubyClassObject = newClass(
 	objectClass,
 	arrayMethods,
 	arrayClassMethods,
-	func(RubyClassObject) RubyObject { return &Array{make([]RubyObject, 0)} },
+	func(c RubyClassObject, args ...RubyObject) (RubyObject, error) { return NewArray(args...), nil },
 )
 
 func init() {
