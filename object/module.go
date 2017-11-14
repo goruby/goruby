@@ -2,6 +2,7 @@ package object
 
 import (
 	"bytes"
+	"fmt"
 	"hash/fnv"
 	"unicode"
 )
@@ -70,6 +71,20 @@ var moduleMethods = map[string]RubyMethod{
 	"private_instance_methods":   publicMethod(modulePrivateInstanceMethods),
 	"include":                    publicMethod(moduleInclude),
 	"append_features":            withArity(1, privateMethod(moduleAppendFeatures)),
+	"to_s":                       withArity(0, publicMethod(moduleToS)),
+	"inspect":                    withArity(0, publicMethod(moduleToS)),
+}
+
+func moduleToS(context CallContext, args ...RubyObject) (RubyObject, error) {
+	receiver := context.Receiver()
+	if self, ok := receiver.(*Self); ok {
+		receiver = self.RubyObject
+	}
+	if class, ok := receiver.(RubyClass); ok && class.Name() != "" {
+		return &String{Value: class.Name()}, nil
+	}
+	val := fmt.Sprintf("#<%s:%p>", receiver.Class().Name(), receiver)
+	return &String{Value: val}, nil
 }
 
 func moduleAncestors(context CallContext, args ...RubyObject) (RubyObject, error) {

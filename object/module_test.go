@@ -27,6 +27,63 @@ func TestModule_hashKey(t *testing.T) {
 	}
 }
 
+func TestModuleToS(t *testing.T) {
+	t.Run("class as receiver", func(t *testing.T) {
+		context := &callContext{
+			receiver: moduleClass,
+		}
+
+		result, err := moduleToS(context)
+
+		checkError(t, err, nil)
+
+		expected := &String{Value: "Module"}
+
+		checkResult(t, result, expected)
+	})
+	t.Run("object as receiver", func(t *testing.T) {
+		context := &callContext{
+			receiver: &Module{},
+		}
+
+		result, err := moduleToS(context)
+
+		checkError(t, err, nil)
+
+		expected := &String{Value: fmt.Sprintf("#<Module:%p>", context.receiver)}
+
+		checkResult(t, result, expected)
+	})
+	t.Run("self object as receiver", func(t *testing.T) {
+		self := &Self{RubyObject: &Module{}, Name: "foo"}
+		context := &callContext{
+			receiver: self,
+		}
+
+		result, err := moduleToS(context)
+
+		checkError(t, err, nil)
+
+		expected := &String{Value: fmt.Sprintf("#<Module:%p>", self.RubyObject)}
+
+		checkResult(t, result, expected)
+	})
+	t.Run("self class as receiver", func(t *testing.T) {
+		self := &Self{RubyObject: moduleClass, Name: "foo"}
+		context := &callContext{
+			receiver: self,
+		}
+
+		result, err := moduleToS(context)
+
+		checkError(t, err, nil)
+
+		expected := &String{Value: "Module"}
+
+		checkResult(t, result, expected)
+	})
+}
+
 func TestModuleAncestors(t *testing.T) {
 	t.Run("class extending from BasicObject", func(t *testing.T) {
 		context := &callContext{
