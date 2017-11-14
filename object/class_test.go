@@ -240,7 +240,8 @@ func TestClassNew(t *testing.T) {
 		objectClass,
 		map[string]RubyMethod{"initialize": privateMethod(initializeStub)},
 		nil,
-		func(c RubyClassObject, args ...RubyObject) (RubyObject, error) { return &classInstance{c}, nil })
+		defaultBuilder,
+	)
 	env := NewEnvironment()
 	env.Set("Class", classClass)
 	env.Set("Foo", fooClass)

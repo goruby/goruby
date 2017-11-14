@@ -33,11 +33,7 @@ func (b *basicObject) Type() Type { return BASIC_OBJECT_OBJ }
 // Class returns the class of BasicObject
 func (b *basicObject) Class() RubyClass { return basicObjectClass }
 
-var basicObjectClassMethods = map[string]RubyMethod{
-	"new": publicMethod(func(context CallContext, args ...RubyObject) (RubyObject, error) {
-		return &basicObject{}, nil
-	}),
-}
+var basicObjectClassMethods = map[string]RubyMethod{}
 
 var basicObjectMethods = map[string]RubyMethod{
 	"initialize":     privateMethod(basicObjectInitialize),

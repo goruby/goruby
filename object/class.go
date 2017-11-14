@@ -12,8 +12,12 @@ var classClass RubyClassObject = &class{
 	builder:         defaultBuilder,
 }
 
-var notInstantiatable = func(RubyClassObject, ...RubyObject) (RubyObject, error) { return nil, nil }
-var defaultBuilder = func(c RubyClassObject, args ...RubyObject) (RubyObject, error) { return &classInstance{class: c}, nil }
+var notInstantiatable = func(c RubyClassObject, args ...RubyObject) (RubyObject, error) {
+	return nil, NewNoMethodError(c, "new")
+}
+var defaultBuilder = func(c RubyClassObject, args ...RubyObject) (RubyObject, error) {
+	return &classInstance{class: c}, nil
+}
 
 func init() {
 	classClass.(*class).class = classClass
@@ -133,9 +137,9 @@ func classSuperclass(context CallContext, args ...RubyObject) (RubyObject, error
 
 func classNew(context CallContext, args ...RubyObject) (RubyObject, error) {
 	classObject := context.Receiver().(RubyClassObject)
-	instance, _ := classObject.New()
-	if instance == nil {
-		return nil, NewNoMethodError(context.Receiver(), "new")
+	instance, err := classObject.New(args...)
+	if err != nil {
+		return nil, err
 	}
 	self := &Self{RubyObject: instance, Name: classObject.Inspect()}
 	callContext := &callContext{
@@ -143,7 +147,7 @@ func classNew(context CallContext, args ...RubyObject) (RubyObject, error) {
 		env:      context.Env(),
 		eval:     context.Eval,
 	}
-	_, err := Send(callContext, "initialize", args...)
+	_, err = Send(callContext, "initialize", args...)
 	if err != nil {
 		return nil, err
 	}
