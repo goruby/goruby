@@ -38,4 +38,13 @@ func (s *Symbol) hashKey() hashKey {
 
 var symbolClassMethods = map[string]RubyMethod{}
 
-var symbolMethods = map[string]RubyMethod{}
+var symbolMethods = map[string]RubyMethod{
+	"to_s": withArity(0, publicMethod(symbolToS)),
+}
+
+func symbolToS(context CallContext, args ...RubyObject) (RubyObject, error) {
+	if sym, ok := context.Receiver().(*Symbol); ok {
+		return &String{Value: sym.Value}, nil
+	}
+	return nil, nil
+}

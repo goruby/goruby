@@ -20,3 +20,17 @@ func TestSymbol_hashKey(t *testing.T) {
 		t.Errorf("strings with different content have same hash keys")
 	}
 }
+
+func TestSymbolToS(t *testing.T) {
+	context := &callContext{
+		receiver: &Symbol{Value: "foo"},
+	}
+
+	result, err := symbolToS(context)
+
+	checkError(t, err, nil)
+
+	expected := &String{Value: "foo"}
+
+	checkResult(t, result, expected)
+}
