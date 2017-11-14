@@ -1,6 +1,7 @@
 package object
 
 import (
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -1014,5 +1015,35 @@ func TestKernelTap(t *testing.T) {
 		expected := NewException("An error")
 
 		checkError(t, err, expected)
+	})
+}
+
+func TestKernelToS(t *testing.T) {
+	t.Run("object as receiver", func(t *testing.T) {
+		context := &callContext{
+			receiver: &Module{},
+		}
+
+		result, err := kernelToS(context)
+
+		checkError(t, err, nil)
+
+		expected := &String{Value: fmt.Sprintf("#<Module:%p>", context.receiver)}
+
+		checkResult(t, result, expected)
+	})
+	t.Run("self object as receiver", func(t *testing.T) {
+		self := &Self{RubyObject: &Module{}, Name: "foo"}
+		context := &callContext{
+			receiver: self,
+		}
+
+		result, err := kernelToS(context)
+
+		checkError(t, err, nil)
+
+		expected := &String{Value: fmt.Sprintf("#<Module:%p>", self.RubyObject)}
+
+		checkResult(t, result, expected)
 	})
 }

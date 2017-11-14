@@ -20,6 +20,7 @@ func init() {
 }
 
 var kernelMethodSet = map[string]RubyMethod{
+	"to_s":              withArity(0, publicMethod(kernelToS)),
 	"nil?":              withArity(0, publicMethod(kernelIsNil)),
 	"methods":           publicMethod(kernelMethods),
 	"public_methods":    publicMethod(kernelPublicMethods),
@@ -31,6 +32,15 @@ var kernelMethodSet = map[string]RubyMethod{
 	"extend":            publicMethod(kernelExtend),
 	"block_given?":      withArity(0, privateMethod(kernelBlockGiven)),
 	"tap":               publicMethod(kernelTap),
+}
+
+func kernelToS(context CallContext, args ...RubyObject) (RubyObject, error) {
+	receiver := context.Receiver()
+	if self, ok := receiver.(*Self); ok {
+		receiver = self.RubyObject
+	}
+	val := fmt.Sprintf("#<%s:%p>", receiver.Class().Name(), receiver)
+	return &String{Value: val}, nil
 }
 
 func kernelPuts(context CallContext, args ...RubyObject) (RubyObject, error) {
