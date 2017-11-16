@@ -429,7 +429,7 @@ func TestIntegerSpaceship(t *testing.T) {
 
 func checkError(t *testing.T, actual, expected error) {
 	if !reflect.DeepEqual(expected, actual) {
-		t.Logf("Expected error to equal %T:%v, got %T:%v\n", expected, expected, actual, actual)
+		t.Logf("Expected error to equal\n%T:%v\n\tgot\n%T:%v\n", expected, expected, actual, actual)
 		t.Fail()
 	}
 }

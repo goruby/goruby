@@ -1,6 +1,9 @@
 package object
 
-import "hash/fnv"
+import (
+	"fmt"
+	"hash/fnv"
+)
 
 var stringClass RubyClassObject = newClass(
 	"String",
@@ -35,6 +38,30 @@ func (s *String) hashKey() hashKey {
 	h := fnv.New64a()
 	h.Write([]byte(s.Value))
 	return hashKey{Type: s.Type(), Value: h.Sum64()}
+}
+
+func stringify(obj RubyObject) (string, error) {
+	stringObj, err := Send(NewCallContext(nil, obj), "to_s")
+	if err != nil {
+		return "", NewTypeError(
+			fmt.Sprintf(
+				"can't convert %s into String",
+				obj.Class().Name(),
+			),
+		)
+	}
+	str, ok := stringObj.(*String)
+	if !ok {
+		return "", NewTypeError(
+			fmt.Sprintf(
+				"can't convert %s to String (%s#to_s gives %s)",
+				obj.Class().Name(),
+				obj.Class().Name(),
+				stringObj.Class().Name(),
+			),
+		)
+	}
+	return str.Value, nil
 }
 
 var stringClassMethods = map[string]RubyMethod{}

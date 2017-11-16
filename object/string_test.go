@@ -21,6 +21,46 @@ func TestString_hashKey(t *testing.T) {
 	}
 }
 
+func Test_stringify(t *testing.T) {
+	t.Run("object with regular `to_s`", func(t *testing.T) {
+		obj := &Symbol{Value: "sym"}
+
+		res, err := stringify(obj)
+
+		checkError(t, err, nil)
+
+		if res != "sym" {
+			t.Logf("Expected stringify to return 'sym', got %q\n", res)
+			t.Fail()
+		}
+	})
+	t.Run("object with `to_s` returning not string", func(t *testing.T) {
+		toS := func(CallContext, ...RubyObject) (RubyObject, error) {
+			return &Integer{Value: 42}, nil
+		}
+		obj := &extendedObject{
+			RubyObject: &Object{},
+			class: newEigenclass(objectClass, map[string]RubyMethod{
+				"to_s": publicMethod(toS),
+			}),
+			Environment: NewEnvironment(),
+		}
+
+		_, err := stringify(obj)
+
+		checkError(t, err, NewTypeError(
+			"can't convert Object to String (Object#to_s gives Integer)",
+		))
+	})
+	t.Run("object without `to_s`", func(t *testing.T) {
+		obj := &basicObject{}
+
+		_, err := stringify(obj)
+
+		checkError(t, err, NewTypeError("can't convert BasicObject into String"))
+	})
+}
+
 func TestStringAdd(t *testing.T) {
 	tests := []struct {
 		arguments []RubyObject
