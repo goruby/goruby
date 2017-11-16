@@ -173,9 +173,89 @@ func (e *Exception) setErrorMessage(msg string) {
 // Class returns exceptionClass
 func (e *Exception) Class() RubyClass { return exceptionClass }
 
-var exceptionClassMethods = map[string]RubyMethod{}
+var exceptionClassMethods = map[string]RubyMethod{
+	"exception": publicMethod(exceptionClassException),
+}
 
-var exceptionMethods = map[string]RubyMethod{}
+var exceptionMethods = map[string]RubyMethod{
+	"initialize": privateMethod(exceptionInitialize),
+	"exception":  publicMethod(exceptionException),
+}
+
+func exceptionInitialize(context CallContext, args ...RubyObject) (RubyObject, error) {
+	receiver := context.Receiver()
+	if self, ok := receiver.(*Self); ok {
+		receiver = self.RubyObject
+	}
+	var message string
+	message = receiver.Class().Name()
+	if len(args) == 1 {
+		msg, err := stringify(args[0])
+		if err != nil {
+			return nil, err
+		}
+		message = msg
+	}
+	if exception, ok := receiver.(exception); ok {
+		exception.setErrorMessage(message)
+	}
+	return receiver, nil
+}
+
+func exceptionClassException(context CallContext, args ...RubyObject) (RubyObject, error) {
+	receiver := context.Receiver()
+	var message string
+	class, ok := receiver.(RubyClass)
+	if ok {
+		receiver, _ = class.New()
+	}
+	if class == nil {
+		class = receiver.Class()
+	}
+	message = class.Name()
+	if len(args) == 1 {
+		msg, err := stringify(args[0])
+		if err != nil {
+			return nil, err
+		}
+		message = msg
+	}
+	if exception, ok := receiver.(exception); ok {
+		msg := exception.Error()
+		if msg != message {
+			exception.setErrorMessage(message)
+		}
+	}
+	return receiver, nil
+}
+
+func exceptionException(context CallContext, args ...RubyObject) (RubyObject, error) {
+	receiver := context.Receiver()
+	if len(args) == 0 {
+		return receiver, nil
+	}
+	var oldMessage string
+	if err, ok := receiver.(error); ok {
+		oldMessage = err.Error()
+	}
+	message, err := stringify(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	if oldMessage != message {
+		class := receiver.Class()
+		exc, err := class.New()
+		if err != nil {
+			return nil, err
+		}
+		if exception, ok := exc.(exception); ok {
+			exception.setErrorMessage(message)
+		}
+		return exc, nil
+	}
+	return receiver, nil
+}
 
 // NewStandardError returns a StandardError with the given message
 func NewStandardError(message string) *StandardError {
