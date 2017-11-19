@@ -1035,3 +1035,64 @@ func TestKernelToS(t *testing.T) {
 		checkResult(t, result, expected)
 	})
 }
+
+func TestKernelRaise(t *testing.T) {
+	object := &Self{RubyObject: &Object{}, Name: "x"}
+	env := NewMainEnvironment()
+	context := &callContext{
+		receiver: object,
+		env:      env,
+	}
+
+	t.Run("without args", func(t *testing.T) {
+		result, err := kernelRaise(context)
+
+		checkResult(t, result, nil)
+
+		checkError(t, err, NewRuntimeError(""))
+	})
+
+	t.Run("with 1 arg", func(t *testing.T) {
+		t.Run("string argument", func(t *testing.T) {
+			result, err := kernelRaise(context, &String{Value: "ouch"})
+
+			checkResult(t, result, nil)
+
+			checkError(t, err, NewRuntimeError("ouch"))
+		})
+		t.Run("class argument", func(t *testing.T) {
+			t.Run("exception class", func(t *testing.T) {
+				result, err := kernelRaise(context, standardErrorClass)
+
+				checkResult(t, result, nil)
+
+				checkError(t, err, &StandardError{message: "StandardError"})
+			})
+			t.Run("other class", func(t *testing.T) {
+				result, err := kernelRaise(context, stringClass)
+
+				checkResult(t, result, nil)
+
+				checkError(t, err, &TypeError{message: "exception class/object expected"})
+			})
+			t.Run("object with #exception returning exception", func(t *testing.T) {
+				exceptionFn := func(CallContext, ...RubyObject) (RubyObject, error) {
+					return &StandardError{message: "err"}, nil
+				}
+				obj := &extendedObject{
+					RubyObject: &Object{},
+					class: newEigenclass(objectClass, map[string]RubyMethod{
+						"exception": publicMethod(exceptionFn),
+					}),
+					Environment: NewEnvironment(),
+				}
+
+				result, err := kernelRaise(context, obj)
+
+				checkResult(t, result, nil)
+
+				checkError(t, err, &StandardError{message: "err"})
+			})
+		})
+	})
+}

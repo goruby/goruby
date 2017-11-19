@@ -32,6 +32,7 @@ var kernelMethodSet = map[string]RubyMethod{
 	"extend":            publicMethod(kernelExtend),
 	"block_given?":      withArity(0, privateMethod(kernelBlockGiven)),
 	"tap":               publicMethod(kernelTap),
+	"raise":             privateMethod(kernelRaise),
 }
 
 func kernelToS(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -239,4 +240,25 @@ func kernelTap(context CallContext, args ...RubyObject) (RubyObject, error) {
 		return nil, err
 	}
 	return context.Receiver(), nil
+}
+
+func kernelRaise(context CallContext, args ...RubyObject) (RubyObject, error) {
+	switch len(args) {
+	case 1:
+		switch arg := args[0].(type) {
+		case *String:
+			return nil, NewRuntimeError(arg.Value)
+		default:
+			exc, err := Send(NewCallContext(context.Env(), arg), "exception")
+			if err != nil {
+				return nil, NewTypeError("exception class/object expected")
+			}
+			if excAsErr, ok := exc.(error); ok {
+				return nil, excAsErr
+			}
+			return nil, nil
+		}
+	default:
+		return nil, NewRuntimeError("")
+	}
 }
