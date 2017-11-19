@@ -180,6 +180,7 @@ var exceptionClassMethods = map[string]RubyMethod{
 var exceptionMethods = map[string]RubyMethod{
 	"initialize": privateMethod(exceptionInitialize),
 	"exception":  publicMethod(exceptionException),
+	"to_s":       withArity(0, publicMethod(exceptionToS)),
 }
 
 func exceptionInitialize(context CallContext, args ...RubyObject) (RubyObject, error) {
@@ -255,6 +256,14 @@ func exceptionException(context CallContext, args ...RubyObject) (RubyObject, er
 		return exc, nil
 	}
 	return receiver, nil
+}
+
+func exceptionToS(context CallContext, args ...RubyObject) (RubyObject, error) {
+	receiver := context.Receiver()
+	if err, ok := receiver.(exception); ok {
+		return &String{Value: err.Error()}, nil
+	}
+	return nil, nil
 }
 
 // NewStandardError returns a StandardError with the given message

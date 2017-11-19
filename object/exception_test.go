@@ -2,10 +2,6 @@ package object
 
 import "testing"
 
-func TestExceptionClassNew(t *testing.T) {
-
-}
-
 func TestExceptionInitialize(t *testing.T) {
 	context := &callContext{
 		receiver: &Self{RubyObject: &Exception{}},
@@ -93,4 +89,18 @@ func TestExceptionException(t *testing.T) {
 
 		checkResult(t, result, &Exception{message: "err"})
 	})
+}
+
+func TestExceptionToS(t *testing.T) {
+	contextObject := &Exception{message: "x"}
+	context := &callContext{
+		receiver: contextObject,
+		env:      NewMainEnvironment(),
+	}
+
+	result, err := exceptionToS(context)
+
+	checkError(t, err, nil)
+
+	checkResult(t, result, &String{Value: "x"})
 }
