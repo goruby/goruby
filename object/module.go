@@ -7,7 +7,13 @@ import (
 	"unicode"
 )
 
-var moduleClass RubyClassObject = &class{name: "Module", instanceMethods: NewMethodSet(moduleMethods)}
+var moduleClass RubyClassObject = &class{
+	name:            "Module",
+	instanceMethods: NewMethodSet(moduleMethods),
+	builder: func(c RubyClassObject, args ...RubyObject) (RubyObject, error) {
+		return &Module{}, nil
+	},
+}
 
 func init() {
 	moduleClass.(*class).superClass = objectClass

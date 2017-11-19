@@ -20,7 +20,7 @@ var defaultBuilder = func(c RubyClassObject, args ...RubyObject) (RubyObject, er
 }
 
 func init() {
-	classClass.(*class).class = classClass
+	classClass.(*class).class = newEigenclass(moduleClass.Class(), classClassMethods)
 	classes.Set("Class", classClass)
 }
 
@@ -58,11 +58,15 @@ func newClassWithEnv(
 	builder func(RubyClassObject, ...RubyObject) (RubyObject, error),
 	env Environment,
 ) *class {
+	var superclassClass RubyClass = classClass
+	if superClass != nil {
+		superclassClass = superClass.(RubyClassObject).Class()
+	}
 	return &class{
 		name:            name,
 		superClass:      superClass,
 		instanceMethods: NewMethodSet(instanceMethods),
-		class:           newEigenclass(classClass, classMethods),
+		class:           newEigenclass(superclassClass, classMethods),
 		builder:         builder,
 		Environment:     NewEnclosedEnvironment(env),
 	}

@@ -262,6 +262,8 @@ func mustGet(obj object.RubyObject, ok bool) object.RubyObject {
 }
 
 func TestScopedIdentifierExpression(t *testing.T) {
+	objectClassObject, _ := object.NewMainEnvironment().Get("Object")
+	objectClass := objectClassObject.(object.RubyClassObject)
 	tests := []struct {
 		input           string
 		expectedInspect string
@@ -286,8 +288,8 @@ func TestScopedIdentifierExpression(t *testing.T) {
 			end
 			A::B
 			`,
-			object.NewClass("B", nil, nil).Inspect(),
-			object.NewClass("B", nil, nil).Class(),
+			object.NewClass("B", objectClass, nil).Inspect(),
+			object.NewClass("B", objectClass, nil).Class(),
 		},
 		{
 			`
@@ -297,8 +299,8 @@ func TestScopedIdentifierExpression(t *testing.T) {
 			end
 			A::B
 			`,
-			object.NewClass("B", nil, nil).Inspect(),
-			object.NewClass("B", nil, nil).Class(),
+			object.NewClass("B", objectClass, nil).Inspect(),
+			object.NewClass("B", objectClass, nil).Class(),
 		},
 		{
 			`

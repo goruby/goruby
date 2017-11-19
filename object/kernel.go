@@ -124,12 +124,11 @@ func kernelIsNil(context CallContext, args ...RubyObject) (RubyObject, error) {
 }
 
 func kernelClass(context CallContext, args ...RubyObject) (RubyObject, error) {
-	class := context.Receiver().Class()
-	if eigenClass, ok := class.(*eigenclass); ok {
-		class = eigenClass.Class()
+	receiver := context.Receiver()
+	if _, ok := receiver.(RubyClassObject); ok {
+		return classClass, nil
 	}
-	classObj := class.(RubyClassObject)
-	return classObj, nil
+	return receiver.Class().(RubyClassObject), nil
 }
 
 func kernelRequire(context CallContext, args ...RubyObject) (RubyObject, error) {

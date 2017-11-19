@@ -290,16 +290,10 @@ func TestKernelClass(t *testing.T) {
 
 		checkError(t, err, nil)
 
-		cl, ok := result.(*class)
-		if !ok {
-			t.Logf("Expected Class, got %T", result)
-			t.Fail()
-		}
-
 		expected := classClass
 
-		if !reflect.DeepEqual(expected, cl) {
-			t.Logf("Expected class to equal %+#v, got %+#v", expected, cl)
+		if !reflect.DeepEqual(expected, result) {
+			t.Logf("Expected class to equal\n%+#v\n\tgot\n%+#v\n", expected, result)
 			t.Fail()
 		}
 	})
@@ -310,16 +304,10 @@ func TestKernelClass(t *testing.T) {
 
 		checkError(t, err, nil)
 
-		cl, ok := result.(*class)
-		if !ok {
-			t.Logf("Expected Class, got %T", result)
-			t.Fail()
-		}
-
 		expected := classClass
 
-		if !reflect.DeepEqual(expected, cl) {
-			t.Logf("Expected class to equal %+#v, got %+#v", expected, cl)
+		if !reflect.DeepEqual(expected, result) {
+			t.Logf("Expected class to equal %+#v, got %+#v", expected, result)
 			t.Fail()
 		}
 	})
