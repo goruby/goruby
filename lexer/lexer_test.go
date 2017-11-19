@@ -26,6 +26,10 @@ else
 	false
 end
 
+begin
+rescue
+end
+
 10 == 10
 10 != 9
 10 <= 9
@@ -140,6 +144,13 @@ $a`
 		{token.ELSE, "else"},
 		{token.NEWLINE, "\n"},
 		{token.FALSE, "false"},
+		{token.NEWLINE, "\n"},
+		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.NEWLINE, "\n"},
+		{token.BEGIN, "begin"},
+		{token.NEWLINE, "\n"},
+		{token.RESCUE, "rescue"},
 		{token.NEWLINE, "\n"},
 		{token.END, "end"},
 		{token.NEWLINE, "\n"},

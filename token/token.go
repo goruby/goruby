@@ -80,6 +80,8 @@ const (
 	CLASS
 	DO
 	YIELD
+	BEGIN
+	RESCUE
 	KEYWORD__FILE__
 	keyword_end
 )
@@ -144,6 +146,8 @@ var tokens = [...]string{
 	CLASS:           "class",
 	DO:              "do",
 	YIELD:           "yield",
+	BEGIN:           "begin",
+	RESCUE:          "rescue",
 	KEYWORD__FILE__: "__FILE__",
 }
 

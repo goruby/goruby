@@ -118,6 +118,62 @@ func (bs *BlockStatement) String() string {
 	return out.String()
 }
 
+// ExceptionHandlingBlock represents a begin/end block where exceptions are rescued
+type ExceptionHandlingBlock struct {
+	BeginToken token.Token
+	TryBody    *BlockStatement
+	Rescues    []*RescueBlock
+}
+
+func (eh *ExceptionHandlingBlock) expressionNode() {}
+
+// TokenLiteral returns the token literal from 'begin'
+func (eh *ExceptionHandlingBlock) TokenLiteral() string { return eh.BeginToken.Literal }
+func (eh *ExceptionHandlingBlock) String() string {
+	var out bytes.Buffer
+	out.WriteString(eh.BeginToken.Literal)
+	out.WriteString("\n")
+	out.WriteString(eh.TryBody.String())
+	out.WriteString("\n")
+	for _, r := range eh.Rescues {
+		out.WriteString(r.String())
+	}
+	out.WriteString("end")
+	return out.String()
+}
+
+// A RescueBlock represents a rescue block
+type RescueBlock struct {
+	Token            token.Token
+	ExceptionClasses []*Identifier
+	Exception        *Identifier
+	Body             *BlockStatement
+}
+
+func (rb *RescueBlock) expressionNode() {}
+
+// TokenLiteral returns the token literal from 'rescue'
+func (rb *RescueBlock) TokenLiteral() string { return rb.Token.Literal }
+func (rb *RescueBlock) String() string {
+	var out bytes.Buffer
+	out.WriteString(rb.Token.Literal)
+	if len(rb.ExceptionClasses) != 0 {
+		classes := make([]string, len(rb.ExceptionClasses))
+		for i, c := range rb.ExceptionClasses {
+			classes[i] = c.String()
+		}
+		out.WriteString(strings.Join(classes, ", "))
+	}
+	if rb.Exception != nil {
+		out.WriteString(" => ")
+		out.WriteString(rb.Exception.String())
+	}
+	out.WriteString("\n")
+	out.WriteString(rb.Body.String())
+	out.WriteString("\n")
+	return out.String()
+}
+
 // Assignment represents a generic assignment
 type Assignment struct {
 	Token token.Token

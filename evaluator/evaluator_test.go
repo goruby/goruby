@@ -261,6 +261,117 @@ func mustGet(obj object.RubyObject, ok bool) object.RubyObject {
 	return obj
 }
 
+func TestExceptionHandlingBlock(t *testing.T) {
+	tests := []struct {
+		input  string
+		err    error
+		output object.RubyObject
+	}{
+		{
+			"begin\n2\nend",
+			nil,
+			&object.Integer{Value: 2},
+		},
+		{
+			`
+begin
+	2
+rescue Exception => e
+	4
+end`,
+			nil,
+			&object.Integer{Value: 2},
+		},
+		{
+			`
+begin
+	raise Exception
+end`,
+			object.NewException("Exception"),
+			nil,
+		},
+		{
+			`
+begin
+	raise Exception
+rescue Exception
+	4
+end`,
+			nil,
+			&object.Integer{Value: 4},
+		},
+		{
+			`
+begin
+	raise Exception.new "foo"
+rescue Exception => e
+	e.to_s
+end`,
+			nil,
+			&object.String{Value: "foo"},
+		},
+		{
+			`
+begin
+	raise StandardError.new "foo"
+rescue
+	5
+end`,
+			nil,
+			&object.Integer{Value: 5},
+		},
+		{
+			`
+begin
+	raise StandardError.new "bar"
+rescue => e
+	e.to_s
+end`,
+			nil,
+			&object.String{Value: "bar"},
+		},
+		// {
+		// 	`
+		// begin
+		// raise Exception.new "qux"
+		// rescue
+		// 3
+		// end`,
+		// 	object.NewException("qux"),
+		// 	nil,
+		// },
+	}
+
+	for _, tt := range tests {
+		if tt.err == nil {
+			t.Run("catched exception", func(t *testing.T) {
+				env := object.NewMainEnvironment()
+				evaluated, err := testEval(tt.input, env)
+				checkError(t, err)
+
+				if !reflect.DeepEqual(evaluated, tt.output) {
+					t.Logf("Expected result to equal\n%+#v\n\tgot\n%+#v\n", tt.output, evaluated)
+					t.Fail()
+				}
+			})
+		} else {
+			t.Run("uncaught exception", func(t *testing.T) {
+				env := object.NewMainEnvironment()
+				evaluated, err := testEval(tt.input, env)
+				if evaluated != nil {
+					t.Logf("expected result to be nil")
+					t.Fail()
+				}
+
+				if !reflect.DeepEqual(errors.Cause(err), tt.err) {
+					t.Logf("Expected err to equal\n%+#v\n\tgot\n%+#v\n", tt.err, errors.Cause(err))
+					t.Fail()
+				}
+			})
+		}
+	}
+}
+
 func TestScopedIdentifierExpression(t *testing.T) {
 	objectClassObject, _ := object.NewMainEnvironment().Get("Object")
 	objectClass := objectClassObject.(object.RubyClassObject)

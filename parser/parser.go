@@ -144,6 +144,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerPrefix(token.YIELD, p.parseYield)
 	p.registerPrefix(token.GLOBAL, p.parseGlobal)
 	p.registerPrefix(token.KEYWORD__FILE__, p.parseKeyword__FILE__)
+	p.registerPrefix(token.BEGIN, p.parseExceptionHandlingBlock)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -383,6 +384,9 @@ func (p *parser) parseExpression(precedence int) ast.Expression {
 }
 
 func (p *parser) parseComment() ast.Statement {
+	if p.trace {
+		defer un(trace(p, "parseComment"))
+	}
 	comment := &ast.Comment{Token: p.curToken}
 	if !p.accept(token.STRING) {
 		return nil
@@ -399,6 +403,57 @@ func (p *parser) parseComment() ast.Statement {
 		return nil
 	}
 	return comment
+}
+
+func (p *parser) parseExceptionHandlingBlock() ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseExceptionHandlingBlock"))
+	}
+	block := &ast.ExceptionHandlingBlock{BeginToken: p.curToken}
+	if !p.accept(token.NEWLINE) {
+		return nil
+	}
+	block.TryBody = p.parseBlockStatement(token.END, token.RESCUE)
+	block.Rescues = []*ast.RescueBlock{}
+	for p.peekTokenIs(token.RESCUE) {
+		p.accept(token.RESCUE)
+		rescue := p.parseRescueBlock()
+		block.Rescues = append(block.Rescues, rescue)
+	}
+	if !p.accept(token.END) {
+		return nil
+	}
+	return block
+}
+
+func (p *parser) parseRescueBlock() *ast.RescueBlock {
+	if p.trace {
+		defer un(trace(p, "parseRescueBlock"))
+	}
+	block := &ast.RescueBlock{Token: p.curToken}
+	classes := []*ast.Identifier{}
+	for p.peekTokenIs(token.CONST) {
+		p.accept(token.CONST)
+		class := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		classes = append(classes, class)
+		if p.peekTokenIs(token.COMMA) {
+			p.accept(token.COMMA)
+		}
+	}
+	block.ExceptionClasses = classes
+
+	if p.peekTokenIs(token.HASHROCKET) {
+		p.accept(token.HASHROCKET)
+		if !p.accept(token.IDENT) {
+			return nil
+		}
+		block.Exception = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	}
+	if !p.accept(token.NEWLINE) {
+		return nil
+	}
+	block.Body = p.parseBlockStatement(token.END)
+	return block
 }
 
 func (p *parser) parseAssignment(left ast.Expression) ast.Expression {

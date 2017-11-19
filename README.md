@@ -245,6 +245,10 @@ To run the command as one off run `go run main.go`.
 		- [ ] `||=`
 		- [ ] `&&=`
 - [x] function blocks (procs)
+- [ ] error handling
+	- [x] begin/rescue
+	- [ ] ensure
+	- [ ] retry
 - [x] constants
 - [x] scope operator `::`
 - [ ] classes

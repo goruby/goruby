@@ -296,6 +296,142 @@ func TestInstanceVariable(t *testing.T) {
 	testLiteralExpression(t, instVar.Name, "foo")
 }
 
+func TestExceptionHandling(t *testing.T) {
+	type rescue struct {
+		classes   []string
+		exception string
+		body      string
+	}
+	tests := []struct {
+		input   string
+		body    string
+		rescues []rescue
+	}{
+		{
+			input: `
+begin
+end
+`,
+			body: "",
+		},
+		{
+			input: `
+begin
+	2
+end
+`,
+			body: "2",
+		},
+		{
+			input: `
+begin
+	2
+rescue
+	3
+end
+`,
+			body:    "2",
+			rescues: []rescue{{body: "3"}},
+		},
+		{
+			input: `
+begin
+	2
+rescue Error
+	3
+end
+`,
+			body:    "2",
+			rescues: []rescue{{classes: []string{"Error"}, body: "3"}},
+		},
+		{
+			input: `
+begin
+	2
+rescue Error, StandardError
+	3
+end
+`,
+			body:    "2",
+			rescues: []rescue{{classes: []string{"Error", "StandardError"}, body: "3"}},
+		},
+		{
+			input: `
+begin
+	2
+rescue => e
+	3
+end
+`,
+			body:    "2",
+			rescues: []rescue{{body: "3", exception: "e"}},
+		},
+		{
+			input: `
+begin
+	2
+rescue Error => e
+	3
+end
+`,
+			body:    "2",
+			rescues: []rescue{{classes: []string{"Error"}, body: "3", exception: "e"}},
+		},
+	}
+
+	for _, tt := range tests {
+		program, err := parseSource(tt.input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Statements does not contain 1 statements. got=%d",
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+		begin, ok := stmt.Expression.(*ast.ExceptionHandlingBlock)
+		if !ok {
+			t.Fatalf("Expression not %T. got=%T", begin, stmt.Expression)
+		}
+
+		body := begin.TryBody.String()
+		if body != tt.body {
+			t.Logf("Expected TryBody to equal\n%s\n\tgot\n%s\n", tt.body, body)
+			t.Fail()
+		}
+
+		if len(begin.Rescues) != len(tt.rescues) {
+			t.Logf("Expected %d rescue blocks, got %d\n", len(tt.rescues), len(begin.Rescues))
+			t.Fail()
+		}
+
+		var rescues []rescue
+		for _, r := range begin.Rescues {
+			re := rescue{body: r.Body.String()}
+			for _, ec := range r.ExceptionClasses {
+				re.classes = append(re.classes, ec.String())
+			}
+			if r.Exception != nil {
+				re.exception = r.Exception.String()
+			}
+			rescues = append(rescues, re)
+		}
+
+		if !reflect.DeepEqual(tt.rescues, rescues) {
+			t.Logf("Expected rescues to equal\n%s\n\tgot\n%s\n", tt.rescues, rescues)
+			t.Fail()
+		}
+	}
+}
+
 func TestReturnStatements(t *testing.T) {
 	tests := []struct {
 		input         string

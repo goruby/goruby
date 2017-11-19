@@ -353,6 +353,33 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			return nil, errors.WithMessage(err, "eval scope inner")
 		}
 		return inner, nil
+	case *ast.ExceptionHandlingBlock:
+		bodyReturn, err := Eval(node.TryBody, env)
+		if err == nil {
+			return bodyReturn, nil
+		}
+		if err != nil && len(node.Rescues) == 0 {
+			return nil, err
+		}
+		errorObject := err.(object.RubyObject)
+		errClass := errorObject.Class().Name()
+		rescueEnv := object.WithScopedLocalVariables(env)
+		for _, r := range node.Rescues {
+			if r.Exception != nil {
+				rescueEnv.Set(r.Exception.Value, errorObject)
+			}
+			for _, cl := range r.ExceptionClasses {
+				if cl.Value == errClass {
+					rescueRet, err := Eval(r.Body, rescueEnv)
+					return rescueRet, err
+				}
+			}
+			if len(r.ExceptionClasses) == 0 {
+				rescueRet, err := Eval(r.Body, rescueEnv)
+				return rescueRet, err
+			}
+		}
+		return bodyReturn, err
 	case nil:
 		return nil, nil
 	default:

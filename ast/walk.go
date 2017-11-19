@@ -66,6 +66,23 @@ func Walk(v Visitor, node Node) {
 		walkParameterList(v, n.Parameters)
 		Walk(v, n.Body)
 
+	case *ExceptionHandlingBlock:
+		Walk(v, n.TryBody)
+		for _, r := range n.Rescues {
+			Walk(v, r)
+		}
+
+	case *RescueBlock:
+		if len(n.ExceptionClasses) != 0 {
+			for _, e := range n.ExceptionClasses {
+				Walk(v, e)
+			}
+		}
+		if n.Exception != nil {
+			Walk(v, n.Exception)
+		}
+		Walk(v, n.Body)
+
 	case *FunctionLiteral:
 		Walk(v, n.Receiver)
 		Walk(v, n.Name)
