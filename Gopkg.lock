@@ -2,14 +2,26 @@
 
 
 [[projects]]
+  name = "github.com/goruby/readline"
+  packages = ["."]
+  revision = "a4d5111b617813c5d09df1ba6d76394ed71b1644"
+  version = "v1.5"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["unix"]
+  revision = "0ac51a24ef1c37380f98ba8b98f56e3bffd59850"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "be52a27ec302b8a6c01d9cceda92c94ebffda1207e5c8ec8bee6579b794eaa8e"
+  inputs-digest = "4cff0468512c8dd5177ab4c9707245aba76b0839e7ad06920830d28979e05186"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,43 +1,77 @@
 package main
 
 import (
-	"fmt"
-	"io"
+	"log"
 	"os"
-	"os/signal"
-	"os/user"
-	"syscall"
 
 	"github.com/goruby/goruby/repl"
+	"github.com/goruby/readline"
 )
 
 func main() {
-	user, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Hello %s! This is the Ruby programming language in Go!\n", user.Username)
-	fmt.Printf("Feel free to type in commands\n")
-	start(os.Stdin, os.Stdout)
+	exit := startRepl()
+	os.Exit(exit)
 }
 
-func start(in io.Reader, out io.Writer) {
-	printChan := make(chan string)
-	sigChan := make(chan os.Signal, 4)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGHUP, os.Kill)
-	go repl.Start(in, printChan)
-	for {
-		select {
-		case evaluated, ok := <-printChan:
-			fmt.Fprintf(out, "%s", evaluated)
-			if !ok {
-				return
-			}
-		case sig := <-sigChan:
-			fmt.Fprintln(out)
-			if sig != syscall.SIGINT {
-				return
-			}
-		}
+// Readline returns a readline enabled REPL
+func startRepl() int {
+	// Configure input
+	rm := rawMode{StdinFd: int(os.Stdin.Fd())}
+	config := &readline.Config{
+		InterruptPrompt:   "^C",
+		EOFPrompt:         "\n",
+		HistorySearchFold: true,
+		FuncMakeRaw:       rm.enter,
+		FuncExitRaw:       rm.exit,
 	}
+	l, err := readline.NewEx(config)
+	if err != nil {
+		log.Printf("Error initializing readlines: %v\n", err)
+		return 1
+	}
+	defer l.Close()
+	lNoInterrupt := &ignoreInterrupt{l}
+
+	r := repl.New(lNoInterrupt, lNoInterrupt, lNoInterrupt)
+	err = r.Start()
+	if err != nil {
+		log.Printf("Error within repl: %v\n", err)
+		return 1
+	}
+
+	return 0
+}
+
+type ignoreInterrupt struct {
+	*readline.Instance
+}
+
+func (i *ignoreInterrupt) Readline() (string, error) {
+	line, err := i.Instance.Readline()
+	if err == readline.ErrInterrupt {
+		return line, nil
+	}
+	return line, err
+}
+
+// rawMode is a helper for entering and exiting raw mode.
+type rawMode struct {
+	StdinFd int
+
+	state *readline.State
+}
+
+// enter is used to put the terminal in raw mode
+func (r *rawMode) enter() (err error) {
+	r.state, err = readline.MakeRaw(r.StdinFd)
+	return err
+}
+
+// exit restores the terminal's previous state
+func (r *rawMode) exit() error {
+	if r.state == nil {
+		return nil
+	}
+
+	return readline.Restore(r.StdinFd, r.state)
 }

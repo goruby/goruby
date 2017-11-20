@@ -1,7 +1,6 @@
 package repl
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 
@@ -11,41 +10,86 @@ import (
 	"github.com/pkg/errors"
 )
 
-const prompt = "girb:%03d> "
+// Input defines the input interface for the repl
+type Input interface {
+	// Readline returns the next line of input. When it returns io.EOF,
+	// the repl exits
+	Readline() (string, error)
+}
 
-// Start starts the repl for the given reader in and writes its results to out.
-func Start(in io.Reader, out chan<- string) {
-	scanner := bufio.NewScanner(in)
-	counter := 1
-	interpreter := interpreter.New()
-	var buffer string
+// Prompt represents a way to set the prompt
+type Prompt interface {
+	SetPrompt(string)
+}
+
+// Repl defines the interface to the Repl
+type Repl interface {
+	// Start starts the repl. If an error occurs, e.g. from Input, it will be returned.
+	Start() error
+}
+
+// New returns a repl
+func New(input Input, output io.Writer, prompt Prompt) Repl {
+	return &repl{
+		input:  input,
+		output: output,
+		prompt: prompt,
+		interpreter: &bufferedInterpreter{
+			interpreter: interpreter.New(),
+		},
+	}
+}
+
+type repl struct {
+	input       Input
+	output      io.Writer
+	prompt      Prompt
+	interpreter *bufferedInterpreter
+}
+
+func (r *repl) Start() error {
+	p := &prompt{}
+	r.prompt.SetPrompt(p.prompt())
 	for {
-		out <- fmt.Sprintf(prompt, counter)
-		counter++
-		scanned := scanner.Scan()
-		if !scanned {
-			out <- fmt.Sprintln()
-			close(out)
+		// Read a line
+		line, err := r.input.Readline()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		r.interpreter.interpretLine(line, r.output)
+		r.prompt.SetPrompt(p.prompt())
+	}
+	return nil
+}
+
+// bufferedInterpreter provides a buffered evaluator
+type bufferedInterpreter struct {
+	interpreter interpreter.Interpreter
+	buffer      string
+}
+
+// interpretLine evaluates the next line from the input and writes the results to out
+func (b *bufferedInterpreter) interpretLine(line string, out io.Writer) {
+	b.buffer += line
+	evaluated, err := b.interpreter.Interpret("", b.buffer)
+	if err != nil {
+		if isEOFError(err) {
+			b.buffer += "\n"
 			return
 		}
-
-		buffer += scanner.Text()
-		evaluated, err := interpreter.Interpret("", buffer)
-		if err != nil {
-			if isEOFError(err) {
-				buffer += "\n"
-				continue
-			}
-			out <- fmt.Sprintf("%s\n", errors.Cause(err).Error())
-			buffer = ""
-			continue
-		}
-
-		if evaluated != nil {
-			out <- fmt.Sprintf("=> %s\n", evaluated.Inspect())
-		}
-		buffer = ""
+		fmt.Fprintf(out, "%s\n", errors.Cause(err).Error())
+		b.buffer = ""
+		return
 	}
+
+	if evaluated != nil {
+		fmt.Fprintf(out, "=> %s\n", evaluated.Inspect())
+	}
+	b.buffer = ""
 }
 
 func isEOFError(err error) bool {
@@ -55,4 +99,15 @@ func isEOFError(err error) bool {
 	}
 	err = syntaxError.UnderlyingError()
 	return parser.IsEOFError(err)
+}
+
+const promptTemplate = "girb:%03d> "
+
+type prompt struct {
+	counter int
+}
+
+func (p *prompt) prompt() string {
+	p.counter++
+	return fmt.Sprintf(promptTemplate, p.counter)
 }
