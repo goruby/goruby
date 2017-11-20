@@ -330,16 +330,26 @@ end`,
 			nil,
 			&object.String{Value: "bar"},
 		},
-		// {
-		// 	`
-		// begin
-		// raise Exception.new "qux"
-		// rescue
-		// 3
-		// end`,
-		// 	object.NewException("qux"),
-		// 	nil,
-		// },
+		{
+			`
+begin
+	raise Exception.new "qux"
+rescue
+	3
+end`,
+			object.NewException("qux"),
+			nil,
+		},
+		{
+			`
+begin
+	raise StandardError.new "qux"
+rescue
+	3
+end`,
+			nil,
+			&object.Integer{Value: 3},
+		},
 	}
 
 	for _, tt := range tests {

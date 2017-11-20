@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/object"
@@ -358,28 +359,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err == nil {
 			return bodyReturn, nil
 		}
-		if err != nil && len(node.Rescues) == 0 {
-			return nil, err
-		}
-		errorObject := err.(object.RubyObject)
-		errClass := errorObject.Class().Name()
-		rescueEnv := object.WithScopedLocalVariables(env)
-		for _, r := range node.Rescues {
-			if r.Exception != nil {
-				rescueEnv.Set(r.Exception.Value, errorObject)
-			}
-			for _, cl := range r.ExceptionClasses {
-				if cl.Value == errClass {
-					rescueRet, err := Eval(r.Body, rescueEnv)
-					return rescueRet, err
-				}
-			}
-			if len(r.ExceptionClasses) == 0 {
-				rescueRet, err := Eval(r.Body, rescueEnv)
-				return rescueRet, err
-			}
-		}
-		return bodyReturn, err
+		return handleException(err, node.Rescues, env)
 	case nil:
 		return nil, nil
 	default:
@@ -592,6 +572,64 @@ func unwrapReturnValue(obj object.RubyObject) object.RubyObject {
 		return returnValue.Value
 	}
 	return obj
+}
+
+func handleException(err error, rescues []*ast.RescueBlock, env object.Environment) (object.RubyObject, error) {
+	if err != nil && len(rescues) == 0 {
+		return nil, err
+	}
+	errorObject := err.(object.RubyObject)
+	errClass := errorObject.Class().Name()
+	rescueEnv := object.WithScopedLocalVariables(env)
+
+	var catchAll *ast.RescueBlock
+	for _, r := range rescues {
+		if len(r.ExceptionClasses) == 0 {
+			catchAll = r
+			continue
+		}
+		if r.Exception != nil {
+			rescueEnv.Set(r.Exception.Value, errorObject)
+		}
+		for _, cl := range r.ExceptionClasses {
+			if cl.Value == errClass {
+				rescueRet, err := Eval(r.Body, rescueEnv)
+				return rescueRet, err
+			}
+		}
+	}
+
+	if catchAll != nil {
+		ancestors := getAncestors(errorObject)
+		sort.Strings(ancestors)
+		if sort.SearchStrings(ancestors, "StandardError") >= len(ancestors) {
+			return nil, err
+		}
+
+		if catchAll.Exception != nil {
+			rescueEnv.Set(catchAll.Exception.Value, errorObject)
+		}
+		rescueRet, err := Eval(catchAll.Body, rescueEnv)
+		return rescueRet, err
+	}
+
+	return nil, err
+}
+
+func getAncestors(obj object.RubyObject) []string {
+	class := obj.Class()
+	if c, ok := obj.(object.RubyClass); ok {
+		class = c
+	}
+	var ancestors []string
+	ancestors = append(ancestors, class.Name())
+
+	superClass := class.SuperClass()
+	if superClass != nil {
+		superAncestors := getAncestors(superClass.(object.RubyClassObject))
+		ancestors = append(ancestors, superAncestors...)
+	}
+	return ancestors
 }
 
 func isTruthy(obj object.RubyObject) bool {
