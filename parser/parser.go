@@ -423,6 +423,7 @@ func (p *parser) parseExceptionHandlingBlock() ast.Expression {
 	if !p.accept(token.END) {
 		return nil
 	}
+	block.EndToken = p.curToken
 	return block
 }
 
@@ -692,7 +693,7 @@ func (p *parser) parseArrayLiteral() ast.Expression {
 
 	p.nextToken()
 	array.Elements = p.parseExpressionList(token.RBRACKET)
-
+	array.Rbracket = p.curToken
 	return array
 }
 
@@ -711,6 +712,7 @@ func (p *parser) parseHash() ast.Expression {
 	p.nextToken()
 
 	if p.currentTokenIs(token.RBRACE) {
+		hash.Rbrace = p.curToken
 		return hash
 	}
 
@@ -732,6 +734,7 @@ func (p *parser) parseHash() ast.Expression {
 	if !p.accept(token.RBRACE) {
 		return nil
 	}
+	hash.Rbrace = p.curToken
 	return hash
 }
 
@@ -764,6 +767,7 @@ func (p *parser) parseBlock() ast.Expression {
 
 	block.Body = p.parseBlockStatement(endToken)
 	p.nextToken()
+	block.EndToken = p.curToken
 	return block
 }
 
@@ -858,6 +862,7 @@ func (p *parser) parseIfExpression() ast.Expression {
 		expression.Alternative = p.parseBlockStatement()
 	}
 	p.accept(token.END)
+	expression.EndToken = p.curToken
 	return expression
 }
 
@@ -896,6 +901,7 @@ func (p *parser) parseModule() ast.Expression {
 	if !p.accept(token.END) {
 		return nil
 	}
+	expr.EndToken = p.curToken
 	return expr
 }
 
@@ -923,6 +929,7 @@ func (p *parser) parseClass() ast.Expression {
 	if !p.accept(token.END) {
 		return nil
 	}
+	expr.EndToken = p.curToken
 	return expr
 }
 
@@ -965,6 +972,7 @@ func (p *parser) parseFunctionLiteral() ast.Expression {
 	if !p.accept(token.END) {
 		return nil
 	}
+	lit.EndToken = p.curToken
 	inspect := func(n ast.Node) bool {
 		if x, ok := n.(*ast.VariableAssignment); ok {
 			if x.Name.IsConstant() {
