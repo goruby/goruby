@@ -62,7 +62,7 @@ To run the command as one off run `go run main.go`.
   - [ ] `--context-mode n`  Set n[0-3] to method to create Binding Object,
                     when new workspace was created
   - [ ] `--echo`            Show result(default)
-  - [ ] `--noecho`          Don't show result
+  - [x] `--noecho`          Don't show result
   - [ ] `--inspect`	    Use `inspect' for output (default except for bc mode)
   - [ ] `--noinspect`	    Don't use inspect for output
   - [ ] `--readline`        Use Readline extension module
@@ -74,7 +74,7 @@ To run the command as one off run `go run main.go`.
 		    Suppresses --readline.
   - [ ] `--sample-book-mode`/`--simple-prompt`
                     Simple prompt mode
-  - [ ] `--noprompt`        No prompt mode
+  - [x] `--noprompt`        No prompt mode
   - [ ] `--single-irb`      Share self with sub-irb.
   - [ ] `--tracer`          Display trace for each execution of commands.
   - [ ] `--back-trace-limit n`

@@ -12,15 +12,24 @@ import (
 
 // Input defines the input interface for the repl
 type Input interface {
-	// Readline returns the next line of input. When it returns io.EOF,
-	// the repl exits
+	// Readline returns the next line of input. When it returns io.EOF, the
+	// repl exits
 	Readline() (string, error)
 }
 
 // Prompt represents a way to set the prompt
 type Prompt interface {
+	// SetPrompt is called after every evaluation
 	SetPrompt(string)
 }
+
+// The PromptFunc type is an adapter to allow the use of ordinary functions as
+// prompt. If f is a function with the appropriate signature, PromptFunc(f) is
+// a Prompt that calls f.
+type PromptFunc func(string)
+
+// SetPrompt calls f(prompt).
+func (f PromptFunc) SetPrompt(prompt string) { f(prompt) }
 
 // Repl defines the interface to the Repl
 type Repl interface {

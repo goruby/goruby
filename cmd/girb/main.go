@@ -1,6 +1,9 @@
 package main
 
 import (
+	"flag"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -8,7 +11,15 @@ import (
 	"github.com/goruby/readline"
 )
 
+var (
+	noecho   bool
+	noprompt bool
+)
+
 func main() {
+	flag.BoolVar(&noecho, "noecho", false, "--noecho")
+	flag.BoolVar(&noprompt, "noprompt", false, "--noprompt")
+	flag.Parse()
 	exit := startRepl()
 	os.Exit(exit)
 }
@@ -32,7 +43,16 @@ func startRepl() int {
 	defer l.Close()
 	lNoInterrupt := &ignoreInterrupt{l}
 
-	r := repl.New(lNoInterrupt, lNoInterrupt, lNoInterrupt)
+	var out io.Writer = lNoInterrupt
+	if noecho {
+		out = ioutil.Discard
+	}
+	var prompt repl.Prompt = lNoInterrupt
+	if noprompt {
+		prompt = repl.PromptFunc(discardPrompt)
+	}
+
+	r := repl.New(lNoInterrupt, out, prompt)
 	err = r.Start()
 	if err != nil {
 		log.Printf("Error within repl: %v\n", err)
@@ -41,6 +61,8 @@ func startRepl() int {
 
 	return 0
 }
+
+func discardPrompt(string) {}
 
 type ignoreInterrupt struct {
 	*readline.Instance
