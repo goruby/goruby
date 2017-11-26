@@ -3,6 +3,7 @@ package repl
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/goruby/goruby/interpreter"
 	"github.com/goruby/goruby/object"
@@ -79,12 +80,13 @@ func (r *repl) Start() error {
 type bufferedInterpreter struct {
 	interpreter interpreter.Interpreter
 	buffer      string
+	linecount   int
 }
 
 // interpretLine evaluates the next line from the input and writes the results to out
 func (b *bufferedInterpreter) interpretLine(line string, out io.Writer) {
 	b.buffer += line
-	evaluated, err := b.interpreter.Interpret("", b.buffer)
+	evaluated, err := b.interpreter.Interpret("(irb)", b.preserveLineCount(b.buffer))
 	if err != nil {
 		if isEOFError(err) {
 			b.buffer += "\n"
@@ -99,6 +101,14 @@ func (b *bufferedInterpreter) interpretLine(line string, out io.Writer) {
 		fmt.Fprintf(out, "=> %s\n", evaluated.Inspect())
 	}
 	b.buffer = ""
+}
+
+func (b *bufferedInterpreter) preserveLineCount(input string) string {
+	return strings.Repeat("\n", b.linecount) + input
+}
+
+func (b *bufferedInterpreter) getLines(input string) {
+	b.linecount = b.linecount + len(strings.Split(input, "\n"))
 }
 
 func isEOFError(err error) bool {
