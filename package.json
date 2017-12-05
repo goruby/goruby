@@ -1,0 +1,20 @@
+{
+
+  "name": "goruby",
+  "scripts": {
+      "test": "jest"
+  },
+  "jest": {
+	"moduleFileExtensions": [
+	  "go"
+	],
+	"runner": "jest-runner-go",
+	"testMatch": [
+	  "**/?(*_)test.go"
+	]
+  },
+  "devDependencies": {
+    "jest": "^21.2.1",
+    "jest-runner-go": "^0.1.3"
+  }
+}
