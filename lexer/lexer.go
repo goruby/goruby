@@ -40,7 +40,6 @@ type Lexer struct {
 	input  string           // the string being scanned.
 	state  StateFn          // the next lexing function to enter
 	pos    int              // current position in the input.
-	lines  int              // lines of input lexed
 	start  int              // start position of this item.
 	width  int              // width of last rune read from input.
 	tokens chan token.Token // channel of scanned tokens.
@@ -126,7 +125,6 @@ func startLexer(l *Lexer) StateFn {
 	case '$':
 		return lexGlobal
 	case '\n':
-		l.lines++
 		l.emit(token.NEWLINE)
 		return startLexer
 	case '\'':
@@ -134,7 +132,7 @@ func startLexer(l *Lexer) StateFn {
 	case '"':
 		return lexString
 	case ':':
-		if r := l.peek(); r == ':' {
+		if p := l.peek(); p == ':' {
 			l.next()
 			l.emit(token.SCOPE)
 			return startLexer
