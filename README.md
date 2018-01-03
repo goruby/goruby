@@ -4,6 +4,10 @@ goruby
 GoRuby, an implementation of Ruby written in Go
 
 [![Build Status](https://travis-ci.org/goruby/goruby.svg?branch=master)](https://travis-ci.org/goruby/goruby)
+[![GoDoc](https://godoc.org/github.com/goruby/goruby?status.svg)](http://godoc.org/github.com/goruby/goruby)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/56d0bf11b42e7e40ae59/test_coverage)](https://codeclimate.com/github/goruby/goruby/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/56d0bf11b42e7e40ae59/maintainability)](https://codeclimate.com/github/goruby/goruby/maintainability)
+[![Go Report Card](https://goreportcard.com/badge/github.com/goruby/goruby)](https://goreportcard.com/report/github.com/goruby/goruby)
 
 ## Contribution
 
