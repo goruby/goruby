@@ -77,7 +77,7 @@ func TestVariableExpression(t *testing.T) {
 			expectedValue      string
 		}{
 			{"x = 5;", "x", "5"},
-			{"x = 5_0;", "x", "5_0"},
+			{"x = 5_0;", "x", "50"},
 			{"y = true;", "y", "true"},
 			{"foobar = y;", "foobar", "y"},
 			{"foobar = (12 + 2 * bar) - x;", "foobar", "((12 + (2 * bar)) - x)"},
@@ -1140,7 +1140,7 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		},
 		{
 			"3 + 4; -5 * 5",
-			"(3 + 4)((-5) * 5)",
+			"(3 + 4)\n((-5) * 5)",
 		},
 		{
 			"5 > 4 == 3 < 4",

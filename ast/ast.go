@@ -62,11 +62,11 @@ func (p *Program) End() int {
 	return p.Statements[len(p.Statements)-1].End()
 }
 func (p *Program) String() string {
-	var out bytes.Buffer
-	for _, s := range p.Statements {
-		out.WriteString(s.String())
+	stmts := make([]string, len(p.Statements))
+	for i, s := range p.Statements {
+		stmts[i] = s.String()
 	}
-	return out.String()
+	return strings.Join(stmts, "\n")
 }
 
 // TokenLiteral returns the literal of the first statement and empty string if
@@ -511,7 +511,7 @@ func (il *IntegerLiteral) End() int { return il.Token.Pos + len(fmt.Sprintf("%d"
 
 // TokenLiteral returns the literal from the token.INT token
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
-func (il *IntegerLiteral) String() string       { return il.Token.Literal }
+func (il *IntegerLiteral) String() string       { return fmt.Sprintf("%d", il.Value) }
 
 // Nil represents the 'nil' keyword
 type Nil struct {
@@ -548,7 +548,7 @@ func (b *Boolean) End() int { return b.Token.Pos + len(fmt.Sprintf("%t", b.Value
 
 // TokenLiteral returns the literal from the token token.BOOLEAN
 func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
-func (b *Boolean) String() string       { return b.Token.Literal }
+func (b *Boolean) String() string       { return fmt.Sprintf("%t", b.Value) }
 
 // StringLiteral represents a double quoted string in the AST
 type StringLiteral struct {
