@@ -1,12 +1,91 @@
 package ast
 
-import "fmt"
+import (
+	"container/list"
+	"fmt"
+)
 
-// A Visitor's Visit method is invoked for each node encountered by Walk.
-// If the result visitor w is not nil, Walk visits each of the children
-// of node with the visitor w, followed by a call of w.Visit(nil).
+// A Visitor's Visit method is invoked for each node encountered by Walk.  If
+// the result visitor w is not nil, Walk visits each of the children of node
+// with the visitor w, followed by a call of w.Visit(nil).
 type Visitor interface {
 	Visit(node Node) (w Visitor)
+}
+
+// The VisitorFunc type is an adapter to allow the use of ordinary functions as
+// AST Visitors. If f is a function with the appropriate signature,
+// VisitorFunc(f) is a Visitor that calls f.
+type VisitorFunc func(Node) Visitor
+
+// Visit calls f(n)
+func (f VisitorFunc) Visit(n Node) Visitor {
+	return f(n)
+}
+
+// Path returns the path from the root of the AST till the child as a doubly
+// linked list. If child is not found within root, the bool will be false and
+// the list nil.
+func Path(root, child Node) (*list.List, bool) {
+	if ok := Contains(root, child); !ok {
+		return nil, false
+	}
+	childTree := list.New()
+	l := treeToList(root)
+	for e := l.Front(); e != nil; e = e.Next() {
+		n, ok := e.Value.(Node)
+		if !ok {
+			continue
+		}
+		if Contains(n, child) {
+			childTree.PushBack(n)
+		}
+	}
+	return childTree, true
+}
+
+type listVisitor struct {
+	list *list.List
+}
+
+func (f *listVisitor) Visit(n Node) Visitor {
+	if f.list == nil {
+		f.list = list.New()
+	}
+	f.list.PushBack(n)
+	return nil
+}
+
+func treeToList(node Node) *list.List {
+	list := list.New()
+	var walkFn VisitorFunc
+	walkFn = func(n Node) Visitor {
+		if n != nil {
+			list.PushBack(n)
+		}
+		return walkFn
+	}
+	Walk(walkFn, node)
+	return list
+}
+
+type containsVisitor struct {
+	needle Node
+	found  bool
+}
+
+func (c *containsVisitor) Visit(n Node) Visitor {
+	if n == c.needle {
+		c.found = true
+		return nil
+	}
+	return c
+}
+
+// Contains reports whether root contains child or not.
+func Contains(root Node, child Node) bool {
+	v := &containsVisitor{needle: child}
+	Walk(v, root)
+	return v.found
 }
 
 // Helper functions for common node lists. They may be empty.
