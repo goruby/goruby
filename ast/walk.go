@@ -59,6 +59,7 @@ func Walk(v Visitor, node Node) {
 		*Boolean,
 		*Nil,
 		*Self,
+		*Keyword__FILE__,
 		*Comment:
 		// nothing to do
 
@@ -84,7 +85,9 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Body)
 
 	case *FunctionLiteral:
-		Walk(v, n.Receiver)
+		if n.Receiver != nil {
+			Walk(v, n.Receiver)
+		}
 		Walk(v, n.Name)
 		walkParameterList(v, n.Parameters)
 		Walk(v, n.Body)
@@ -104,6 +107,17 @@ func Walk(v Visitor, node Node) {
 		// TODO: examine why it is not working
 		// Walk(v, n.Block)
 
+	case *ModuleExpression:
+		Walk(v, n.Name)
+		Walk(v, n.Body)
+
+	case *ClassExpression:
+		Walk(v, n.Name)
+		if n.SuperClass != nil {
+			Walk(v, n.SuperClass)
+		}
+		Walk(v, n.Body)
+
 	case *YieldExpression:
 		walkExprList(v, n.Arguments)
 
@@ -121,6 +135,12 @@ func Walk(v Visitor, node Node) {
 	// Types
 	case *ArrayLiteral:
 		walkExprList(v, n.Elements)
+
+	case *HashLiteral:
+		for k, val := range n.Map {
+			Walk(v, k)
+			Walk(v, val)
+		}
 
 	case *ExpressionStatement:
 		Walk(v, n.Expression)
