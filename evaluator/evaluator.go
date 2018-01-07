@@ -360,6 +360,11 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			return bodyReturn, nil
 		}
 		return handleException(err, node.Rescues, env)
+
+	case *ast.Comment:
+		// ignore comments
+		return nil, nil
+
 	case nil:
 		return nil, nil
 	default:
