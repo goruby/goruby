@@ -290,6 +290,11 @@ func (p *parser) ParseProgram() (*ast.Program, error) {
 	program := &ast.Program{File: p.file}
 	program.Statements = []ast.Statement{}
 	for !p.currentTokenIs(token.EOF) {
+		if p.currentTokenIs(token.NEWLINE) {
+			// Early exit
+			p.nextToken()
+			continue
+		}
 		stmt := p.parseStatement()
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)
@@ -374,6 +379,9 @@ func (p *parser) parseExpression(precedence int) ast.Expression {
 	for precedence < p.peekPrecedence() {
 		if leftExp == nil {
 			return nil // fail early and stop parsing
+		}
+		if p.currentTokenOneOf(token.NEWLINE, token.SEMICOLON) {
+			return leftExp
 		}
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
@@ -1112,7 +1120,7 @@ func (p *parser) parseMethodCall(context ast.Expression) ast.Expression {
 
 	p.nextToken()
 	contextCallExpression.Arguments = p.parseCallArguments(
-		token.SEMICOLON, token.LBRACE, token.DO,
+		token.LBRACE, token.DO,
 	)
 	if p.currentTokenOneOf(token.LBRACE, token.DO) {
 		contextCallExpression.Block = p.parseBlock().(*ast.BlockExpression)
@@ -1164,7 +1172,7 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 
 	p.nextToken()
 	contextCallExpression.Arguments = p.parseCallArguments(
-		token.SEMICOLON, token.LBRACE, token.DO,
+		token.LBRACE, token.DO,
 	)
 	if p.currentTokenOneOf(token.LBRACE, token.DO) {
 		contextCallExpression.Block = p.parseBlock().(*ast.BlockExpression)
