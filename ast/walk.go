@@ -22,11 +22,35 @@ func (f VisitorFunc) Visit(n Node) Visitor {
 	return f(n)
 }
 
+// Parent returns the parent node of child. If child is not found within root,
+// or child does not have a parent, i.e. equals root, the bool will be false
+func Parent(root, child Node) (Node, bool) {
+	if root == child {
+		return nil, false
+	}
+	if !Contains(root, child) {
+		return nil, false
+	}
+	path, ok := Path(root, child)
+	if !ok {
+		return nil, false
+	}
+	parentElement := path.Back().Prev()
+	if parentElement == nil {
+		return nil, false
+	}
+	parent, ok := parentElement.Value.(Node)
+	if !ok {
+		return nil, false
+	}
+	return parent, true
+}
+
 // Path returns the path from the root of the AST till the child as a doubly
 // linked list. If child is not found within root, the bool will be false and
 // the list nil.
 func Path(root, child Node) (*list.List, bool) {
-	if ok := Contains(root, child); !ok {
+	if !Contains(root, child) {
 		return nil, false
 	}
 	childTree := list.New()

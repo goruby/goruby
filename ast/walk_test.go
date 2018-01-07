@@ -6,6 +6,74 @@ import (
 	"testing"
 )
 
+func Test_Parent(t *testing.T) {
+	t.Run("parent found", func(t *testing.T) {
+		child := &VariableAssignment{
+			Name:  &Identifier{Value: "x"},
+			Value: &IntegerLiteral{Value: 2},
+		}
+		parent := &ExpressionStatement{Expression: child}
+		root := &Program{
+			Statements: []Statement{
+				&ExpressionStatement{
+					Expression: &IntegerLiteral{Value: 3},
+				},
+				parent,
+			},
+		}
+
+		p, ok := Parent(root, child)
+
+		if !ok {
+			t.Logf("Expected child not to be contained within root")
+			t.Fail()
+		}
+
+		if !reflect.DeepEqual(parent, p) {
+			t.Logf("Expected parent to equal\n%+#v\n\tgot\n%+#v\n", parent, p)
+			t.Fail()
+		}
+	})
+	t.Run("parent is root", func(t *testing.T) {
+		root := &Program{
+			Statements: []Statement{
+				&ExpressionStatement{
+					Expression: &IntegerLiteral{Value: 3},
+				},
+			},
+		}
+
+		_, ok := Parent(root, root)
+
+		if ok {
+			t.Logf("Expected bool to return false")
+			t.Fail()
+		}
+	})
+	t.Run("child not found", func(t *testing.T) {
+		root := &Program{
+			Statements: []Statement{
+				&ExpressionStatement{
+					Expression: &IntegerLiteral{Value: 3},
+				},
+				&ExpressionStatement{
+					Expression: &VariableAssignment{
+						Name:  &Identifier{Value: "x"},
+						Value: &IntegerLiteral{Value: 2},
+					},
+				},
+			},
+		}
+
+		_, ok := Parent(root, &IntegerLiteral{Value: 3})
+
+		if ok {
+			t.Logf("Expected child to be contained within root, was not")
+			t.Fail()
+		}
+	})
+}
+
 func Test_Path(t *testing.T) {
 	t.Run("child found", func(t *testing.T) {
 		child := &VariableAssignment{
