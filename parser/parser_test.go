@@ -1450,7 +1450,7 @@ func TestConditionalExpression(t *testing.T) {
 			end`, "x", "<", "y", "if(x == 3) y endx"},
 			{`if x < y
 			x = Object x
-			end`, "x", "<", "y", "x = Object.x()"},
+			end`, "x", "<", "y", "x = (Object(x))"},
 			{`unless x < y
 			x
 			end`, "x", "<", "y", "x"},
@@ -1467,7 +1467,7 @@ func TestConditionalExpression(t *testing.T) {
 			end`, "x", "<", "y", "if(x == 3) y endx"},
 			{`unless x < y
 			x = Object x
-			end`, "x", "<", "y", "x = Object.x()"},
+			end`, "x", "<", "y", "x = (Object(x))"},
 			{"x = 3 if x < y", "x", "<", "y", "x = 3"},
 			{"@x = 3 if x < y", "x", "<", "y", "@x = 3"},
 			{"x = 3 unless x < y", "x", "<", "y", "x = 3"},
@@ -2483,6 +2483,53 @@ func TestCallExpressionParsing(t *testing.T) {
 		testLiteralExpression(t, exp.Arguments[0], 1)
 		testInfixExpression(t, exp.Arguments[1], 2, "*", 3)
 		testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
+	})
+	t.Run("without parens without args with block", func(t *testing.T) {
+		input := "add { |x| x };"
+
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
+				1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not ast.ContextCallExpression. got=%T",
+				stmt.Expression,
+			)
+		}
+
+		if exp.Context != nil {
+			t.Logf("Expected context to be nil, got: %s\n", exp.Context)
+			t.Fail()
+		}
+
+		if !testIdentifier(t, exp.Function, "add") {
+			return
+		}
+
+		if len(exp.Arguments) != 0 {
+			t.Fatalf(
+				"wrong length of arguments. want %d, got=%d",
+				0,
+				len(exp.Arguments),
+			)
+		}
+
+		if exp.Block == nil {
+			t.Logf("Expected function block not to be nil")
+			t.FailNow()
+		}
 	})
 }
 

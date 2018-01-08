@@ -19,8 +19,8 @@ const (
 	precMultiVars   // x, y
 	precBlockDo     // do
 	precBlockBraces // { |x| }
-	precCallArg     // func x
 	precIfUnless    // modifier-if, modifier-unless
+	precCallArg     // func x
 	precEquals      // ==, !=, <=>
 	precLessGreater // >, <, >=, <=
 	precAssignment  // x = 5
@@ -235,6 +235,7 @@ func (p *parser) nextToken() {
 		}
 	}
 	p.curToken = p.peekToken
+	p.pos = gotoken.Pos(p.curToken.Pos)
 	p.lastLine += p.curToken.Literal
 	if p.curToken.Type == token.NEWLINE {
 		p.file.AddLine(int(p.pos))
@@ -242,7 +243,6 @@ func (p *parser) nextToken() {
 	}
 	if p.l.HasNext() {
 		p.peekToken = p.l.NextToken()
-		p.pos = gotoken.Pos(p.curToken.Pos)
 	} else {
 		p.peekToken = token.NewToken(token.EOF, "", -1)
 	}
@@ -593,6 +593,11 @@ func (p *parser) parseNilLiteral() ast.Expression {
 func (p *parser) parseIdentifier() ast.Expression {
 	if p.trace {
 		defer un(trace(p, "parseIdentifier"))
+	}
+	if p.peekTokenOneOf(token.LBRACE, token.DO) {
+		fn := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		p.nextToken()
+		return p.parseCallArgument(fn)
 	}
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
@@ -1094,9 +1099,8 @@ func (p *parser) parseMethodCall(context ast.Expression) ast.Expression {
 		return nil
 	}
 
-	function := p.parseIdentifier()
-	ident := function.(*ast.Identifier)
-	contextCallExpression.Function = ident
+	function := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	contextCallExpression.Function = function
 
 	if p.peekTokenOneOf(token.SEMICOLON, token.NEWLINE, token.EOF, token.DOT, token.SCOPE) {
 		contextCallExpression.Arguments = []ast.Expression{}
