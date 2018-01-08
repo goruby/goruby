@@ -11,6 +11,9 @@ func TestLexerNextToken(t *testing.T) {
 # just comment
 fifty = 5_0
 ten = 10
+?-
+?\n
+? foo
 
 def add(x, y)
 	x + y
@@ -91,6 +94,13 @@ $a`
 		{token.IDENT, "ten"},
 		{token.ASSIGN, "="},
 		{token.INT, "10"},
+		{token.NEWLINE, "\n"},
+		{token.STRING, "-"},
+		{token.NEWLINE, "\n"},
+		{token.STRING, "\\n"},
+		{token.NEWLINE, "\n"},
+		{token.QMARK, "?"},
+		{token.IDENT, "foo"},
 		{token.NEWLINE, "\n"},
 		{token.NEWLINE, "\n"},
 		{token.DEF, "def"},

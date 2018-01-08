@@ -148,6 +148,7 @@ To run the command as one off run `go run main.go`.
 - [ ] strings
 	- [x] double quoted
 	- [x] single quoted
+	- [x] character literals (`?\n`, `?a`,...)
 	- [ ] `%q{}`
 	- [ ] `%Q{}`
 	- [ ] heredoc

@@ -167,6 +167,18 @@ func startLexer(l *Lexer) StateFn {
 			l.emit(token.BANG)
 		}
 		return startLexer
+	case '?':
+		p := l.peek()
+		if isWhitespace(p) {
+			l.emit(token.QMARK)
+			return startLexer
+		}
+		if isExpressionDelimiter(p) {
+			fmt.Printf("warning: invalid character syntax; use ?%c\n", r)
+			l.ignore()
+			return l.errorf("unexpected '?'")
+		}
+		return lexCharacterLiteral
 	case '/':
 		l.emit(token.SLASH)
 		return startLexer
@@ -277,6 +289,22 @@ func lexSingleQuoteString(l *Lexer) StateFn {
 	l.emit(token.STRING)
 	l.next()
 	l.ignore()
+	return startLexer
+}
+
+func lexCharacterLiteral(l *Lexer) StateFn {
+	l.ignore()
+	r := l.next()
+	if isWhitespace(r) && r != '\t' && r != '\v' && r != '\f' && r != '\r' {
+		return l.errorf("invalid character syntax; use ?\\s")
+	}
+	if r == '\\' {
+		r = l.next()
+	}
+	if p := l.peek(); !isWhitespace(p) && !isExpressionDelimiter(p) {
+		return l.errorf("unexpected '?'")
+	}
+	l.emit(token.STRING)
 	return startLexer
 }
 

@@ -63,6 +63,8 @@ const (
 	SCOPE // ::
 	AT    // @
 
+	QMARK // ?
+
 	// Keywords
 	keyword_beg
 	DEF
@@ -130,6 +132,8 @@ var tokens = [...]string{
 	SCOPE:      "::",
 	HASHROCKET: "=>",
 	AT:         "@",
+
+	QMARK: "?",
 
 	DEF:             "def",
 	SELF:            "self",
