@@ -2844,7 +2844,7 @@ func TestContextCallExpression(t *testing.T) {
 	t.Run("context call on self with no dot", func(t *testing.T) {
 		input := "self add;"
 
-		_, err := parseSource(input, Trace)
+		_, err := parseSource(input)
 
 		if err == nil {
 			t.Logf("Expected parser error, got nil")
