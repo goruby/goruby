@@ -635,6 +635,9 @@ func (p *parser) parseSelf() ast.Expression {
 		defer un(trace(p, "parseSelf"))
 	}
 	self := &ast.Self{Token: p.curToken}
+	if p.peekTokenOneOf(token.IF, token.UNLESS) {
+		return self
+	}
 	if !p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON, token.DOT, token.EOF) {
 		p.peekError(token.NEWLINE, token.SEMICOLON, token.DOT, token.EOF)
 		return nil
@@ -661,11 +664,11 @@ func (p *parser) parseYield() ast.Expression {
 	p.nextToken()
 	if p.currentTokenIs(token.LPAREN) {
 		p.nextToken()
-		yield.Arguments = p.parseExpressionList(token.RPAREN)
+		yield.Arguments = p.parseCallArguments(token.RPAREN)
 		p.nextToken()
 		return yield
 	}
-	yield.Arguments = p.parseExpressionList(token.SEMICOLON, token.NEWLINE)
+	yield.Arguments = p.parseCallArguments(token.SEMICOLON, token.NEWLINE)
 	return yield
 }
 
@@ -1266,7 +1269,7 @@ func (p *parser) parseExpressionList(end ...token.Type) []ast.Expression {
 		return list
 	}
 
-	list = append(list, p.parseExpression(precMultiVars))
+	list = append(list, p.parseExpression(precIfUnless))
 
 	for p.peekTokenIs(token.COMMA) {
 		p.consume(token.COMMA)

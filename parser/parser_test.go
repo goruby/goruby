@@ -1451,6 +1451,10 @@ func TestConditionalExpression(t *testing.T) {
 			{`if x < y
 			x = Object x
 			end`, "x", "<", "y", "x = (Object(x))"},
+			{"x 3 if x < y", "x", "<", "y", "x(3)"},
+			{"x.add 3 if x < y", "x", "<", "y", "x.add(3)"},
+			{"yield 3 if x < y", "x", "<", "y", "yield 3"},
+			{"yield self if x < y", "x", "<", "y", "yield self"},
 			{`unless x < y
 			x
 			end`, "x", "<", "y", "x"},
@@ -1472,72 +1476,78 @@ func TestConditionalExpression(t *testing.T) {
 			{"@x = 3 if x < y", "x", "<", "y", "@x = 3"},
 			{"x = 3 unless x < y", "x", "<", "y", "x = 3"},
 			{"@x = 3 unless x < y", "x", "<", "y", "@x = 3"},
+			{"x 3 unless x < y", "x", "<", "y", "x(3)"},
+			{"x.add 3 unless x < y", "x", "<", "y", "x.add(3)"},
+			{"yield 3 unless x < y", "x", "<", "y", "yield 3"},
+			{"yield self unless x < y", "x", "<", "y", "yield self"},
 		}
 
 		for _, tt := range tests {
-			program, err := parseSource(tt.input)
-			checkParserErrors(t, err)
+			t.Run("expression "+tt.input, func(t *testing.T) {
+				program, err := parseSource(tt.input)
+				checkParserErrors(t, err)
 
-			if len(program.Statements) != 1 {
-				t.Fatalf(
-					"program.Body does not contain %d statements. got=%d\n",
-					1,
-					len(program.Statements),
-				)
-			}
-
-			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-			if !ok {
-				t.Fatalf(
-					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-					program.Statements[0],
-				)
-			}
-
-			exp, ok := stmt.Expression.(*ast.ConditionalExpression)
-			if !ok {
-				t.Fatalf(
-					"stmt.Expression is not %T. got=%T",
-					exp,
-					stmt.Expression,
-				)
-			}
-
-			if !testInfixExpression(
-				t,
-				exp.Condition,
-				tt.expectedConditionLeft,
-				tt.expectedConditionOperator,
-				tt.expectedConditionRight,
-			) {
-				return
-			}
-
-			consequenceBody := ""
-			for _, stmt := range exp.Consequence.Statements {
-				consequence, ok := stmt.(*ast.ExpressionStatement)
-				if !ok {
+				if len(program.Statements) != 1 {
 					t.Fatalf(
-						"Statements[0] is not ast.ExpressionStatement. got=%T",
-						exp.Consequence.Statements[0],
+						"program.Body does not contain %d statements. got=%d\n",
+						1,
+						len(program.Statements),
 					)
 				}
 
-				consequenceBody += consequence.Expression.String()
-			}
+				stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+				if !ok {
+					t.Fatalf(
+						"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+						program.Statements[0],
+					)
+				}
 
-			if consequenceBody != tt.expectedConsequenceExpression {
-				t.Logf(
-					"Expected consequence to equal %q, got %q\n",
-					tt.expectedConsequenceExpression,
-					consequenceBody,
-				)
-				t.Fail()
-			}
+				exp, ok := stmt.Expression.(*ast.ConditionalExpression)
+				if !ok {
+					t.Fatalf(
+						"stmt.Expression is not %T. got=%T",
+						exp,
+						stmt.Expression,
+					)
+				}
 
-			if exp.Alternative != nil {
-				t.Errorf("exp.Alternative.Statements was not nil. got=%+v", exp.Alternative)
-			}
+				if !testInfixExpression(
+					t,
+					exp.Condition,
+					tt.expectedConditionLeft,
+					tt.expectedConditionOperator,
+					tt.expectedConditionRight,
+				) {
+					return
+				}
+
+				consequenceBody := ""
+				for _, stmt := range exp.Consequence.Statements {
+					consequence, ok := stmt.(*ast.ExpressionStatement)
+					if !ok {
+						t.Fatalf(
+							"Statements[0] is not ast.ExpressionStatement. got=%T",
+							exp.Consequence.Statements[0],
+						)
+					}
+
+					consequenceBody += consequence.Expression.String()
+				}
+
+				if consequenceBody != tt.expectedConsequenceExpression {
+					t.Logf(
+						"Expected consequence to equal %q, got %q\n",
+						tt.expectedConsequenceExpression,
+						consequenceBody,
+					)
+					t.Fail()
+				}
+
+				if exp.Alternative != nil {
+					t.Errorf("exp.Alternative.Statements was not nil. got=%+v", exp.Alternative)
+				}
+			})
 		}
 	})
 	t.Run("with method call expression", func(t *testing.T) {
