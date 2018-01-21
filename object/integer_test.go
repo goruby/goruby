@@ -428,6 +428,7 @@ func TestIntegerSpaceship(t *testing.T) {
 }
 
 func checkError(t *testing.T, actual, expected error) {
+	t.Helper()
 	if !reflect.DeepEqual(expected, actual) {
 		t.Logf("Expected error to equal\n%T:%v\n\tgot\n%T:%v\n", expected, expected, actual, actual)
 		t.Fail()
@@ -435,6 +436,7 @@ func checkError(t *testing.T, actual, expected error) {
 }
 
 func checkResult(t *testing.T, actual, expected RubyObject) {
+	t.Helper()
 	if !reflect.DeepEqual(expected, actual) {
 		t.Logf("Expected result to equal %s, got %s\n", toString(expected), toString(actual))
 		t.Fail()

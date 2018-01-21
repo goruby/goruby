@@ -3580,6 +3580,7 @@ func TestParseHash(t *testing.T) {
 }
 
 func testVariableExpression(t *testing.T, e ast.Expression, name string) bool {
+	t.Helper()
 	variable, ok := e.(*ast.VariableAssignment)
 	if !ok {
 		t.Errorf("expression not *ast.Variable. got=%T", e)
@@ -3604,6 +3605,7 @@ func testInfixExpression(
 	operator string,
 	right interface{},
 ) bool {
+	t.Helper()
 	opExp, ok := exp.(*ast.InfixExpression)
 	if !ok {
 		t.Errorf("exp is not ast.OperatorExpression. got=%T(%s)", exp, exp)
@@ -3631,6 +3633,7 @@ func testLiteralExpression(
 	exp ast.Expression,
 	expected interface{},
 ) bool {
+	t.Helper()
 	switch v := expected.(type) {
 	case int:
 		return testIntegerLiteral(t, exp, int64(v))
@@ -3650,6 +3653,7 @@ func testLiteralExpression(
 }
 
 func testStringLiteral(t *testing.T, sl ast.Expression, value string) bool {
+	t.Helper()
 	str, ok := sl.(*ast.StringLiteral)
 	if !ok {
 		t.Errorf("expression not *ast.StringLiteral. got=%T", sl)
@@ -3673,6 +3677,7 @@ func testStringLiteral(t *testing.T, sl ast.Expression, value string) bool {
 }
 
 func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
+	t.Helper()
 	integ, ok := il.(*ast.IntegerLiteral)
 	if !ok {
 		t.Errorf("expression not *ast.IntegerLiteral. got=%T", il)
@@ -3696,6 +3701,7 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 }
 
 func testGlobal(t *testing.T, exp ast.Expression, value string) bool {
+	t.Helper()
 	global, ok := exp.(*ast.Global)
 	if !ok {
 		t.Errorf("exp not *ast.Identifier. got=%T", exp)
@@ -3717,6 +3723,7 @@ func testGlobal(t *testing.T, exp ast.Expression, value string) bool {
 }
 
 func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
+	t.Helper()
 	ident, ok := exp.(*ast.Identifier)
 	if !ok {
 		t.Errorf("exp not *ast.Identifier. got=%T", exp)
@@ -3738,6 +3745,7 @@ func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 }
 
 func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
+	t.Helper()
 	bo, ok := exp.(*ast.Boolean)
 	if !ok {
 		t.Errorf("exp not *ast.Boolean. got=%T", exp)
@@ -3759,6 +3767,7 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 }
 
 func testHashLiteral(t *testing.T, expr ast.Expression, value map[string]string) bool {
+	t.Helper()
 	hash, ok := expr.(*ast.HashLiteral)
 	if !ok {
 		t.Errorf("exp not *ast.HashLiteral. got=%T", expr)
@@ -3790,6 +3799,7 @@ func parseSource(src string, modes ...Mode) (*ast.Program, *Errors) {
 }
 
 func checkParserErrors(t *testing.T, err error) {
+	t.Helper()
 	if err == nil {
 		return
 	}

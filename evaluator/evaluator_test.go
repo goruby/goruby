@@ -1489,6 +1489,7 @@ func TestKeyword__File__(t *testing.T) {
 }
 
 func testExceptionObject(t *testing.T, obj object.RubyObject, errorMessage string) {
+	t.Helper()
 	if !IsError(obj) {
 		t.Logf("Expected error or exception, got %T", obj)
 		t.Fail()
@@ -1503,6 +1504,7 @@ func testExceptionObject(t *testing.T, obj object.RubyObject, errorMessage strin
 }
 
 func testNilObject(t *testing.T, obj object.RubyObject) bool {
+	t.Helper()
 	if obj != object.NIL {
 		t.Errorf("object is not NIL. got=%T (%+v)", obj, obj)
 		return false
@@ -1523,6 +1525,7 @@ func testEval(input string, context ...object.Environment) (object.RubyObject, e
 }
 
 func checkError(t *testing.T, err error) {
+	t.Helper()
 	if err != nil {
 		t.Logf("Expected no error, got %T:%v\n", err, err)
 		t.Fail()
@@ -1530,6 +1533,7 @@ func checkError(t *testing.T, err error) {
 }
 
 func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool {
+	t.Helper()
 	result, ok := obj.(*object.Boolean)
 	if !ok {
 		t.Errorf(
@@ -1551,6 +1555,7 @@ func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool 
 }
 
 func testIntegerObject(t *testing.T, obj object.RubyObject, expected int64) bool {
+	t.Helper()
 	result, ok := obj.(*object.Integer)
 	if !ok {
 		t.Errorf(
