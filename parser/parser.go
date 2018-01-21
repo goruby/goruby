@@ -57,6 +57,7 @@ var precedences = map[token.Type]int{
 	token.GLOBAL:    precCallArg,
 	token.INT:       precCallArg,
 	token.STRING:    precCallArg,
+	token.SELF:      precCallArg,
 	token.LBRACKET:  precIndex,
 	token.LBRACE:    precBlockBraces,
 	token.DO:        precBlockDo,
@@ -169,6 +170,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.INT, p.parseCallArgument)
 	p.registerInfix(token.STRING, p.parseCallArgument)
 	p.registerInfix(token.COLON, p.parseCallArgument)
+	p.registerInfix(token.SELF, p.parseCallArgument)
 	p.registerInfix(token.DOT, p.parseMethodCall)
 	p.registerInfix(token.COMMA, p.parseMultiVars)
 	p.registerInfix(token.RBRACKET, p.parseCallArgument)
