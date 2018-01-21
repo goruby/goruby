@@ -199,6 +199,11 @@ func startLexer(l *Lexer) StateFn {
 			l.emit(token.LTE)
 			return startLexer
 		}
+		if l.peek() == '<' {
+			l.next()
+			l.emit(token.LSHIFT)
+			return startLexer
+		}
 		l.emit(token.LT)
 		return startLexer
 	case '>':

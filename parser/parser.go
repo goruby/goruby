@@ -24,6 +24,7 @@ const (
 	precAssignment  // x = 5
 	precEquals      // ==, !=, <=>
 	precLessGreater // >, <, >=, <=
+	precShift       // <<
 	precSum         // + or -
 	precProduct     // *, /, %
 	precPrefix      // -X or !X
@@ -40,6 +41,7 @@ var precedences = map[token.Type]int{
 	token.EQ:        precEquals,
 	token.NOTEQ:     precEquals,
 	token.SPACESHIP: precEquals,
+	token.LSHIFT:    precShift,
 	token.LT:        precLessGreater,
 	token.GT:        precLessGreater,
 	token.LTE:       precLessGreater,
@@ -75,6 +77,7 @@ var operatorsNotPossibleInCallArgs = []token.Type{
 	token.GT,
 	token.GTE,
 	token.SPACESHIP,
+	token.LSHIFT,
 	token.EQ,
 	token.NOTEQ,
 	token.IF,
@@ -163,6 +166,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.IF, p.parseModifierConditionalExpression)
 	p.registerInfix(token.UNLESS, p.parseModifierConditionalExpression)
 	p.registerInfix(token.SPACESHIP, p.parseInfixExpression)
+	p.registerInfix(token.LSHIFT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpressionWithParens)
 	p.registerInfix(token.IDENT, p.parseCallArgument)
 	p.registerInfix(token.CONST, p.parseCallArgument)
@@ -1125,6 +1129,7 @@ func (p *parser) parseMethodCall(context ast.Expression) ast.Expression {
 	}
 
 	p.nextToken()
+
 	contextCallExpression.Arguments = p.parseCallArguments(
 		token.LBRACE, token.DO,
 	)

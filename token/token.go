@@ -39,6 +39,7 @@ const (
 	EQ        // ==
 	NOTEQ     // !=
 	SPACESHIP // <=>
+	LSHIFT    // <<
 	operator_end
 
 	HASHROCKET // =>
@@ -113,6 +114,7 @@ var tokens = [...]string{
 	EQ:        "==",
 	NOTEQ:     "!=",
 	SPACESHIP: "<=>",
+	LSHIFT:    "<<",
 
 	NEWLINE:   "NEWLINE",
 	COMMA:     ",",

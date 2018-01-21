@@ -38,6 +38,7 @@ end
 10 <= 9
 10 >= 9
 10 <=> 9
+10 << 9
 ""
 "foobar"
 'foobar'
@@ -183,6 +184,10 @@ $a`
 		{token.NEWLINE, "\n"},
 		{token.INT, "10"},
 		{token.SPACESHIP, "<=>"},
+		{token.INT, "9"},
+		{token.NEWLINE, "\n"},
+		{token.INT, "10"},
+		{token.LSHIFT, "<<"},
 		{token.INT, "9"},
 		{token.NEWLINE, "\n"},
 		{token.STRING, ""},
