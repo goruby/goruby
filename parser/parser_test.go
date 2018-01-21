@@ -2844,24 +2844,38 @@ func TestContextCallExpression(t *testing.T) {
 	t.Run("context call on self with no dot", func(t *testing.T) {
 		input := "self add;"
 
-		_, err := parseSource(input)
+		_, err := parseSource(input, Trace)
 
 		if err == nil {
 			t.Logf("Expected parser error, got nil")
 			t.FailNow()
 		}
 
-		expected := &unexpectedTokenError{
-			expectedTokens: []token.Type{token.NEWLINE, token.SEMICOLON, token.DOT, token.EOF},
-			actualToken:    token.IDENT,
+		errs := err.errors
+		cause := errors.Cause(errs[0])
+
+		unexpectErr, ok := cause.(*unexpectedTokenError)
+		if !ok {
+			t.Logf("Expected err to be %T, got %T\n", unexpectErr, cause)
+			t.FailNow()
 		}
 
-		errs := err.errors
-		actual := errors.Cause(errs[0])
+		{
+			expected := []token.Type{token.NEWLINE, token.SEMICOLON, token.DOT, token.EOF}
+			actual := unexpectErr.expectedTokens
+			if !reflect.DeepEqual(expected, actual) {
+				t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, actual)
+				t.Fail()
+			}
+		}
 
-		if !reflect.DeepEqual(expected, actual) {
-			t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, actual)
-			t.Fail()
+		{
+			expected := token.IDENT
+			actual := unexpectErr.actualToken
+			if !reflect.DeepEqual(expected, actual) {
+				t.Logf("Expected error to equal\n%+#v\n\tgot\n%+#v\n", expected, actual)
+				t.Fail()
+			}
 		}
 	})
 	t.Run("context call on nonident with no dot", func(t *testing.T) {
