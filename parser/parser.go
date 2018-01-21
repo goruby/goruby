@@ -21,9 +21,9 @@ const (
 	precBlockBraces // { |x| }
 	precIfUnless    // modifier-if, modifier-unless
 	precCallArg     // func x
+	precAssignment  // x = 5
 	precEquals      // ==, !=, <=>
 	precLessGreater // >, <, >=, <=
-	precAssignment  // x = 5
 	precSum         // + or -
 	precProduct     // *, /, %
 	precPrefix      // -X or !X

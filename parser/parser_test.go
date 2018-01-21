@@ -1059,11 +1059,11 @@ func TestParsingInfixExpressions(t *testing.T) {
 			)
 		}
 
-		infix, ok := stmt.Expression.(*ast.InfixExpression)
+		cce, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
 			t.Fatalf(
 				"stmt.Expression is not %T. got=%T",
-				infix,
+				cce,
 				stmt.Expression,
 			)
 		}
@@ -1090,11 +1090,11 @@ func TestParsingInfixExpressions(t *testing.T) {
 			)
 		}
 
-		infix, ok := stmt.Expression.(*ast.InfixExpression)
+		cce, ok := stmt.Expression.(*ast.ContextCallExpression)
 		if !ok {
 			t.Fatalf(
 				"stmt.Expression is not %T. got=%T",
-				infix,
+				cce,
 				stmt.Expression,
 			)
 		}
