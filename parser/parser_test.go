@@ -3602,23 +3602,48 @@ func TestParsingArrayLiterals(t *testing.T) {
 }
 
 func TestParsingIndexExpressions(t *testing.T) {
-	input := "myArray[1 + 1]"
-	program, err := parseSource(input)
-	checkParserErrors(t, err)
+	t.Run("one arg as index", func(t *testing.T) {
+		input := "myArray[1 + 1]"
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
 
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	indexExp, ok := stmt.Expression.(*ast.IndexExpression)
-	if !ok {
-		t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
-	}
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+		if !ok {
+			t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
+		}
 
-	if !testIdentifier(t, indexExp.Left, "myArray") {
-		return
-	}
+		if !testIdentifier(t, indexExp.Left, "myArray") {
+			return
+		}
 
-	if !testInfixExpression(t, indexExp.Index, 1, "+", 1) {
-		return
-	}
+		if !testInfixExpression(t, indexExp.Index, 1, "+", 1) {
+			return
+		}
+	})
+	t.Run("two args as index", func(t *testing.T) {
+		input := "myArray[1, 1]"
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+		if !ok {
+			t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
+		}
+
+		if !testIdentifier(t, indexExp.Left, "myArray") {
+			return
+		}
+
+		if !testIntegerLiteral(t, indexExp.Index, 1) {
+			return
+		}
+
+		if !testIntegerLiteral(t, indexExp.Length, 1) {
+			return
+		}
+	})
 }
 
 func TestParsingModuleExpressions(t *testing.T) {

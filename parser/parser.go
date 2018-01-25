@@ -845,7 +845,11 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 	exp := &ast.IndexExpression{Token: p.curToken, Left: left}
 
 	p.nextToken()
-	exp.Index = p.parseExpression(precLowest)
+	exp.Index = p.parseExpression(precMultiVars)
+	if p.peekTokenIs(token.COMMA) {
+		p.consume(token.COMMA)
+		exp.Length = p.parseExpression(precLowest)
+	}
 
 	if !p.accept(token.RBRACKET) {
 		return nil
