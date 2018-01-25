@@ -92,6 +92,7 @@ var tokensNotPossibleInCallArgs = []token.Type{
 	token.UNLESS,
 	token.COLON,
 	token.RBRACKET,
+	token.COMMA,
 }
 
 type (

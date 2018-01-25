@@ -3645,7 +3645,32 @@ func TestParsingIndexExpressions(t *testing.T) {
 				return
 			}
 		})
-		t.Run("method calls", func(t *testing.T) {
+		t.Run("method calls as index", func(t *testing.T) {
+			input := "myArray[foo.bar, 1]"
+			program, err := parseSource(input, Trace)
+			checkParserErrors(t, err)
+
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+			if !ok {
+				t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
+			}
+
+			if !testIdentifier(t, indexExp.Left, "myArray") {
+				return
+			}
+
+			index := indexExp.Index.String()
+			if index != "foo.bar()" {
+				t.Logf("Expected index arg to equal %s, got %s", "foo.bar()", index)
+				t.Fail()
+			}
+
+			if !testIntegerLiteral(t, indexExp.Length, 1) {
+				return
+			}
+		})
+		t.Run("method calls as length", func(t *testing.T) {
 			input := "myArray[1, foo.bar]"
 			program, err := parseSource(input)
 			checkParserErrors(t, err)
