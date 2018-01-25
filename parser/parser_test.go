@@ -3622,27 +3622,54 @@ func TestParsingIndexExpressions(t *testing.T) {
 		}
 	})
 	t.Run("two args as index", func(t *testing.T) {
-		input := "myArray[1, 1]"
-		program, err := parseSource(input)
-		checkParserErrors(t, err)
+		t.Run("integers", func(t *testing.T) {
+			input := "myArray[1, 1]"
+			program, err := parseSource(input)
+			checkParserErrors(t, err)
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		indexExp, ok := stmt.Expression.(*ast.IndexExpression)
-		if !ok {
-			t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
-		}
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+			if !ok {
+				t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
+			}
 
-		if !testIdentifier(t, indexExp.Left, "myArray") {
-			return
-		}
+			if !testIdentifier(t, indexExp.Left, "myArray") {
+				return
+			}
 
-		if !testIntegerLiteral(t, indexExp.Index, 1) {
-			return
-		}
+			if !testIntegerLiteral(t, indexExp.Index, 1) {
+				return
+			}
 
-		if !testIntegerLiteral(t, indexExp.Length, 1) {
-			return
-		}
+			if !testIntegerLiteral(t, indexExp.Length, 1) {
+				return
+			}
+		})
+		t.Run("method calls", func(t *testing.T) {
+			input := "myArray[1, foo.bar]"
+			program, err := parseSource(input)
+			checkParserErrors(t, err)
+
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+			if !ok {
+				t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
+			}
+
+			if !testIdentifier(t, indexExp.Left, "myArray") {
+				return
+			}
+
+			if !testIntegerLiteral(t, indexExp.Index, 1) {
+				return
+			}
+
+			length := indexExp.Length.String()
+			if length != "foo.bar()" {
+				t.Logf("Expected length arg to equal %s, got %s", "foo.bar()", length)
+				t.Fail()
+			}
+		})
 	})
 }
 

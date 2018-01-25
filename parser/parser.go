@@ -78,7 +78,7 @@ var precedences = map[token.Type]int{
 	token.NEWLINE:   precHighest,
 }
 
-var operatorsNotPossibleInCallArgs = []token.Type{
+var tokensNotPossibleInCallArgs = []token.Type{
 	token.ASSIGN,
 	token.LT,
 	token.LTE,
@@ -91,6 +91,7 @@ var operatorsNotPossibleInCallArgs = []token.Type{
 	token.IF,
 	token.UNLESS,
 	token.COLON,
+	token.RBRACKET,
 }
 
 type (
@@ -1183,7 +1184,7 @@ func (p *parser) parseMethodCall(context ast.Expression) ast.Expression {
 		return contextCallExpression
 	}
 
-	if p.peekTokenOneOf(append(operatorsNotPossibleInCallArgs, token.RBRACE)...) {
+	if p.peekTokenOneOf(append(tokensNotPossibleInCallArgs, token.RBRACE)...) {
 		return contextCallExpression
 	}
 
@@ -1236,7 +1237,7 @@ func (p *parser) parseContextCallExpression(context ast.Expression) ast.Expressi
 		return contextCallExpression
 	}
 
-	if p.peekTokenOneOf(append(operatorsNotPossibleInCallArgs, token.RBRACE)...) {
+	if p.peekTokenOneOf(append(tokensNotPossibleInCallArgs, token.RBRACE)...) {
 		return contextCallExpression
 	}
 
