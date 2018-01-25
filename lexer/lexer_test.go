@@ -48,6 +48,7 @@ end
 :"sym"
 :'sym'
 .
+&
 :dotAfter.
 
 def nil?
@@ -212,6 +213,8 @@ $a`
 		{token.STRING, "sym"},
 		{token.NEWLINE, "\n"},
 		{token.DOT, "."},
+		{token.NEWLINE, "\n"},
+		{token.AND, "&"},
 		{token.NEWLINE, "\n"},
 		{token.SYMBEG, ":"},
 		{token.IDENT, "dotAfter"},

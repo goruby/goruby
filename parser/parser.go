@@ -1065,6 +1065,12 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 		return identifiers
 	}
 
+	if p.peekTokenIs(token.ASTERISK) {
+		p.accept(token.ASTERISK)
+	}
+	if p.peekTokenIs(token.AND) {
+		p.accept(token.AND)
+	}
 	p.accept(token.IDENT)
 
 	ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
@@ -1076,6 +1082,12 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 
 	for p.peekTokenIs(token.COMMA) {
 		p.accept(token.COMMA)
+		if p.peekTokenIs(token.ASTERISK) {
+			p.accept(token.ASTERISK)
+		}
+		if p.peekTokenIs(token.AND) {
+			p.accept(token.AND)
+		}
 		p.accept(token.IDENT)
 		ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
 		if p.peekTokenIs(token.ASSIGN) {

@@ -193,6 +193,9 @@ func startLexer(l *Lexer) StateFn {
 	case '%':
 		l.emit(token.MODULO)
 		return startLexer
+	case '&':
+		l.emit(token.AND)
+		return startLexer
 	case '<':
 		if l.peek() == '=' {
 			l.next()

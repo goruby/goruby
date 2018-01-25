@@ -2248,6 +2248,22 @@ func TestFunctionParameterParsing(t *testing.T) {
 			input:          "def fn(x, y, z = 1); end",
 			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z", defaultValue: 1}},
 		},
+		{
+			input:          "def fn(x, y, *z); end",
+			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
+		},
+		{
+			input:          "def fn(*x); end",
+			expectedParams: []funcParam{{name: "x"}},
+		},
+		{
+			input:          "def fn(x, y, &z); end",
+			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
+		},
+		{
+			input:          "def fn(&x); end",
+			expectedParams: []funcParam{{name: "x"}},
+		},
 	}
 
 	for _, tt := range tests {

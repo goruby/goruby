@@ -31,6 +31,7 @@ const (
 	ASTERISK // *
 	SLASH    // /
 	MODULO   // %
+	AND      // &
 
 	LT        // <
 	LTE       // <=
@@ -107,6 +108,7 @@ var tokens = [...]string{
 	ASTERISK: "*",
 	SLASH:    "/",
 	MODULO:   "%",
+	AND:      "&",
 
 	LT:        "<",
 	LTE:       "<=",
