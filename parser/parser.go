@@ -55,6 +55,11 @@ var precedences = map[token.Type]int{
 	token.ASTERISK:  precProduct,
 	token.MODULO:    precProduct,
 	token.ASSIGN:    precAssignment,
+	token.ADDASSIGN: precAssignment,
+	token.SUBASSIGN: precAssignment,
+	token.MULASSIGN: precAssignment,
+	token.DIVASSIGN: precAssignment,
+	token.MODASSIGN: precAssignment,
 	token.LPAREN:    precCall,
 	token.DOT:       precCall,
 	token.IDENT:     precCallArg,
@@ -167,6 +172,11 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LTE, p.parseInfixExpression)
 	p.registerInfix(token.GTE, p.parseInfixExpression)
+	p.registerInfix(token.ADDASSIGN, p.parseInfixExpression)
+	p.registerInfix(token.SUBASSIGN, p.parseInfixExpression)
+	p.registerInfix(token.MULASSIGN, p.parseInfixExpression)
+	p.registerInfix(token.DIVASSIGN, p.parseInfixExpression)
+	p.registerInfix(token.MODASSIGN, p.parseInfixExpression)
 	p.registerInfix(token.IF, p.parseModifierConditionalExpression)
 	p.registerInfix(token.UNLESS, p.parseModifierConditionalExpression)
 	p.registerInfix(token.QMARK, p.parseTenaryIfExpression)

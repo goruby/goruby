@@ -159,9 +159,19 @@ func startLexer(l *Lexer) StateFn {
 		}
 		return startLexer
 	case '+':
+		if l.peek() == '=' {
+			l.next()
+			l.emit(token.ADDASSIGN)
+			return startLexer
+		}
 		l.emit(token.PLUS)
 		return startLexer
 	case '-':
+		if l.peek() == '=' {
+			l.next()
+			l.emit(token.SUBASSIGN)
+			return startLexer
+		}
 		l.emit(token.MINUS)
 		return startLexer
 	case '!':
@@ -185,12 +195,27 @@ func startLexer(l *Lexer) StateFn {
 		}
 		return lexCharacterLiteral
 	case '/':
+		if l.peek() == '=' {
+			l.next()
+			l.emit(token.DIVASSIGN)
+			return startLexer
+		}
 		l.emit(token.SLASH)
 		return startLexer
 	case '*':
+		if l.peek() == '=' {
+			l.next()
+			l.emit(token.MULASSIGN)
+			return startLexer
+		}
 		l.emit(token.ASTERISK)
 		return startLexer
 	case '%':
+		if l.peek() == '=' {
+			l.next()
+			l.emit(token.MODASSIGN)
+			return startLexer
+		}
 		l.emit(token.MODULO)
 		return startLexer
 	case '&':

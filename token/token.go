@@ -24,7 +24,13 @@ const (
 
 	// Operators
 	operator_beg
-	ASSIGN   // =
+	ASSIGN    // =
+	ADDASSIGN // +=
+	SUBASSIGN // -=
+	MULASSIGN // *=
+	DIVASSIGN // /=
+	MODASSIGN // %=
+
 	PLUS     // +
 	MINUS    // -
 	BANG     // !
@@ -101,7 +107,13 @@ var tokens = [...]string{
 	INT:    "INT",
 	STRING: "STRING",
 
-	ASSIGN:   "=",
+	ASSIGN:    "=",
+	ADDASSIGN: "+=",
+	SUBASSIGN: "-=",
+	MULASSIGN: "*=",
+	DIVASSIGN: "/=",
+	MODASSIGN: "%=",
+
 	PLUS:     "+",
 	MINUS:    "-",
 	BANG:     "!",

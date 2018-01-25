@@ -21,6 +21,7 @@ end
 
 result = add(five, ten)
 !-/*%5;
++= -= *= /= %=
 5 < 10 > 5
 return
 if 5 < 10 then
@@ -138,6 +139,12 @@ $a`
 		{token.MODULO, "%"},
 		{token.INT, "5"},
 		{token.SEMICOLON, ";"},
+		{token.NEWLINE, "\n"},
+		{token.ADDASSIGN, "+="},
+		{token.SUBASSIGN, "-="},
+		{token.MULASSIGN, "*="},
+		{token.DIVASSIGN, "/="},
+		{token.MODASSIGN, "%="},
 		{token.NEWLINE, "\n"},
 		{token.INT, "5"},
 		{token.LT, "<"},
