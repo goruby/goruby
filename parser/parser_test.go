@@ -2073,6 +2073,43 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			t.Fail()
 		}
 	}
+	t.Run("test function rescue block", func(t *testing.T) {
+		input := `
+			def foo
+				3
+			rescue Exception => e
+				puts e
+			end
+		`
+
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Body does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		function, ok := stmt.Expression.(*ast.FunctionLiteral)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not %T. got=%T",
+				function,
+				stmt.Expression,
+			)
+		}
+	})
 }
 
 func TestBlockExpressionParsing(t *testing.T) {
@@ -3648,7 +3685,7 @@ func TestParsingIndexExpressions(t *testing.T) {
 		})
 		t.Run("method calls as index", func(t *testing.T) {
 			input := "myArray[foo.bar, 1]"
-			program, err := parseSource(input, Trace)
+			program, err := parseSource(input)
 			checkParserErrors(t, err)
 
 			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)

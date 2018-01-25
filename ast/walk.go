@@ -194,6 +194,9 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Name)
 		walkParameterList(v, n.Parameters)
 		Walk(v, n.Body)
+		for _, r := range n.Rescues {
+			Walk(v, r)
+		}
 
 	case *FunctionParameter:
 		Walk(v, n.Name)

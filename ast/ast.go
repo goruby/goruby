@@ -723,6 +723,7 @@ type FunctionLiteral struct {
 	Name       *Identifier
 	Parameters []*FunctionParameter
 	Body       *BlockStatement
+	Rescues    []*RescueBlock
 }
 
 func (fl *FunctionLiteral) expressionNode() {}
@@ -751,6 +752,9 @@ func (fl *FunctionLiteral) String() string {
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")
 	out.WriteString(fl.Body.String())
+	for _, r := range fl.Rescues {
+		out.WriteString(r.String())
+	}
 	out.WriteString(" end")
 	return out.String()
 }

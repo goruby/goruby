@@ -1057,7 +1057,13 @@ func (p *parser) parseFunctionLiteral() ast.Expression {
 	if !p.acceptOneOf(token.NEWLINE, token.SEMICOLON) {
 		return nil
 	}
-	lit.Body = p.parseBlockStatement()
+	lit.Body = p.parseBlockStatement(token.END, token.RESCUE)
+	lit.Rescues = []*ast.RescueBlock{}
+	for p.peekTokenIs(token.RESCUE) {
+		p.accept(token.RESCUE)
+		rescue := p.parseRescueBlock()
+		lit.Rescues = append(lit.Rescues, rescue)
+	}
 	if !p.accept(token.END) {
 		return nil
 	}
