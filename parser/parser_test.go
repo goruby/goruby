@@ -440,6 +440,7 @@ func TestReturnStatements(t *testing.T) {
 		{"return 5;", 5},
 		{"return true;", true},
 		{"return foobar;", "foobar"},
+		{"return 3, 5, 8;", []string{"3", "5", "8"}},
 	}
 
 	for _, tt := range tests {
@@ -464,8 +465,8 @@ func TestReturnStatements(t *testing.T) {
 				returnStmt.TokenLiteral(),
 			)
 		}
-		if testLiteralExpression(t, returnStmt.ReturnValue, tt.expectedValue) {
-			return
+		if !testLiteralExpression(t, returnStmt.ReturnValue, tt.expectedValue) {
+			t.Fail()
 		}
 	}
 }
@@ -3861,6 +3862,8 @@ func testLiteralExpression(
 		return testBooleanLiteral(t, exp, v)
 	case map[string]string:
 		return testHashLiteral(t, exp, v)
+	case []string:
+		return testArrayLiteral(t, exp, v)
 	case nil:
 		return true
 	}
@@ -3998,11 +4001,34 @@ func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
 	return true
 }
 
+func testArrayLiteral(t *testing.T, expr ast.Expression, value []string) bool {
+	t.Helper()
+	array, ok := expr.(*ast.ArrayLiteral)
+	if !ok {
+		t.Fatalf("expr not *ast.ArrayLiteral. got=%T", expr)
+		return false
+	}
+
+	if len(array.Elements) != len(value) {
+		t.Fatalf("len(array.Elements) not %d. got=%d", len(value), len(array.Elements))
+	}
+
+	arr := make([]string, len(array.Elements))
+	for i, v := range array.Elements {
+		arr[i] = v.String()
+	}
+	if !reflect.DeepEqual(arr, value) {
+		t.Logf("Expected array to equal\n%q\n\tgot\n%q\n", value, array)
+		return false
+	}
+	return true
+}
+
 func testHashLiteral(t *testing.T, expr ast.Expression, value map[string]string) bool {
 	t.Helper()
 	hash, ok := expr.(*ast.HashLiteral)
 	if !ok {
-		t.Errorf("exp not *ast.HashLiteral. got=%T", expr)
+		t.Errorf("expr not *ast.HashLiteral. got=%T", expr)
 		return false
 	}
 	hashMap := make(map[string]string)

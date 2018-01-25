@@ -369,7 +369,26 @@ func (p *parser) parseReturnStatement() *ast.ReturnStatement {
 		return stmt
 	}
 
-	stmt.ReturnValue = p.parseExpression(precLowest)
+	valToken := p.curToken
+	stmt.ReturnValue = p.parseExpression(precMultiVars)
+
+	if p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
+		p.nextToken()
+		return stmt
+	}
+
+	if !p.peekTokenIs(token.COMMA) {
+		p.peekError(token.COMMA)
+		return nil
+	}
+
+	arr := &ast.ArrayLiteral{Token: valToken, Elements: []ast.Expression{stmt.ReturnValue}}
+	for p.peekTokenIs(token.COMMA) {
+		p.consume(token.COMMA)
+		arr.Elements = append(arr.Elements, p.parseExpression(precMultiVars))
+	}
+	arr.Rbracket = p.curToken
+	stmt.ReturnValue = arr
 
 	if !p.acceptOneOf(token.NEWLINE, token.SEMICOLON) {
 		return nil
@@ -569,7 +588,7 @@ func (p *parser) parseMultiVars(left ast.Expression) ast.Expression {
 	}
 	ident, ok := left.(*ast.Identifier)
 	if !ok {
-		msg := fmt.Sprintf("multi vars not possible for type %s", left)
+		msg := fmt.Sprintf("multi vars not possible for type %T", left)
 		epos := p.file.Position(p.pos)
 		if epos.Filename != "" || epos.IsValid() {
 			msg = epos.String() + ": " + msg
