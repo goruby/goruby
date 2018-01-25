@@ -13,7 +13,7 @@ fifty = 5_0
 ten = 10
 ?-
 ?\n
-? foo
+? foo : bar
 
 def add(x, y)
 	x + y
@@ -102,6 +102,8 @@ $a`
 		{token.NEWLINE, "\n"},
 		{token.QMARK, "?"},
 		{token.IDENT, "foo"},
+		{token.COLON, ":"},
+		{token.IDENT, "bar"},
 		{token.NEWLINE, "\n"},
 		{token.NEWLINE, "\n"},
 		{token.DEF, "def"},
@@ -200,18 +202,18 @@ $a`
 		{token.NEWLINE, "\n"},
 		{token.STRING, "foo bar"},
 		{token.NEWLINE, "\n"},
-		{token.COLON, ":"},
+		{token.SYMBEG, ":"},
 		{token.IDENT, "sym"},
 		{token.NEWLINE, "\n"},
-		{token.COLON, ":"},
+		{token.SYMBEG, ":"},
 		{token.STRING, "sym"},
 		{token.NEWLINE, "\n"},
-		{token.COLON, ":"},
+		{token.SYMBEG, ":"},
 		{token.STRING, "sym"},
 		{token.NEWLINE, "\n"},
 		{token.DOT, "."},
 		{token.NEWLINE, "\n"},
-		{token.COLON, ":"},
+		{token.SYMBEG, ":"},
 		{token.IDENT, "dotAfter"},
 		{token.DOT, "."},
 		{token.NEWLINE, "\n"},

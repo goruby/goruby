@@ -132,12 +132,17 @@ func startLexer(l *Lexer) StateFn {
 	case '"':
 		return lexString
 	case ':':
-		if p := l.peek(); p == ':' {
+		p := l.peek()
+		if p == ':' {
 			l.next()
 			l.emit(token.SCOPE)
 			return startLexer
 		}
-		l.emit(token.COLON)
+		if isWhitespace(p) {
+			l.emit(token.COLON)
+			return startLexer
+		}
+		l.emit(token.SYMBEG)
 		return startLexer
 	case '.':
 		l.emit(token.DOT)

@@ -1667,65 +1667,170 @@ func TestConditionalExpression(t *testing.T) {
 }
 
 func TestConditionalExpressionWithAlternative(t *testing.T) {
-	input := `
-      if x < y
-      x
-      else
-      y
-      end`
-
-	program, err := parseSource(input)
-	checkParserErrors(t, err)
-
-	if len(program.Statements) != 1 {
-		t.Fatalf("program.Body does not contain %d statements. got=%d\n",
-			1, len(program.Statements))
+	tests := []struct {
+		name        string
+		input       string
+		condition   [3]string
+		consequence string
+		alternative string
+	}{
+		{
+			"regular if else",
+			`
+			if x < y
+				x
+			else
+				y
+			end`,
+			[3]string{"x", "<", "y"},
+			"x",
+			"y",
+		},
+		{
+			"tenary if",
+			"x < y ? x : y;",
+			[3]string{"x", "<", "y"},
+			"x",
+			"y",
+		},
+		{
+			"tenary if with symbol as consequence",
+			"x < y ? :x : y;",
+			[3]string{"x", "<", "y"},
+			":x",
+			"y",
+		},
+		{
+			"tenary if with symbol as alternative",
+			"x < y ? x : :y;",
+			[3]string{"x", "<", "y"},
+			"x",
+			":y",
+		},
 	}
 
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
-			program.Statements[0])
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-	exp, ok := stmt.Expression.(*ast.ConditionalExpression)
-	if !ok {
-		t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
-	}
+			if len(program.Statements) != 1 {
+				t.Fatalf("program.Body does not contain %d statements. got=%d\n",
+					1, len(program.Statements))
+			}
 
-	if !testInfixExpression(t, exp.Condition, "x", "<", "y") {
-		return
-	}
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0])
+			}
 
-	if len(exp.Consequence.Statements) != 1 {
-		t.Errorf("consequence is not 1 statements. got=%d\n",
-			len(exp.Consequence.Statements))
-	}
+			exp, ok := stmt.Expression.(*ast.ConditionalExpression)
+			if !ok {
+				t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
+			}
 
-	consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
-			exp.Consequence.Statements[0])
-	}
+			if !testInfixExpression(t, exp.Condition, tt.condition[0], tt.condition[1], tt.condition[2]) {
+				return
+			}
 
-	if !testIdentifier(t, consequence.Expression, "x") {
-		return
-	}
+			if len(exp.Consequence.Statements) != 1 {
+				t.Errorf("consequence is not 1 statements. got=%d\n",
+					len(exp.Consequence.Statements))
+			}
 
-	if len(exp.Alternative.Statements) != 1 {
-		t.Errorf("exp.Alternative.Statements does not contain 1 statements. got=%d\n",
-			len(exp.Alternative.Statements))
-	}
+			consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
+					exp.Consequence.Statements[0])
+			}
 
-	alternative, ok := exp.Alternative.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
-			exp.Alternative.Statements[0])
-	}
+			if !testLiteralExpression(t, consequence.Expression, tt.consequence) {
+				return
+			}
 
-	if !testIdentifier(t, alternative.Expression, "y") {
-		return
+			if len(exp.Alternative.Statements) != 1 {
+				t.Errorf("exp.Alternative.Statements does not contain 1 statements. got=%d\n",
+					len(exp.Alternative.Statements))
+			}
+
+			alternative, ok := exp.Alternative.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
+					exp.Alternative.Statements[0])
+			}
+
+			if !testLiteralExpression(t, alternative.Expression, tt.alternative) {
+				return
+			}
+		})
 	}
+	t.Run("tenary if with call as consequence", func(t *testing.T) {
+		tt := struct {
+			input       string
+			condition   [3]string
+			consequence string
+			alternative string
+		}{
+			"x < y ? x.foo : y;",
+			[3]string{"x", "<", "y"},
+			"x.foo()",
+			"y",
+		}
+		program, err := parseSource(tt.input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Body does not contain %d statements. got=%d\n",
+				1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.ConditionalExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
+		}
+
+		if !testInfixExpression(t, exp.Condition, tt.condition[0], tt.condition[1], tt.condition[2]) {
+			return
+		}
+
+		if len(exp.Consequence.Statements) != 1 {
+			t.Errorf("consequence is not 1 statements. got=%d\n",
+				len(exp.Consequence.Statements))
+		}
+
+		consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
+				exp.Consequence.Statements[0])
+		}
+
+		if consequence.String() != tt.consequence {
+			t.Logf("Expected consequence to equal %s, got %s", tt.consequence, consequence.String())
+			t.Fail()
+		}
+
+		if len(exp.Alternative.Statements) != 1 {
+			t.Errorf("exp.Alternative.Statements does not contain 1 statements. got=%d\n",
+				len(exp.Alternative.Statements))
+		}
+
+		alternative, ok := exp.Alternative.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
+				exp.Alternative.Statements[0])
+		}
+
+		if !testLiteralExpression(t, alternative.Expression, tt.alternative) {
+			return
+		}
+	})
 }
 
 func TestFunctionLiteralParsing(t *testing.T) {
@@ -3650,6 +3755,9 @@ func testLiteralExpression(
 	case int64:
 		return testIntegerLiteral(t, exp, v)
 	case string:
+		if strings.HasPrefix(v, ":") {
+			return testSymbol(t, exp, strings.TrimPrefix(v, ":"))
+		}
 		return testIdentifier(t, exp, v)
 	case bool:
 		return testBooleanLiteral(t, exp, v)
@@ -3726,6 +3834,22 @@ func testGlobal(t *testing.T, exp ast.Expression, value string) bool {
 	if global.TokenLiteral() != value {
 		t.Errorf("global.TokenLiteral not %s. got=%s", value,
 			global.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func testSymbol(t *testing.T, exp ast.Expression, value string) bool {
+	t.Helper()
+	symbol, ok := exp.(*ast.SymbolLiteral)
+	if !ok {
+		t.Errorf("exp not %T. got=%T", symbol, exp)
+		return false
+	}
+
+	if symbol.Value.String() != value {
+		t.Errorf("symbol.Value not %s. got=%s", value, symbol.Value)
 		return false
 	}
 

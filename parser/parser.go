@@ -21,6 +21,7 @@ const (
 	precBlockBraces // { |x| }
 	precIfUnless    // modifier-if, modifier-unless
 	precCallArg     // func x
+	precTenary      // ?, :
 	precAssignment  // x = 5
 	precEquals      // ==, !=, <=>
 	precLessGreater // >, <, >=, <=
@@ -42,6 +43,8 @@ var precedences = map[token.Type]int{
 	token.NOTEQ:     precEquals,
 	token.SPACESHIP: precEquals,
 	token.LSHIFT:    precShift,
+	token.QMARK:     precTenary,
+	token.COLON:     precTenary,
 	token.LT:        precLessGreater,
 	token.GT:        precLessGreater,
 	token.LTE:       precLessGreater,
@@ -64,7 +67,7 @@ var precedences = map[token.Type]int{
 	token.LBRACE:    precBlockBraces,
 	token.DO:        precBlockDo,
 	token.SCOPE:     precScope,
-	token.COLON:     precSymbol,
+	token.SYMBEG:    precSymbol,
 	token.COMMA:     precMultiVars,
 	token.THEN:      precHighest,
 	token.NEWLINE:   precHighest,
@@ -82,6 +85,7 @@ var operatorsNotPossibleInCallArgs = []token.Type{
 	token.NOTEQ,
 	token.IF,
 	token.UNLESS,
+	token.COLON,
 }
 
 type (
@@ -138,7 +142,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.UNLESS, p.parseIfExpression)
 	p.registerPrefix(token.DEF, p.parseFunctionLiteral)
-	p.registerPrefix(token.COLON, p.parseSymbolLiteral)
+	p.registerPrefix(token.SYMBEG, p.parseSymbolLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.NIL, p.parseNilLiteral)
 	p.registerPrefix(token.SELF, p.parseSelf)
@@ -165,6 +169,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.GTE, p.parseInfixExpression)
 	p.registerInfix(token.IF, p.parseModifierConditionalExpression)
 	p.registerInfix(token.UNLESS, p.parseModifierConditionalExpression)
+	p.registerInfix(token.QMARK, p.parseTenaryIfExpression)
 	p.registerInfix(token.SPACESHIP, p.parseInfixExpression)
 	p.registerInfix(token.LSHIFT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpressionWithParens)
@@ -173,7 +178,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.GLOBAL, p.parseCallArgument)
 	p.registerInfix(token.INT, p.parseCallArgument)
 	p.registerInfix(token.STRING, p.parseCallArgument)
-	p.registerInfix(token.COLON, p.parseCallArgument)
+	p.registerInfix(token.SYMBEG, p.parseCallArgument)
 	p.registerInfix(token.SELF, p.parseCallArgument)
 	p.registerInfix(token.DOT, p.parseMethodCall)
 	p.registerInfix(token.COMMA, p.parseMultiVars)
@@ -887,6 +892,31 @@ func (p *parser) parseIfExpression() ast.Expression {
 	}
 	p.accept(token.END)
 	expression.EndToken = p.curToken
+	return expression
+}
+
+func (p *parser) parseTenaryIfExpression(condition ast.Expression) ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseTenaryIfExpression"))
+	}
+	expression := &ast.ConditionalExpression{Token: p.curToken}
+	p.nextToken()
+	expression.Condition = condition
+	expression.Consequence = &ast.BlockStatement{
+		Statements: []ast.Statement{
+			&ast.ExpressionStatement{
+				Expression: p.parseExpression(precTenary),
+			},
+		},
+	}
+	p.consume(token.COLON)
+	expression.Alternative = &ast.BlockStatement{
+		Statements: []ast.Statement{
+			&ast.ExpressionStatement{
+				Expression: p.parseExpression(precLowest),
+			},
+		},
+	}
 	return expression
 }
 
