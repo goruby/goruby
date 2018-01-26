@@ -974,7 +974,6 @@ func (p *parser) parseLoopExpression() ast.Expression {
 	loop := &ast.LoopExpression{Token: p.curToken}
 	p.nextToken()
 	loop.Condition = p.parseExpression(precBlockDo)
-	fmt.Printf("Cur %s, next %s\n", p.curToken, p.peekToken)
 	p.consume(token.DO)
 	loop.Block = p.parseBlockStatement(token.END)
 	p.nextToken()
