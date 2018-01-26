@@ -69,6 +69,7 @@ add { |x| x }
 add do |x|
 end
 yield
+while
 A::B
 =>
 __FILE__
@@ -280,6 +281,8 @@ $a`
 		{token.END, "end"},
 		{token.NEWLINE, "\n"},
 		{token.YIELD, "yield"},
+		{token.NEWLINE, "\n"},
+		{token.WHILE, "while"},
 		{token.NEWLINE, "\n"},
 		{token.CONST, "A"},
 		{token.SCOPE, "::"},

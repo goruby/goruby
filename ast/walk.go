@@ -286,6 +286,10 @@ func Walk(v Visitor, node Node) {
 			Walk(v, n.Alternative)
 		}
 
+	case *LoopExpression:
+		Walk(v, n.Condition)
+		Walk(v, n.Block)
+
 	// Program
 	case *Program:
 		walkStmtList(v, n.Statements)

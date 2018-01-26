@@ -148,6 +148,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.UNLESS, p.parseIfExpression)
+	p.registerPrefix(token.WHILE, p.parseLoopExpression)
 	p.registerPrefix(token.DEF, p.parseFunctionLiteral)
 	p.registerPrefix(token.SYMBEG, p.parseSymbolLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
@@ -636,11 +637,6 @@ func (p *parser) parseIdentifier() ast.Expression {
 	if p.trace {
 		defer un(trace(p, "parseIdentifier"))
 	}
-	if p.peekTokenOneOf(token.LBRACE, token.DO) {
-		fn := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
-		p.nextToken()
-		return p.parseCallArgument(fn)
-	}
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
@@ -969,6 +965,20 @@ func (p *parser) parseModifierConditionalExpression(left ast.Expression) ast.Exp
 		},
 	}
 	return expression
+}
+
+func (p *parser) parseLoopExpression() ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseLoopExpression"))
+	}
+	loop := &ast.LoopExpression{Token: p.curToken}
+	p.nextToken()
+	loop.Condition = p.parseExpression(precBlockDo)
+	fmt.Printf("Cur %s, next %s\n", p.curToken, p.peekToken)
+	p.consume(token.DO)
+	loop.Block = p.parseBlockStatement(token.END)
+	p.nextToken()
+	return loop
 }
 
 func (p *parser) parseModule() ast.Expression {

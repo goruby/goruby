@@ -93,6 +93,7 @@ const (
 	YIELD
 	BEGIN
 	RESCUE
+	WHILE
 	KEYWORD__FILE__
 	keyword_end
 )
@@ -170,6 +171,7 @@ var tokens = [...]string{
 	YIELD:           "yield",
 	BEGIN:           "begin",
 	RESCUE:          "rescue",
+	WHILE:           "while",
 	KEYWORD__FILE__: "__FILE__",
 }
 

@@ -69,6 +69,43 @@ func TestAssignment(t *testing.T) {
 	}
 }
 
+func TestWhileExpression(t *testing.T) {
+	input := `
+	while x < y do
+		x += x
+	end`
+
+	program, err := parseSource(input, Trace)
+	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Logf(
+			"program.Body does not contain %d statements. got=%d\n",
+			1,
+			len(program.Statements),
+		)
+		t.Logf("%s\n", program.Statements)
+		t.FailNow()
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+
+	exp, ok := stmt.Expression.(*ast.LoopExpression)
+	if !ok {
+		t.Fatalf(
+			"stmt.Expression is not %T. got=%T",
+			exp,
+			stmt.Expression,
+		)
+	}
+}
+
 func TestVariableExpression(t *testing.T) {
 	t.Run("valid variable expressions", func(t *testing.T) {
 		tests := []struct {
@@ -2184,77 +2221,81 @@ func TestBlockExpressionParsing(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := parseSource(tt.input)
-		checkParserErrors(t, err)
+		t.Run(tt.input, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		if len(program.Statements) != 1 {
-			t.Fatalf(
-				"program.Body does not contain %d statements. got=%d\n",
-				1,
-				len(program.Statements),
-			)
-		}
+			if len(program.Statements) != 1 {
+				t.Fatalf(
+					"program.Body does not contain %d statements. got=%d\n",
+					1,
+					len(program.Statements),
+				)
+			}
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf(
-				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-				program.Statements[0],
-			)
-		}
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Logf(
+					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0],
+				)
+				t.Log(program.Statements)
+				t.FailNow()
+			}
 
-		call, ok := stmt.Expression.(*ast.ContextCallExpression)
-		if !ok {
-			t.Logf(
-				"stmt.Expression is not *ast.ContextCallExpression. got=%T",
-				stmt.Expression,
-			)
-			t.Fail()
-		}
+			call, ok := stmt.Expression.(*ast.ContextCallExpression)
+			if !ok {
+				t.Logf(
+					"stmt.Expression is not *ast.ContextCallExpression. got=%T",
+					stmt.Expression,
+				)
+				t.Fail()
+			}
 
-		block := call.Block
+			block := call.Block
 
-		if block == nil {
-			t.Logf("Expected block not to be nil")
-			t.FailNow()
-		}
+			if block == nil {
+				t.Logf("Expected block not to be nil")
+				t.FailNow()
+			}
 
-		if len(block.Parameters) != len(tt.parameters) {
-			t.Fatalf(
-				"block literal parameters wrong. want %d, got=%d\n",
-				len(tt.parameters),
-				len(block.Parameters),
-			)
-		}
+			if len(block.Parameters) != len(tt.parameters) {
+				t.Fatalf(
+					"block literal parameters wrong. want %d, got=%d\n",
+					len(tt.parameters),
+					len(block.Parameters),
+				)
+			}
 
-		for i, param := range block.Parameters {
-			testLiteralExpression(t, param.Name, tt.parameters[i])
-		}
+			for i, param := range block.Parameters {
+				testLiteralExpression(t, param.Name, tt.parameters[i])
+			}
 
-		if len(block.Body.Statements) != 1 {
-			t.Fatalf(
-				"block.Body.Statements has not 1 statements. got=%d\n",
-				len(block.Body.Statements),
-			)
-		}
+			if len(block.Body.Statements) != 1 {
+				t.Fatalf(
+					"block.Body.Statements has not 1 statements. got=%d\n",
+					len(block.Body.Statements),
+				)
+			}
 
-		bodyStmt, ok := block.Body.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf(
-				"block body stmt is not ast.ExpressionStatement. got=%T",
-				block.Body.Statements[0],
-			)
-		}
+			bodyStmt, ok := block.Body.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"block body stmt is not ast.ExpressionStatement. got=%T",
+					block.Body.Statements[0],
+				)
+			}
 
-		statement := bodyStmt.String()
-		if statement != tt.bodyStatement {
-			t.Logf(
-				"Expected body statement to equal\n%q\n\tgot\n%q\n",
-				tt.bodyStatement,
-				statement,
-			)
-			t.Fail()
-		}
+			statement := bodyStmt.String()
+			if statement != tt.bodyStatement {
+				t.Logf(
+					"Expected body statement to equal\n%q\n\tgot\n%q\n",
+					tt.bodyStatement,
+					statement,
+				)
+				t.Fail()
+			}
+		})
 	}
 }
 
