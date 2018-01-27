@@ -524,7 +524,13 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 		assign.Right = p.parseExpression(precIfUnless)
 		return assign
 	case *ast.Global:
-		return p.parseGlobalAssignment(left)
+		assign := &ast.Assignment{
+			Token: p.curToken,
+			Left:  left,
+		}
+		p.nextToken()
+		assign.Right = p.parseExpression(precIfUnless)
+		return assign
 	case *ast.IndexExpression:
 		assign := &ast.Assignment{
 			Token: p.curToken,
@@ -550,18 +556,6 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 		p.expectError(token.EOF)
 		return nil
 	}
-}
-
-func (p *parser) parseGlobalAssignment(global *ast.Global) ast.Expression {
-	if p.trace {
-		defer un(trace(p, "parseGlobalAssignment"))
-	}
-	assign := &ast.GlobalAssignment{
-		Name: global,
-	}
-	p.nextToken()
-	assign.Value = p.parseExpression(precIfUnless)
-	return assign
 }
 
 func (p *parser) parseInstanceVariable() ast.Expression {

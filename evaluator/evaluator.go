@@ -192,18 +192,14 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		case *ast.Identifier:
 			env.Set(left.Value, right)
 			return right, nil
+		case *ast.Global:
+			env.SetGlobal(left.Value, right)
+			return right, nil
 		default:
 			return nil, errors.WithStack(
 				object.NewSyntaxError(fmt.Errorf("Assignment not supported to %T", node.Left)),
 			)
 		}
-	case *ast.GlobalAssignment:
-		val, err := Eval(node.Value, env)
-		if err != nil {
-			return nil, errors.WithMessage(err, "eval global Assignment value")
-		}
-		env.SetGlobal(node.Name.Value, val)
-		return val, nil
 	case *ast.MultiAssignment:
 		values := make([]object.RubyObject, 0)
 		for _, v := range node.Values {

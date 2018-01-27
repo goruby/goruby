@@ -695,9 +695,11 @@ func TestGlobalAssignmentExpression(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			evaluated, err := testEval(tt.input)
-			checkError(t, err)
-			testIntegerObject(t, evaluated, tt.expected)
+			t.Run(tt.input, func(t *testing.T) {
+				evaluated, err := testEval(tt.input)
+				checkError(t, err)
+				testIntegerObject(t, evaluated, tt.expected)
+			})
 		}
 	})
 	t.Run("set as global", func(t *testing.T) {

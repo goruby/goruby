@@ -233,21 +233,22 @@ func TestGlobalAssignment(t *testing.T) {
 		)
 	}
 
-	variable, ok := stmt.Expression.(*ast.GlobalAssignment)
+	variable, ok := stmt.Expression.(*ast.Assignment)
 	if !ok {
 		t.Fatalf(
-			"stmt.Expression is not *ast.GlobalAssignment. got=%T",
+			"stmt.Expression is not %T. got=%T",
+			variable,
 			stmt.Expression,
 		)
 	}
 
 	expectedGlobal := "$foo"
 
-	if !testGlobal(t, variable.Name, expectedGlobal) {
+	if !testGlobal(t, variable.Left, expectedGlobal) {
 		return
 	}
 
-	val := variable.Value.String()
+	val := variable.Right.String()
 
 	expectedValue := "3"
 
