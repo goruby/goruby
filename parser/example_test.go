@@ -39,7 +39,7 @@ end`
 
 	// output:
 	//
-	// *ast.VariableAssignment
+	// *ast.Assignment
 	// *ast.ModuleExpression
 }
 

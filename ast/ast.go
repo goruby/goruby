@@ -272,32 +272,6 @@ func (v *GlobalAssignment) End() int { return v.Value.End() }
 // TokenLiteral returns the literal of the Name token
 func (v *GlobalAssignment) TokenLiteral() string { return v.Name.Token.Literal }
 
-// VariableAssignment represents a variable assignment
-type VariableAssignment struct {
-	Name  *Identifier
-	Value Expression
-}
-
-func (v *VariableAssignment) String() string {
-	var out bytes.Buffer
-	out.WriteString(v.Name.String())
-	out.WriteString(" = ")
-	if v.Value != nil {
-		out.WriteString(encloseInParensIfNeeded(v.Value))
-	}
-	return out.String()
-}
-func (v *VariableAssignment) expressionNode() {}
-
-// Pos returns the position of first character belonging to the node
-func (v *VariableAssignment) Pos() int { return v.Name.Pos() }
-
-// End returns the position of first character immediately after the node
-func (v *VariableAssignment) End() int { return v.Value.End() }
-
-// TokenLiteral returns the literal of the Name token
-func (v *VariableAssignment) TokenLiteral() string { return v.Name.Token.Literal }
-
 // An InstanceVariable represents an instance variable in the AST
 type InstanceVariable struct {
 	Token token.Token

@@ -534,12 +534,12 @@ func TestKernelRequire(t *testing.T) {
 				return class, nil
 			case *ast.ExpressionStatement:
 				return eval(node.Expression, env)
-			case *ast.VariableAssignment:
-				val, err := eval(node.Value, env)
+			case *ast.Assignment:
+				val, err := eval(node.Right, env)
 				if err != nil {
 					return nil, err
 				}
-				env.Set(node.Name.Value, val)
+				env.Set(node.String(), val)
 				return val, nil
 			}
 			return TRUE, nil
@@ -599,12 +599,12 @@ func TestKernelRequire(t *testing.T) {
 				return result, nil
 			case *ast.ExpressionStatement:
 				return eval(node.Expression, env)
-			case *ast.VariableAssignment:
-				val, err := eval(node.Value, env)
+			case *ast.Assignment:
+				val, err := eval(node.Right, env)
 				if err != nil {
 					return nil, err
 				}
-				env.Set(node.Name.Value, val)
+				env.Set(node.String(), val)
 				return val, nil
 			}
 			return TRUE, nil

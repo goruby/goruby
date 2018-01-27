@@ -516,7 +516,13 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 	}
 	switch left := left.(type) {
 	case *ast.Identifier:
-		return p.parseVariableAssignExpression(left)
+		assign := &ast.Assignment{
+			Token: p.curToken,
+			Left:  left,
+		}
+		p.nextToken()
+		assign.Right = p.parseExpression(precIfUnless)
+		return assign
 	case *ast.Global:
 		return p.parseGlobalAssignment(left)
 	case *ast.IndexExpression:
@@ -557,18 +563,6 @@ func (p *parser) parseGlobalAssignment(global *ast.Global) ast.Expression {
 	p.nextToken()
 	assign.Value = p.parseExpression(precIfUnless)
 	return assign
-}
-
-func (p *parser) parseVariableAssignExpression(ident *ast.Identifier) ast.Expression {
-	if p.trace {
-		defer un(trace(p, "parseVariableAssignment"))
-	}
-	variableExp := &ast.VariableAssignment{
-		Name: ident,
-	}
-	p.nextToken()
-	variableExp.Value = p.parseExpression(precIfUnless)
-	return variableExp
 }
 
 func (p *parser) parseInstanceVariable() ast.Expression {
@@ -1078,9 +1072,11 @@ func (p *parser) parseFunctionLiteral() ast.Expression {
 	}
 	lit.EndToken = p.curToken
 	inspect := func(n ast.Node) bool {
-		if x, ok := n.(*ast.VariableAssignment); ok {
-			if x.Name.IsConstant() {
-				p.errors = append(p.errors, fmt.Errorf("dynamic constant assignment"))
+		if x, ok := n.(*ast.Assignment); ok {
+			if ident, ok := x.Left.(*ast.Identifier); ok {
+				if ident.IsConstant() {
+					p.errors = append(p.errors, fmt.Errorf("dynamic constant assignment"))
+				}
 			}
 		}
 		return true

@@ -165,20 +165,18 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err != nil {
 			return nil, errors.WithMessage(err, "eval right hand Assignment side")
 		}
-		indexExp, ok := node.Left.(*ast.IndexExpression)
-		if ok {
-			left, err := Eval(indexExp.Left, env)
+		switch left := node.Left.(type) {
+		case *ast.IndexExpression:
+			indexLeft, err := Eval(left.Left, env)
 			if err != nil {
 				return nil, errors.WithMessage(err, "eval left hand Assignment side: eval left side of IndexExpression")
 			}
-			index, err := Eval(indexExp.Index, env)
+			index, err := Eval(left.Index, env)
 			if err != nil {
 				return nil, errors.WithMessage(err, "eval left hand Assignment side: eval right side of IndexExpression")
 			}
-			return evalIndexExpressionAssignment(left, index, right)
-		}
-		instanceVar, ok := node.Left.(*ast.InstanceVariable)
-		if ok {
+			return evalIndexExpressionAssignment(indexLeft, index, right)
+		case *ast.InstanceVariable:
 			self, _ := env.Get("self")
 			selfObj := self.(*object.Self)
 			selfAsEnv, ok := selfObj.RubyObject.(object.Environment)
@@ -189,19 +187,16 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 				)
 			}
 
-			selfAsEnv.Set(instanceVar.String(), right)
+			selfAsEnv.Set(left.String(), right)
 			return right, nil
+		case *ast.Identifier:
+			env.Set(left.Value, right)
+			return right, nil
+		default:
+			return nil, errors.WithStack(
+				object.NewSyntaxError(fmt.Errorf("Assignment not supported to %T", node.Left)),
+			)
 		}
-		return nil, errors.WithStack(
-			object.NewSyntaxError(fmt.Errorf("Assignment not supported to %T", node.Left)),
-		)
-	case *ast.VariableAssignment:
-		val, err := Eval(node.Value, env)
-		if err != nil {
-			return nil, errors.WithMessage(err, "eval variable Assignment value")
-		}
-		env.Set(node.Name.Value, val)
-		return val, nil
 	case *ast.GlobalAssignment:
 		val, err := Eval(node.Value, env)
 		if err != nil {

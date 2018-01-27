@@ -261,10 +261,6 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Left)
 		Walk(v, n.Right)
 
-	case *VariableAssignment:
-		Walk(v, n.Name)
-		Walk(v, n.Value)
-
 	case *GlobalAssignment:
 		Walk(v, n.Name)
 		Walk(v, n.Value)

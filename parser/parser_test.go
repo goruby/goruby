@@ -14,95 +14,80 @@ import (
 
 func TestAssignment(t *testing.T) {
 	tests := []struct {
-		input    string
-		leftType reflect.Type
-		output   int
+		name      string
+		input     string
+		leftType  reflect.Type
+		rightType reflect.Type
 	}{
 		{
-			input:    `x[:foo] = 3`,
-			leftType: reflect.TypeOf(&ast.IndexExpression{}),
-			output:   3,
+			name:      "hash index assignment",
+			input:     `x[:foo] = 3`,
+			leftType:  reflect.TypeOf(&ast.IndexExpression{}),
+			rightType: reflect.TypeOf(&ast.IntegerLiteral{}),
 		},
 		{
-			input:    `@x = 3`,
-			leftType: reflect.TypeOf(&ast.InstanceVariable{}),
-			output:   3,
+			name:      "instance varibale",
+			input:     `@x = 3`,
+			leftType:  reflect.TypeOf(&ast.InstanceVariable{}),
+			rightType: reflect.TypeOf(&ast.IntegerLiteral{}),
+		},
+		{
+			name:      "local varibale",
+			input:     `x = 3`,
+			leftType:  reflect.TypeOf(&ast.Identifier{}),
+			rightType: reflect.TypeOf(&ast.IntegerLiteral{}),
 		},
 	}
 
 	for _, tt := range tests {
-		program, err := parseSource(tt.input)
-		checkParserErrors(t, err)
+		t.Run(tt.name, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		if len(program.Statements) != 1 {
-			t.Fatalf(
-				"program.Statements does not contain 1 statements. got=%d",
-				len(program.Statements),
-			)
-		}
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf(
-				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-				program.Statements[0],
-			)
-		}
+			if len(program.Statements) != 1 {
+				t.Fatalf(
+					"program.Statements does not contain 1 statements. got=%d",
+					len(program.Statements),
+				)
+			}
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0],
+				)
+			}
 
-		assign, ok := stmt.Expression.(*ast.Assignment)
-		if !ok {
-			t.Fatalf(
-				"stmt.Expression is not *ast.Assignment. got=%T",
-				stmt.Expression,
-			)
-		}
+			assign, ok := stmt.Expression.(*ast.Assignment)
+			if !ok {
+				t.Fatalf(
+					"stmt.Expression is not *ast.Assignment. got=%T",
+					stmt.Expression,
+				)
+			}
 
-		actual := reflect.TypeOf(assign.Left)
-		if tt.leftType != actual {
-			t.Fatalf(
-				"assign.Left is not %T. got=%T",
-				tt.leftType,
-				stmt.Expression,
-			)
-		}
+			{
+				actual := reflect.TypeOf(assign.Left)
+				if tt.leftType != actual {
+					t.Fatalf(
+						"assign.Left is not %v. got=%v",
+						tt.leftType,
+						actual,
+					)
+				}
+			}
 
-		testIntegerLiteral(t, assign.Right, 3)
-	}
-}
-
-func TestWhileExpression(t *testing.T) {
-	input := `
-	while x < y do
-		x += x
-	end`
-
-	program, err := parseSource(input, Trace)
-	checkParserErrors(t, err)
-
-	if len(program.Statements) != 1 {
-		t.Logf(
-			"program.Body does not contain %d statements. got=%d\n",
-			1,
-			len(program.Statements),
-		)
-		t.Logf("%s\n", program.Statements)
-		t.FailNow()
-	}
-
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf(
-			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-			program.Statements[0],
-		)
-	}
-
-	exp, ok := stmt.Expression.(*ast.LoopExpression)
-	if !ok {
-		t.Fatalf(
-			"stmt.Expression is not %T. got=%T",
-			exp,
-			stmt.Expression,
-		)
+			{
+				actual := reflect.TypeOf(assign.Right)
+				if tt.rightType != actual {
+					t.Fatalf(
+						"assign.Right is not %v. got=%v",
+						tt.rightType,
+						actual,
+					)
+				}
+			}
+		})
 	}
 }
 
@@ -138,7 +123,7 @@ func TestVariableExpression(t *testing.T) {
 				)
 			}
 
-			variable, ok := stmt.Expression.(*ast.VariableAssignment)
+			variable, ok := stmt.Expression.(*ast.Assignment)
 			if !ok {
 				t.Fatalf(
 					"stmt.Expression is not *ast.VariableAssignment. got=%T",
@@ -146,11 +131,11 @@ func TestVariableExpression(t *testing.T) {
 				)
 			}
 
-			if !testIdentifier(t, variable.Name, tt.expectedIdentifier) {
+			if !testIdentifier(t, variable.Left, tt.expectedIdentifier) {
 				return
 			}
 
-			val := variable.Value.String()
+			val := variable.Right.String()
 
 			if val != tt.expectedValue {
 				t.Logf(
@@ -189,6 +174,43 @@ func TestVariableExpression(t *testing.T) {
 			t.Fail()
 		}
 	})
+}
+
+func TestWhileExpression(t *testing.T) {
+	input := `
+	while x < y do
+		x += x
+	end`
+
+	program, err := parseSource(input)
+	checkParserErrors(t, err)
+
+	if len(program.Statements) != 1 {
+		t.Logf(
+			"program.Body does not contain %d statements. got=%d\n",
+			1,
+			len(program.Statements),
+		)
+		t.Logf("%s\n", program.Statements)
+		t.FailNow()
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+
+	exp, ok := stmt.Expression.(*ast.LoopExpression)
+	if !ok {
+		t.Fatalf(
+			"stmt.Expression is not %T. got=%T",
+			exp,
+			stmt.Expression,
+		)
+	}
 }
 
 func TestGlobalAssignment(t *testing.T) {
@@ -3869,25 +3891,6 @@ func TestParseHash(t *testing.T) {
 
 		testHashLiteral(t, stmt.Expression, tt.hashMap)
 	}
-}
-
-func testVariableExpression(t *testing.T, e ast.Expression, name string) bool {
-	t.Helper()
-	variable, ok := e.(*ast.VariableAssignment)
-	if !ok {
-		t.Errorf("expression not *ast.Variable. got=%T", e)
-		return false
-	}
-	if variable.Name.Value != name {
-		t.Errorf("variable.Name.Value not '%s'. got=%s", name, variable.Name.Value)
-		return false
-	}
-	if variable.Name.TokenLiteral() != name {
-		t.Errorf("variable.Name not '%s'. got=%s", name, variable.Name)
-		return false
-	}
-
-	return true
 }
 
 func testInfixExpression(

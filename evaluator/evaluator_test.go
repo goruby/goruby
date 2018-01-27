@@ -3,6 +3,7 @@ package evaluator
 import (
 	"go/token"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/goruby/goruby/object"
@@ -522,21 +523,55 @@ end`,
 func TestAssignment(t *testing.T) {
 	t.Run("assign to hash", func(t *testing.T) {
 		tests := []struct {
+			name     string
 			input    string
-			expected int64
+			expected interface{}
 		}{
 			{
+				"return value for anonymous hash",
 				`{:foo => 3}[:foo] = 5`,
 				5,
 			},
 			{
+				"return value for hash variable",
 				`x = {:foo => 3}; x[:foo] = 5`,
 				5,
+			},
+			{
+				"variable value after hash assignment",
+				`x = {:foo => 3}; x[:foo] = 5; x`,
+				map[string]string{":foo": "5"},
 			},
 		}
 
 		for _, tt := range tests {
 			evaluated, err := testEval(tt.input)
+			checkError(t, err)
+
+			testObject(t, evaluated, tt.expected)
+		}
+	})
+	t.Run("assign to local variable", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected int64
+		}{
+			{
+				`foo = 5`,
+				5,
+			},
+			{
+				`foo = 5; x = foo; x = 3; x`,
+				3,
+			},
+			{"a = 5; a;", 5},
+			{"a = 5 * 5; a;", 25},
+			{"a = 5; b = a; b;", 5},
+			{"a = 5; b = a; c = a + b + 5; c;", 15},
+		}
+
+		for _, tt := range tests {
+			evaluated, err := testEval(tt.input, object.NewMainEnvironment())
 			checkError(t, err)
 
 			testIntegerObject(t, evaluated, tt.expected)
@@ -644,24 +679,6 @@ func TestMultiAssignment(t *testing.T) {
 			t.Logf("Expected result to equal\n%+v\n\tgot\n%+v\n", tt.output, evaluated)
 			t.Fail()
 		}
-	}
-}
-
-func TestVariableAssignmentExpression(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected int64
-	}{
-		{"a = 5; a;", 5},
-		{"a = 5 * 5; a;", 25},
-		{"a = 5; b = a; b;", 5},
-		{"a = 5; b = a; c = a + b + 5; c;", 15},
-	}
-
-	for _, tt := range tests {
-		evaluated, err := testEval(tt.input)
-		checkError(t, err)
-		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
 
@@ -1532,6 +1549,31 @@ func checkError(t *testing.T, err error) {
 	}
 }
 
+func testObject(t *testing.T, exp object.RubyObject, expected interface{}) bool {
+	t.Helper()
+	switch v := expected.(type) {
+	case int:
+		return testIntegerObject(t, exp, int64(v))
+	case int64:
+		return testIntegerObject(t, exp, v)
+	case string:
+		if strings.HasPrefix(v, ":") {
+			return testSymbolObject(t, exp, strings.TrimPrefix(v, ":"))
+		}
+		return testStringObject(t, exp, v)
+	case bool:
+		return testBooleanObject(t, exp, v)
+	case map[string]string:
+		return testHashObject(t, exp, v)
+	case []string:
+		return testArrayObject(t, exp, v)
+	case nil:
+		return true
+	}
+	t.Errorf("type of object not handled. got=%T", exp)
+	return false
+}
+
 func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool {
 	t.Helper()
 	result, ok := obj.(*object.Boolean)
@@ -1545,7 +1587,7 @@ func testBooleanObject(t *testing.T, obj object.RubyObject, expected bool) bool 
 	}
 	if result.Value != expected {
 		t.Errorf(
-			"object has wrong value. got=%t, want=%t",
+			"object has wrong value. got=%v, want=%v",
 			result.Value,
 			expected,
 		)
@@ -1567,8 +1609,104 @@ func testIntegerObject(t *testing.T, obj object.RubyObject, expected int64) bool
 	}
 	if result.Value != expected {
 		t.Errorf(
-			"object has wrong value. got=%d, want=%d",
+			"object has wrong value. got=%v, want=%v",
 			result.Value,
+			expected,
+		)
+		return false
+	}
+	return true
+}
+
+func testSymbolObject(t *testing.T, obj object.RubyObject, expected string) bool {
+	t.Helper()
+	result, ok := obj.(*object.Symbol)
+	if !ok {
+		t.Errorf(
+			"object is not Symbol. got=%T (%+v)",
+			obj,
+			obj,
+		)
+		return false
+	}
+	if result.Value != expected {
+		t.Errorf(
+			"object has wrong value. got=%v, want=%v",
+			result.Value,
+			expected,
+		)
+		return false
+	}
+	return true
+}
+
+func testStringObject(t *testing.T, obj object.RubyObject, expected string) bool {
+	t.Helper()
+	result, ok := obj.(*object.String)
+	if !ok {
+		t.Errorf(
+			"object is not String. got=%T (%+v)",
+			obj,
+			obj,
+		)
+		return false
+	}
+	if result.Value != expected {
+		t.Errorf(
+			"object has wrong value. got=%v, want=%v",
+			result.Value,
+			expected,
+		)
+		return false
+	}
+	return true
+}
+
+func testHashObject(t *testing.T, obj object.RubyObject, expected map[string]string) bool {
+	t.Helper()
+	result, ok := obj.(*object.Hash)
+	if !ok {
+		t.Errorf(
+			"object is not Hash. got=%T (%+v)",
+			obj,
+			obj,
+		)
+		return false
+	}
+	hashMap := make(map[string]string)
+	for k, v := range result.Map() {
+		hashMap[k.Inspect()] = v.Inspect()
+	}
+	if !reflect.DeepEqual(hashMap, expected) {
+		t.Errorf(
+			"object has wrong value. got=%v, want=%v",
+			hashMap,
+			expected,
+		)
+		return false
+	}
+	return true
+}
+
+func testArrayObject(t *testing.T, obj object.RubyObject, expected []string) bool {
+	t.Helper()
+	result, ok := obj.(*object.Array)
+	if !ok {
+		t.Errorf(
+			"object is not Array. got=%T (%+v)",
+			obj,
+			obj,
+		)
+		return false
+	}
+	array := make([]string, len(result.Elements))
+	for i, v := range result.Elements {
+		array[i] = v.Inspect()
+	}
+	if !reflect.DeepEqual(array, expected) {
+		t.Errorf(
+			"object has wrong value. got=%v, want=%v",
+			array,
 			expected,
 		)
 		return false

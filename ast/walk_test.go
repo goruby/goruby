@@ -8,9 +8,9 @@ import (
 
 func Test_Parent(t *testing.T) {
 	t.Run("parent found", func(t *testing.T) {
-		child := &VariableAssignment{
-			Name:  &Identifier{Value: "x"},
-			Value: &IntegerLiteral{Value: 2},
+		child := &Assignment{
+			Left:  &Identifier{Value: "x"},
+			Right: &IntegerLiteral{Value: 2},
 		}
 		parent := &ExpressionStatement{Expression: child}
 		root := &Program{
@@ -57,9 +57,9 @@ func Test_Parent(t *testing.T) {
 					Expression: &IntegerLiteral{Value: 3},
 				},
 				&ExpressionStatement{
-					Expression: &VariableAssignment{
-						Name:  &Identifier{Value: "x"},
-						Value: &IntegerLiteral{Value: 2},
+					Expression: &Assignment{
+						Left:  &Identifier{Value: "x"},
+						Right: &IntegerLiteral{Value: 2},
 					},
 				},
 			},
@@ -76,9 +76,9 @@ func Test_Parent(t *testing.T) {
 
 func Test_Path(t *testing.T) {
 	t.Run("child found", func(t *testing.T) {
-		child := &VariableAssignment{
-			Name:  &Identifier{Value: "x"},
-			Value: &IntegerLiteral{Value: 2},
+		child := &Assignment{
+			Left:  &Identifier{Value: "x"},
+			Right: &IntegerLiteral{Value: 2},
 		}
 		root := &Program{
 			Statements: []Statement{
@@ -115,9 +115,9 @@ func Test_Path(t *testing.T) {
 					Expression: &IntegerLiteral{Value: 3},
 				},
 				&ExpressionStatement{
-					Expression: &VariableAssignment{
-						Name:  &Identifier{Value: "x"},
-						Value: &IntegerLiteral{Value: 2},
+					Expression: &Assignment{
+						Left:  &Identifier{Value: "x"},
+						Right: &IntegerLiteral{Value: 2},
 					},
 				},
 			},
@@ -139,9 +139,9 @@ func Test_treeToList(t *testing.T) {
 				Expression: &IntegerLiteral{Value: 3},
 			},
 			&ExpressionStatement{
-				Expression: &VariableAssignment{
-					Name:  &Identifier{Value: "x"},
-					Value: &IntegerLiteral{Value: 2},
+				Expression: &Assignment{
+					Left:  &Identifier{Value: "x"},
+					Right: &IntegerLiteral{Value: 2},
 				},
 			},
 		},
@@ -156,14 +156,14 @@ func Test_treeToList(t *testing.T) {
 	})
 	expected.PushBack(&IntegerLiteral{Value: 3})
 	expected.PushBack(&ExpressionStatement{
-		Expression: &VariableAssignment{
-			Name:  &Identifier{Value: "x"},
-			Value: &IntegerLiteral{Value: 2},
+		Expression: &Assignment{
+			Left:  &Identifier{Value: "x"},
+			Right: &IntegerLiteral{Value: 2},
 		},
 	})
-	expected.PushBack(&VariableAssignment{
-		Name:  &Identifier{Value: "x"},
-		Value: &IntegerLiteral{Value: 2},
+	expected.PushBack(&Assignment{
+		Left:  &Identifier{Value: "x"},
+		Right: &IntegerLiteral{Value: 2},
 	})
 	expected.PushBack(&Identifier{Value: "x"})
 	expected.PushBack(&IntegerLiteral{Value: 2})
@@ -204,9 +204,9 @@ func Test_Contains(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		needle := &IntegerLiteral{Value: 3}
 		statement := &ExpressionStatement{
-			Expression: &VariableAssignment{
-				Name:  &Identifier{Value: "foo"},
-				Value: &StringLiteral{Value: "bar"},
+			Expression: &Assignment{
+				Left:  &Identifier{Value: "foo"},
+				Right: &StringLiteral{Value: "bar"},
 			},
 		}
 
