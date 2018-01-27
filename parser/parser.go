@@ -547,8 +547,7 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 		p.errors = append(p.errors, msg)
 		return nil
 	default:
-		msg := fmt.Errorf("could not parse assignment: unexpected lefthandside token '%T'", left)
-		p.errors = append(p.errors, msg)
+		p.expectError(token.EOF)
 		return nil
 	}
 }
