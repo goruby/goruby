@@ -241,6 +241,9 @@ func Walk(v Visitor, node Node) {
 		walkIdentifierList(v, n.Variables)
 		walkExprList(v, n.Values)
 
+	case ExpressionList:
+		walkExprList(v, n)
+
 	// Types
 	case *ArrayLiteral:
 		walkExprList(v, n.Elements)

@@ -577,6 +577,32 @@ func TestAssignment(t *testing.T) {
 			testIntegerObject(t, evaluated, tt.expected)
 		}
 	})
+	t.Run("assign more than one value", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected interface{}
+		}{
+			{
+				`foo = 5, 4`,
+				[]string{"5", "4"},
+			},
+			{
+				`foo = 5, 4; foo`,
+				[]string{"5", "4"},
+			},
+			{
+				`@foo = 5, 6; @foo`,
+				[]string{"5", "6"},
+			},
+		}
+
+		for _, tt := range tests {
+			evaluated, err := testEval(tt.input, object.NewMainEnvironment())
+			checkError(t, err)
+
+			testObject(t, evaluated, tt.expected)
+		}
+	})
 	t.Run("assign to InstanceVariable", func(t *testing.T) {
 		tests := []struct {
 			input    string
@@ -667,6 +693,21 @@ func TestMultiAssignment(t *testing.T) {
 				&object.Integer{Value: 1},
 				object.NIL,
 				object.NIL,
+			}},
+		},
+		{
+			input: "x = []; x[0], y, @z = 1, 2, 3; [x[0], y, @z]",
+			output: &object.Array{Elements: []object.RubyObject{
+				&object.Integer{Value: 1},
+				&object.Integer{Value: 2},
+				&object.Integer{Value: 3},
+			}},
+		},
+		{
+			input: "$x, Y = 1, 2; [$x, Y]",
+			output: &object.Array{Elements: []object.RubyObject{
+				&object.Integer{Value: 1},
+				&object.Integer{Value: 2},
 			}},
 		},
 	}

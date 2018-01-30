@@ -16,7 +16,6 @@ import (
 const (
 	_ int = iota
 	precLowest
-	precMultiVars   // x, y
 	precBlockDo     // do
 	precBlockBraces // { |x| }
 	precIfUnless    // modifier-if, modifier-unless
@@ -73,7 +72,7 @@ var precedences = map[token.Type]int{
 	token.DO:        precBlockDo,
 	token.SCOPE:     precScope,
 	token.SYMBEG:    precSymbol,
-	token.COMMA:     precMultiVars,
+	token.COMMA:     precAssignment,
 	token.THEN:      precHighest,
 	token.NEWLINE:   precHighest,
 }
@@ -194,7 +193,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.SYMBEG, p.parseCallArgument)
 	p.registerInfix(token.SELF, p.parseCallArgument)
 	p.registerInfix(token.DOT, p.parseMethodCall)
-	p.registerInfix(token.COMMA, p.parseMultiVars)
+	p.registerInfix(token.COMMA, p.parseAssignment)
 	p.registerInfix(token.RBRACKET, p.parseCallArgument)
 	p.registerInfix(token.LBRACE, p.parseCallArgument)
 	p.registerInfix(token.DO, p.parseCallArgument)
@@ -371,7 +370,7 @@ func (p *parser) parseReturnStatement() *ast.ReturnStatement {
 	}
 
 	valToken := p.curToken
-	stmt.ReturnValue = p.parseExpression(precMultiVars)
+	stmt.ReturnValue = p.parseExpression(precLowest)
 
 	if p.peekTokenOneOf(token.NEWLINE, token.SEMICOLON) {
 		p.nextToken()
@@ -386,7 +385,7 @@ func (p *parser) parseReturnStatement() *ast.ReturnStatement {
 	arr := &ast.ArrayLiteral{Token: valToken, Elements: []ast.Expression{stmt.ReturnValue}}
 	for p.peekTokenIs(token.COMMA) {
 		p.consume(token.COMMA)
-		arr.Elements = append(arr.Elements, p.parseExpression(precMultiVars))
+		arr.Elements = append(arr.Elements, p.parseExpression(precLowest))
 	}
 	arr.Rbracket = p.curToken
 	stmt.ReturnValue = arr
@@ -510,43 +509,83 @@ func (p *parser) parseRescueBlock() *ast.RescueBlock {
 	return block
 }
 
+func (p *parser) parseExpressions(validExpression func(ast.Expression) bool) (ast.ExpressionList, bool) {
+	if p.trace {
+		defer un(trace(p, "parseExpressions"))
+	}
+	if validExpression == nil {
+		validExpression = func(ast.Expression) bool { return true }
+	}
+	elements := []ast.Expression{}
+	next := p.parseExpression(precAssignment)
+	if !validExpression(next) {
+		p.expectError(token.EOF)
+		return nil, false
+	}
+	elements = append(elements, next)
+	for p.peekTokenIs(token.COMMA) {
+		p.consume(token.COMMA)
+		next = p.parseExpression(precAssignment)
+		if !validExpression(next) {
+			p.expectError(token.EOF)
+			return nil, false
+		}
+		elements = append(elements, next)
+
+	}
+	return elements, true
+}
+
 func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 	if p.trace {
 		defer un(trace(p, "parseAssignment"))
 	}
-	switch left := left.(type) {
+	if p.currentTokenIs(token.COMMA) {
+		lhsValid := func(expr ast.Expression) bool {
+			switch expr.(type) {
+			case *ast.Identifier:
+			case *ast.IndexExpression:
+			case *ast.Global:
+			case *ast.InstanceVariable:
+			default:
+				return false
+			}
+			return true
+		}
+		if !lhsValid(left) {
+			p.expectError(token.EOF)
+			return nil
+		}
+
+		p.nextToken()
+		elements, ok := p.parseExpressions(lhsValid)
+		if !ok {
+			return nil
+		}
+		left = ast.ExpressionList(append([]ast.Expression{left}, elements...))
+		p.nextToken()
+	}
+	parseRightSide := func() (ast.Expression, bool) {
+		right := p.parseExpression(precIfUnless)
+		if p.peekTokenIs(token.COMMA) {
+			p.consume(token.COMMA)
+			elements := []ast.Expression{right}
+			el, ok := p.parseExpressions(nil)
+			if !ok {
+				return nil, false
+			}
+			elements = append(elements, el...)
+			return ast.ExpressionList(elements), true
+		}
+		return right, true
+	}
+
+	switch left.(type) {
 	case *ast.Identifier:
-		assign := &ast.Assignment{
-			Token: p.curToken,
-			Left:  left,
-		}
-		p.nextToken()
-		assign.Right = p.parseExpression(precIfUnless)
-		return assign
 	case *ast.Global:
-		assign := &ast.Assignment{
-			Token: p.curToken,
-			Left:  left,
-		}
-		p.nextToken()
-		assign.Right = p.parseExpression(precIfUnless)
-		return assign
 	case *ast.IndexExpression:
-		assign := &ast.Assignment{
-			Token: p.curToken,
-			Left:  left,
-		}
-		p.nextToken()
-		assign.Right = p.parseExpression(precIfUnless)
-		return assign
 	case *ast.InstanceVariable:
-		assign := &ast.Assignment{
-			Token: p.curToken,
-			Left:  left,
-		}
-		p.nextToken()
-		assign.Right = p.parseExpression(precIfUnless)
-		return assign
+	case ast.ExpressionList:
 	case *ast.Keyword__FILE__:
 		epos := p.file.Position(p.pos)
 		msg := fmt.Errorf("%s: Can't assign to __FILE__", epos.String())
@@ -556,6 +595,18 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 		p.expectError(token.EOF)
 		return nil
 	}
+
+	assign := &ast.Assignment{
+		Token: p.curToken,
+		Left:  left,
+	}
+	p.nextToken()
+	right, ok := parseRightSide()
+	if !ok {
+		return nil
+	}
+	assign.Right = right
+	return assign
 }
 
 func (p *parser) parseInstanceVariable() ast.Expression {
@@ -568,49 +619,6 @@ func (p *parser) parseInstanceVariable() ast.Expression {
 	}
 	instanceVariable.Name = p.parseIdentifier().(*ast.Identifier)
 	return instanceVariable
-}
-
-func (p *parser) parseMultiVars(left ast.Expression) ast.Expression {
-	if p.trace {
-		defer un(trace(p, "parseMultiVars"))
-	}
-	ident, ok := left.(*ast.Identifier)
-	if !ok {
-		msg := fmt.Sprintf("multi vars not possible for type %T", left)
-		epos := p.file.Position(p.pos)
-		if epos.Filename != "" || epos.IsValid() {
-			msg = epos.String() + ": " + msg
-		}
-		p.errors = append(p.errors, errors.Errorf(msg))
-		return nil
-	}
-	vars := make([]*ast.Identifier, 2)
-	vars[0] = ident
-	p.accept(token.IDENT)
-	secondVar := p.parseIdentifier().(*ast.Identifier)
-	vars[1] = secondVar
-	for p.peekTokenIs(token.COMMA) {
-		p.accept(token.COMMA)
-		if !p.accept(token.IDENT) {
-			return nil
-		}
-		nextVar := p.parseIdentifier().(*ast.Identifier)
-		vars = append(vars, nextVar)
-	}
-	if !p.accept(token.ASSIGN) {
-		return nil
-	}
-	p.nextToken()
-	values := make([]ast.Expression, 1)
-	firstExpr := p.parseExpression(precMultiVars)
-	values[0] = firstExpr
-	for p.peekTokenIs(token.COMMA) {
-		p.accept(token.COMMA)
-		p.nextToken()
-		nextVal := p.parseExpression(precMultiVars)
-		values = append(values, nextVal)
-	}
-	return &ast.MultiAssignment{Variables: vars, Values: values}
 }
 
 func (p *parser) parseNilLiteral() ast.Expression {
@@ -786,7 +794,7 @@ func (p *parser) parseKeyValue() (ast.Expression, ast.Expression, bool) {
 	if !p.consume(token.HASHROCKET) {
 		return nil, nil, false
 	}
-	val := p.parseExpression(precMultiVars)
+	val := p.parseExpression(precLowest)
 	return key, val, true
 }
 
@@ -849,7 +857,7 @@ func (p *parser) parseIndexExpression(left ast.Expression) ast.Expression {
 	exp := &ast.IndexExpression{Token: p.curToken, Left: left}
 
 	p.nextToken()
-	exp.Index = p.parseExpression(precMultiVars)
+	exp.Index = p.parseExpression(precLowest)
 	if p.peekTokenIs(token.COMMA) {
 		p.consume(token.COMMA)
 		exp.Length = p.parseExpression(precLowest)
@@ -1115,7 +1123,7 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 	ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
 	if p.peekTokenIs(token.ASSIGN) {
 		p.consume(token.ASSIGN)
-		ident.Default = p.parseExpression(precMultiVars)
+		ident.Default = p.parseExpression(precLowest)
 	}
 	identifiers = append(identifiers, ident)
 
@@ -1131,7 +1139,7 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 		ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
 		if p.peekTokenIs(token.ASSIGN) {
 			p.consume(token.ASSIGN)
-			ident.Default = p.parseExpression(precMultiVars)
+			ident.Default = p.parseExpression(precLowest)
 		}
 		identifiers = append(identifiers, ident)
 	}

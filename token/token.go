@@ -24,12 +24,14 @@ const (
 
 	// Operators
 	operator_beg
+	operator_assign_beg
 	ASSIGN    // =
 	ADDASSIGN // +=
 	SUBASSIGN // -=
 	MULASSIGN // *=
 	DIVASSIGN // /=
 	MODASSIGN // %=
+	operator_assign_end
 
 	PLUS     // +
 	MINUS    // -
@@ -240,6 +242,11 @@ func (tok Type) IsLiteral() bool { return literal_beg < tok && tok < literal_end
 // delimiters; it returns false otherwise.
 //
 func (tok Type) IsOperator() bool { return operator_beg < tok && tok < operator_end }
+
+// IsAssignOperator returns true for tokens corresponding to assignment
+// operators and delimiters; it returns false otherwise.
+//
+func (tok Type) IsAssignOperator() bool { return operator_assign_beg < tok && tok < operator_assign_end }
 
 // IsKeyword returns true for tokens corresponding to keywords;
 // it returns false otherwise.
