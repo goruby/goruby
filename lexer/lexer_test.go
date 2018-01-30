@@ -8,6 +8,10 @@ import (
 
 func TestLexerNextToken(t *testing.T) {
 	input := `five = 5
+while x < y do
+	x += x
+end
+seven,
 # just comment
 fifty = 5_0
 ten = 10
@@ -74,6 +78,7 @@ A::B
 =>
 __FILE__
 @
+$foo,
 $foo;
 $Foo
 $dotAfter.
@@ -87,6 +92,21 @@ $a`
 		{token.IDENT, "five"},
 		{token.ASSIGN, "="},
 		{token.INT, "5"},
+		{token.NEWLINE, "\n"},
+		{token.WHILE, "while"},
+		{token.IDENT, "x"},
+		{token.LT, "<"},
+		{token.IDENT, "y"},
+		{token.DO, "do"},
+		{token.NEWLINE, "\n"},
+		{token.IDENT, "x"},
+		{token.ADDASSIGN, "+="},
+		{token.IDENT, "x"},
+		{token.NEWLINE, "\n"},
+		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.IDENT, "seven"},
+		{token.COMMA, ","},
 		{token.NEWLINE, "\n"},
 		{token.HASH, "#"},
 		{token.STRING, " just comment"},
@@ -293,6 +313,9 @@ $a`
 		{token.KEYWORD__FILE__, "__FILE__"},
 		{token.NEWLINE, "\n"},
 		{token.AT, "@"},
+		{token.NEWLINE, "\n"},
+		{token.GLOBAL, "$foo"},
+		{token.COMMA, ","},
 		{token.NEWLINE, "\n"},
 		{token.GLOBAL, "$foo"},
 		{token.SEMICOLON, ";"},

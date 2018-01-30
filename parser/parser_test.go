@@ -288,43 +288,51 @@ func TestParseMultiAssignment(t *testing.T) {
 			variables: []string{"x", "y", "z"},
 			values:    []string{"3"},
 		},
+		{
+			input:     "x[0], @y, $z, A = 3, 4, 5, 6;",
+			variables: []string{"(x[0])", "@y", "$z", "A"},
+			values:    []string{"3", "4", "5", "6"},
+		},
 	}
 
 	for _, tt := range tests {
-		program, err := parseSource(tt.input)
-		checkParserErrors(t, err)
+		t.Run(tt.input, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Logf("Expected first statement to be *ast.ExpressionStatement, got %T\n", stmt)
-			t.FailNow()
-		}
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Logf("Expected first statement to be *ast.ExpressionStatement, got %T\n", stmt)
+				t.FailNow()
+			}
 
-		multi, ok := stmt.Expression.(*ast.MultiAssignment)
-		if !ok {
-			t.Logf("Expected expression to be *ast.MultiAssignment, got %T\n", stmt.Expression)
-			t.FailNow()
-		}
+			assign, ok := stmt.Expression.(*ast.Assignment)
+			if !ok {
+				t.Logf("Expected expression to be %T, got %T\n", assign, stmt.Expression)
+				t.FailNow()
+			}
 
-		actualVars := make([]string, len(multi.Variables))
-		for i, v := range multi.Variables {
-			actualVars[i] = v.Value
-		}
+			left, ok := assign.Left.(ast.ExpressionList)
+			if !ok {
+				t.Logf("Expected left to be %T, got %T\n", left, assign.Left)
+				t.FailNow()
+			}
 
-		if !reflect.DeepEqual(tt.variables, actualVars) {
-			t.Logf("Expected variable identifiers to equal %s, got %s\n", tt.variables, actualVars)
-			t.Fail()
-		}
+			actualVars := make([]string, len(left))
+			for i, v := range left {
+				actualVars[i] = v.String()
+			}
 
-		actualVals := make([]string, len(multi.Values))
-		for i, v := range multi.Values {
-			actualVals[i] = v.String()
-		}
+			if !reflect.DeepEqual(tt.variables, actualVars) {
+				t.Logf("Expected variable identifiers to equal %s, got %s\n", tt.variables, actualVars)
+				t.Fail()
+			}
 
-		if !reflect.DeepEqual(tt.values, actualVals) {
-			t.Logf("Expected variable values to equal %s, got %s\n", tt.values, actualVals)
-			t.Fail()
-		}
+			if !reflect.DeepEqual(strings.Join(tt.values, ", "), assign.Right.String()) {
+				t.Logf("Expected variable values to equal %s, got %s\n", tt.values, assign.Right.String())
+				t.Fail()
+			}
+		})
 	}
 }
 
@@ -2810,33 +2818,35 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := parseSource(tt.input)
-		checkParserErrors(t, err)
+		t.Run(tt.input, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		stmt := program.Statements[0].(*ast.ExpressionStatement)
-		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
-		if !ok {
-			t.Fatalf(
-				"stmt.Expression is not ast.ContextCallExpression. got=%T",
-				stmt.Expression,
-			)
-		}
-
-		if !testIdentifier(t, exp.Function, tt.expectedIdent) {
-			return
-		}
-
-		if len(exp.Arguments) != len(tt.expectedArgs) {
-			t.Fatalf("wrong number of arguments. want=%d, got=%d",
-				len(tt.expectedArgs), len(exp.Arguments))
-		}
-
-		for i, arg := range tt.expectedArgs {
-			if exp.Arguments[i].String() != arg {
-				t.Errorf("argument %d wrong. want=%q, got=%q", i,
-					arg, exp.Arguments[i].String())
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			exp, ok := stmt.Expression.(*ast.ContextCallExpression)
+			if !ok {
+				t.Fatalf(
+					"stmt.Expression is not ast.ContextCallExpression. got=%T",
+					stmt.Expression,
+				)
 			}
-		}
+
+			if !testIdentifier(t, exp.Function, tt.expectedIdent) {
+				return
+			}
+
+			if len(exp.Arguments) != len(tt.expectedArgs) {
+				t.Fatalf("wrong number of arguments. want=%d, got=%d",
+					len(tt.expectedArgs), len(exp.Arguments))
+			}
+
+			for i, arg := range tt.expectedArgs {
+				if exp.Arguments[i].String() != arg {
+					t.Errorf("argument %d wrong. want=%q, got=%q", i,
+						arg, exp.Arguments[i].String())
+				}
+			}
+		})
 	}
 }
 

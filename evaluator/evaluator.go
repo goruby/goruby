@@ -3,6 +3,7 @@ package evaluator
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/goruby/goruby/ast"
 	"github.com/goruby/goruby/object"
@@ -15,6 +16,26 @@ type callContext struct {
 
 func (c *callContext) Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 	return Eval(node, env)
+}
+
+type rubyObjects []object.RubyObject
+
+func (r rubyObjects) Inspect() string {
+	toS := make([]string, len(r))
+	for i, e := range r {
+		toS[i] = e.Inspect()
+	}
+	return strings.Join(toS, ", ")
+}
+func (r rubyObjects) Type() object.Type       { return "" }
+func (r rubyObjects) Class() object.RubyClass { return nil }
+
+func expandToArrayIfNeeded(obj object.RubyObject) object.RubyObject {
+	arr, ok := obj.(rubyObjects)
+	if !ok {
+		return obj
+	}
+	return object.NewArray(arr...)
 }
 
 // Eval evaluates the given node and traverses recursive over its children
@@ -158,6 +179,16 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			hash.Set(key, value)
 		}
 		return &hash, nil
+	case ast.ExpressionList:
+		var objects []object.RubyObject
+		for _, e := range node {
+			obj, err := Eval(e, env)
+			if err != nil {
+				return nil, errors.WithMessage(err, "eval expression list")
+			}
+			objects = append(objects, obj)
+		}
+		return rubyObjects(objects), nil
 
 	// Expressions
 	case *ast.Assignment:
@@ -165,6 +196,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		if err != nil {
 			return nil, errors.WithMessage(err, "eval right hand Assignment side")
 		}
+
 		switch left := node.Left.(type) {
 		case *ast.IndexExpression:
 			indexLeft, err := Eval(left.Left, env)
@@ -175,7 +207,7 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			if err != nil {
 				return nil, errors.WithMessage(err, "eval left hand Assignment side: eval right side of IndexExpression")
 			}
-			return evalIndexExpressionAssignment(indexLeft, index, right)
+			return evalIndexExpressionAssignment(indexLeft, index, expandToArrayIfNeeded(right))
 		case *ast.InstanceVariable:
 			self, _ := env.Get("self")
 			selfObj := self.(*object.Self)
@@ -187,39 +219,63 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 				)
 			}
 
+			right = expandToArrayIfNeeded(right)
 			selfAsEnv.Set(left.String(), right)
 			return right, nil
 		case *ast.Identifier:
+			right = expandToArrayIfNeeded(right)
 			env.Set(left.Value, right)
 			return right, nil
 		case *ast.Global:
+			right = expandToArrayIfNeeded(right)
 			env.SetGlobal(left.Value, right)
 			return right, nil
+		case ast.ExpressionList:
+			values := []object.RubyObject{right}
+			if list, ok := right.(rubyObjects); ok {
+				values = list
+			}
+			if len(left) > len(values) {
+				// enlarge slice
+				for len(values) <= len(left) {
+					values = append(values, object.NIL)
+				}
+			}
+			for i, exp := range left {
+				if _, ok := exp.(*ast.InstanceVariable); ok {
+					self, _ := env.Get("self")
+					selfObj := self.(*object.Self)
+					selfAsEnv, ok := selfObj.RubyObject.(object.Environment)
+					if !ok {
+						return nil, errors.Wrap(
+							object.NewSyntaxError(fmt.Errorf("instance variable not allowed for %s", selfObj.Name)),
+							"eval left hand Assignment side",
+						)
+					}
+
+					selfAsEnv.Set(exp.String(), values[i])
+					continue
+				}
+				if indexExp, ok := exp.(*ast.IndexExpression); ok {
+					indexLeft, err := Eval(indexExp.Left, env)
+					if err != nil {
+						return nil, errors.WithMessage(err, "eval left hand Assignment side: eval left side of IndexExpression")
+					}
+					index, err := Eval(indexExp.Index, env)
+					if err != nil {
+						return nil, errors.WithMessage(err, "eval left hand Assignment side: eval right side of IndexExpression")
+					}
+					evalIndexExpressionAssignment(indexLeft, index, values[i])
+					continue
+				}
+				env.Set(exp.String(), values[i])
+			}
+			return expandToArrayIfNeeded(right), nil
 		default:
 			return nil, errors.WithStack(
 				object.NewSyntaxError(fmt.Errorf("Assignment not supported to %T", node.Left)),
 			)
 		}
-	case *ast.MultiAssignment:
-		values := make([]object.RubyObject, 0)
-		for _, v := range node.Values {
-			val, err := Eval(v, env)
-			if err != nil {
-				return nil, errors.WithMessage(err, "eval MultiAssignment value")
-			}
-			values = append(values, val)
-		}
-		lastVal := values[len(values)-1]
-		if len(node.Variables) > len(node.Values) {
-			// enlarge slice
-			for len(values) <= len(node.Variables) {
-				values = append(values, object.NIL)
-			}
-		}
-		for i, ident := range node.Variables {
-			env.Set(ident.Value, values[i])
-		}
-		return lastVal, nil
 	case *ast.ModuleExpression:
 		module, ok := env.Get(node.Name.Value)
 		if !ok {
@@ -462,7 +518,7 @@ func evalIndexExpressionAssignment(left, index, right object.RubyObject) (object
 			)
 		}
 		idx := int(integer.Value)
-		if idx > len(target.Elements) {
+		if idx >= len(target.Elements) {
 			// enlarge slice
 			for len(target.Elements) <= idx {
 				target.Elements = append(target.Elements, object.NIL)
@@ -496,6 +552,10 @@ func evalArrayIndexExpression(arrayObject *object.Array, index object.RubyObject
 	idx := index.(*object.Integer).Value
 	maxNegative := -int64(len(arrayObject.Elements))
 	maxPositive := maxNegative*-1 - 1
+	if maxPositive < 0 {
+		return object.NIL
+	}
+
 	if idx > 0 && idx > maxPositive {
 		return object.NIL
 	}

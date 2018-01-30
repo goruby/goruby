@@ -577,6 +577,32 @@ func TestAssignment(t *testing.T) {
 			testIntegerObject(t, evaluated, tt.expected)
 		}
 	})
+	t.Run("assign more than one value", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected interface{}
+		}{
+			{
+				`foo = 5, 4`,
+				[]string{"5", "4"},
+			},
+			{
+				`foo = 5, 4; foo`,
+				[]string{"5", "4"},
+			},
+			{
+				`@foo = 5, 6; @foo`,
+				[]string{"5", "6"},
+			},
+		}
+
+		for _, tt := range tests {
+			evaluated, err := testEval(tt.input, object.NewMainEnvironment())
+			checkError(t, err)
+
+			testObject(t, evaluated, tt.expected)
+		}
+	})
 	t.Run("assign to InstanceVariable", func(t *testing.T) {
 		tests := []struct {
 			input    string
@@ -607,6 +633,11 @@ func TestAssignment(t *testing.T) {
 		}{
 			{
 				`x = [3]; x[0] = 5; x`,
+				1,
+				[]object.RubyObject{&object.Integer{Value: 5}},
+			},
+			{
+				`x = []; x[0] = 5; x`,
 				1,
 				[]object.RubyObject{&object.Integer{Value: 5}},
 			},
@@ -642,10 +673,12 @@ func TestAssignment(t *testing.T) {
 
 func TestMultiAssignment(t *testing.T) {
 	tests := []struct {
+		name   string
 		input  string
-		output object.RubyObject
+		output *object.Array
 	}{
 		{
+			name:  "evenly distributed sides",
 			input: "x, y, z = 1, 2, 3; [x, y, z]",
 			output: &object.Array{Elements: []object.RubyObject{
 				&object.Integer{Value: 1},
@@ -654,6 +687,7 @@ func TestMultiAssignment(t *testing.T) {
 			}},
 		},
 		{
+			name:  "value side one less",
 			input: "x, y, z = 1, 2; [x, y, z]",
 			output: &object.Array{Elements: []object.RubyObject{
 				&object.Integer{Value: 1},
@@ -662,6 +696,7 @@ func TestMultiAssignment(t *testing.T) {
 			}},
 		},
 		{
+			name:  "value side two less",
 			input: "x, y, z = 1; [x, y, z]",
 			output: &object.Array{Elements: []object.RubyObject{
 				&object.Integer{Value: 1},
@@ -669,16 +704,35 @@ func TestMultiAssignment(t *testing.T) {
 				object.NIL,
 			}},
 		},
+		{
+			name:  "lhs with array index and instance var",
+			input: "x = []; x[0], y, @z = 1, 2, 3; [x[0], y, @z]",
+			output: &object.Array{Elements: []object.RubyObject{
+				&object.Integer{Value: 1},
+				&object.Integer{Value: 2},
+				&object.Integer{Value: 3},
+			}},
+		},
+		{
+			name:  "lhs with global and const",
+			input: "$x, Y = 1, 2; [$x, Y]",
+			output: &object.Array{Elements: []object.RubyObject{
+				&object.Integer{Value: 1},
+				&object.Integer{Value: 2},
+			}},
+		},
 	}
 
 	for _, tt := range tests {
-		evaluated, err := testEval(tt.input)
-		checkError(t, err)
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated, err := testEval(tt.input, object.NewMainEnvironment())
+			checkError(t, err)
 
-		if !reflect.DeepEqual(tt.output, evaluated) {
-			t.Logf("Expected result to equal\n%+v\n\tgot\n%+v\n", tt.output, evaluated)
-			t.Fail()
-		}
+			if !reflect.DeepEqual(tt.output, evaluated) {
+				t.Logf("Expected result to equal\n%s\n\tgot\n%s\n", tt.output.Inspect(), evaluated.Inspect())
+				t.Fail()
+			}
+		})
 	}
 }
 

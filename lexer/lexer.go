@@ -3,6 +3,7 @@ package lexer
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 
@@ -24,6 +25,8 @@ var LexStartFn = startLexer
 // return LexStartFn to go back to the decision loop. It also could return
 // another non start state function if the partial input to parse is abiguous.
 type StateFn func(*Lexer) StateFn
+
+const operatorCharacters = "+-!*/%&<>=,;#.:(){}[]|@?$"
 
 // New returns a Lexer instance ready to process the given input.
 func New(input string) *Lexer {
@@ -284,10 +287,10 @@ func startLexer(l *Lexer) StateFn {
 		return startLexer
 
 	default:
-		if isLetter(r) {
-			return lexIdentifier
-		} else if isDigit(r) {
+		if isDigit(r) {
 			return lexDigit
+		} else if isLetter(r) {
+			return lexIdentifier
 		} else {
 			return l.errorf("Illegal character: '%c'", r)
 		}
@@ -297,7 +300,14 @@ func startLexer(l *Lexer) StateFn {
 func lexIdentifier(l *Lexer) StateFn {
 	legalIdentifierCharacters := []byte{'?', '!'}
 	r := l.next()
-	for isLetter(r) || isDigit(r) || bytes.ContainsRune(legalIdentifierCharacters, r) {
+	for {
+		if unicode.IsSpace(r) || strings.ContainsRune(operatorCharacters, r) || r == eof {
+			if bytes.ContainsRune(legalIdentifierCharacters, r) {
+				l.next()
+				break
+			}
+			break
+		}
 		r = l.next()
 	}
 	l.backup()
@@ -375,7 +385,7 @@ func lexGlobal(l *Lexer) StateFn {
 		return l.errorf("Illegal character: '%c'", r)
 	}
 
-	for !isWhitespace(r) && !isExpressionDelimiter(r) && r != '.' {
+	for !isWhitespace(r) && !isExpressionDelimiter(r) && r != '.' && r != ',' {
 		r = l.next()
 	}
 	l.backup()
