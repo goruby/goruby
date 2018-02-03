@@ -231,6 +231,34 @@ type Token struct {
 	Pos     int
 }
 
+// IsLiteral returns true for tokens corresponding to identifiers
+// and basic type literals; it returns false otherwise.
+//
+func (t Token) IsLiteral() bool {
+	return t.Type.IsLiteral()
+}
+
+// IsOperator returns true for tokens corresponding to operators and
+// delimiters; it returns false otherwise.
+//
+func (t Token) IsOperator() bool {
+	return t.Type.IsOperator()
+}
+
+// IsAssignOperator returns true for tokens corresponding to assignment
+// operators and delimiters; it returns false otherwise.
+//
+func (t Token) IsAssignOperator() bool {
+	return t.Type.IsAssignOperator()
+}
+
+// IsKeyword returns true for tokens corresponding to keywords;
+// it returns false otherwise.
+//
+func (t Token) IsKeyword() bool {
+	return t.Type.IsKeyword()
+}
+
 // Predicates
 
 // IsLiteral returns true for tokens corresponding to identifiers

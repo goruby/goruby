@@ -669,6 +669,28 @@ func TestAssignment(t *testing.T) {
 			}
 		}
 	})
+	t.Run("assign operator on local variable", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected int64
+		}{
+			{
+				`foo = 2; foo += 5`,
+				7,
+			},
+			{
+				`foo = 5; foo -= 3; foo`,
+				2,
+			},
+		}
+
+		for _, tt := range tests {
+			evaluated, err := testEval(tt.input, object.NewMainEnvironment())
+			checkError(t, err)
+
+			testIntegerObject(t, evaluated, tt.expected)
+		}
+	})
 }
 
 func TestMultiAssignment(t *testing.T) {

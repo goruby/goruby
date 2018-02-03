@@ -249,9 +249,9 @@ func (p *parser) nextToken() {
 	if p.trace && p.pos.IsValid() {
 		s := p.curToken.Type.String()
 		switch {
-		case p.curToken.Type.IsLiteral():
+		case p.curToken.IsLiteral():
 			p.printTrace(s, p.curToken.Literal)
-		case p.curToken.Type.IsOperator(), p.curToken.Type.IsKeyword():
+		case p.curToken.IsOperator(), p.curToken.IsKeyword():
 			p.printTrace("\"" + s + "\"")
 		default:
 			p.printTrace(s)

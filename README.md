@@ -236,11 +236,11 @@ To run the command as one off run `go run main.go`.
 	- [x] `<=` (less or equal)
 	- [x] `>=` (greater or equal)
 	- [ ] assignment operators
-		- [ ] `+=`
-		- [ ] `-=`
-		- [ ] `/=`
-		- [ ] `*=`
-		- [ ] `%=`
+		- [x] `+=`
+		- [x] `-=`
+		- [x] `/=`
+		- [x] `*=`
+		- [x] `%=`
 		- [ ] `**=`
 		- [ ] `&=`
 		- [ ] `|=`

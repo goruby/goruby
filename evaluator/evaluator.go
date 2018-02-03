@@ -367,6 +367,19 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 		}
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
+		if node.Token.IsAssignOperator() {
+			assignIndex := strings.LastIndexByte(node.Token.Literal, '=')
+			newInf := &ast.InfixExpression{
+				Left:     node.Left,
+				Operator: node.Token.Literal[:assignIndex],
+				Right:    node.Right,
+			}
+			assignment := &ast.Assignment{
+				Left:  node.Left,
+				Right: newInf,
+			}
+			return Eval(assignment, env)
+		}
 		left, err := Eval(node.Left, env)
 		if err != nil {
 			return nil, errors.WithMessage(err, "eval operator left side")
