@@ -115,7 +115,7 @@ To run the command as one off run `go run main.go`.
 	- [x] if
 	- [x] if/else
 	- [ ] if/elif/else
-	- [ ] tenary `? : `
+	- [x] tenary `? : `
 	- [x] unless
 	- [x] unless/else
 	- [ ] case
@@ -123,7 +123,7 @@ To run the command as one off run `go run main.go`.
 	- [ ] `&&`
 - [ ] control flow
 	- [ ] for loop
-	- [ ] while loop
+	- [x] while loop
 	- [ ] until loop
 	- [ ] break
 	- [ ] next
