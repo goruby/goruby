@@ -555,36 +555,6 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 	if p.trace {
 		defer un(trace(p, "parseAssignment"))
 	}
-	// lhsValid := func(expr ast.Expression) bool {
-	// 	switch expr.(type) {
-	// 	case *ast.Identifier:
-	// 	case *ast.IndexExpression:
-	// 	case *ast.Global:
-	// 	case *ast.InstanceVariable:
-	// 	default:
-	// 		return false
-	// 	}
-	// 	return true
-	// }
-	// if !lhsValid(left) {
-	// 	fmt.Printf("LEFT INVALID: %T:%v\n", left, left)
-	// 	p.expectError(token.EOF)
-	// 	return nil
-	// }
-	parseRightSide := func() (ast.Expression, bool) {
-		right := p.parseExpression(precIfUnless)
-		if p.currentTokenIs(token.COMMA) {
-			p.nextToken()
-			elements := []ast.Expression{right}
-			el, ok := p.parseExpressions(right).(ast.ExpressionList)
-			if !ok {
-				return nil, false
-			}
-			elements = append(elements, el...)
-			return ast.ExpressionList(elements), true
-		}
-		return right, true
-	}
 
 	switch left.(type) {
 	case *ast.Identifier:
@@ -607,12 +577,29 @@ func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
 		Left:  left,
 	}
 	p.nextToken()
-	right, ok := parseRightSide()
+	expr := p.parseExpression(precLowest)
+	right, ok := expr.(*ast.ConditionalExpression)
 	if !ok {
+		assign.Right = expr
+		return assign
+	}
+	expStmt, ok := right.Consequence.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		p.errors = append(p.errors, fmt.Errorf("malformed AST in assignment"))
 		return nil
 	}
-	assign.Right = right
-	return assign
+	assign.Right = expStmt.Expression
+	cond := &ast.ConditionalExpression{
+		Token:     right.Token,
+		Condition: right.Condition,
+		Consequence: &ast.BlockStatement{
+			Statements: []ast.Statement{
+				&ast.ExpressionStatement{Expression: assign},
+			},
+		},
+	}
+
+	return cond
 }
 
 func (p *parser) parseInstanceVariable() ast.Expression {

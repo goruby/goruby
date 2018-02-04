@@ -37,6 +37,12 @@ func TestAssignment(t *testing.T) {
 			leftType:  reflect.TypeOf(&ast.Identifier{}),
 			rightType: reflect.TypeOf(&ast.IntegerLiteral{}),
 		},
+		{
+			name:      "method call with block on rhs",
+			input:     `x = foo { |x| }`,
+			leftType:  reflect.TypeOf(&ast.Identifier{}),
+			rightType: reflect.TypeOf(&ast.ContextCallExpression{}),
+		},
 	}
 
 	for _, tt := range tests {
@@ -1244,6 +1250,42 @@ func TestParsingInfixExpressions(t *testing.T) {
 				cce,
 				stmt.Expression,
 			)
+		}
+	})
+	t.Run("call expression with just a block", func(t *testing.T) {
+		input := "foo { |x| x }"
+
+		program, err := parseSource(input)
+		checkParserErrors(t, err)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf(
+				"program.Statements does not contain %d statements. got=%d\n",
+				1,
+				len(program.Statements),
+			)
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf(
+				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0],
+			)
+		}
+
+		cce, ok := stmt.Expression.(*ast.ContextCallExpression)
+		if !ok {
+			t.Fatalf(
+				"stmt.Expression is not %T. got=%T",
+				cce,
+				stmt.Expression,
+			)
+		}
+
+		if cce.Block == nil {
+			t.Logf("Expected block not to be nil")
+			t.Fail()
 		}
 	})
 }
