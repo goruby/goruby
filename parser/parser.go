@@ -962,7 +962,9 @@ func (p *parser) parseLoopExpression() ast.Expression {
 	loop := &ast.LoopExpression{Token: p.curToken}
 	p.nextToken()
 	loop.Condition = p.parseExpression(precBlockDo)
-	p.accept(token.DO)
+	if p.peekTokenIs(token.DO) {
+		p.accept(token.DO)
+	}
 	loop.Block = p.parseBlockStatement(token.END)
 	p.nextToken()
 	return loop

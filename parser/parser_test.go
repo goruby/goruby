@@ -114,7 +114,7 @@ func TestAssignmentOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			program, err := parseSource(tt.input, Trace)
+			program, err := parseSource(tt.input)
 			checkParserErrors(t, err)
 
 			if len(program.Statements) != 1 {
@@ -261,39 +261,58 @@ func TestVariableExpression(t *testing.T) {
 }
 
 func TestWhileExpression(t *testing.T) {
-	input := `
-	while x < y do
-		x += x
-	end`
-
-	program, err := parseSource(input)
-	checkParserErrors(t, err)
-
-	if len(program.Statements) != 1 {
-		t.Logf(
-			"program.Body does not contain %d statements. got=%d\n",
-			1,
-			len(program.Statements),
-		)
-		t.Logf("%s\n", program.Statements)
-		t.FailNow()
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			name: "with explicit do",
+			input: `
+			while x < y do
+				x += x
+			end`,
+		},
+		{
+			name: "without explicit do",
+			input: `
+			while x < y
+				x += x
+			end`,
+		},
 	}
 
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf(
-			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-			program.Statements[0],
-		)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-	exp, ok := stmt.Expression.(*ast.LoopExpression)
-	if !ok {
-		t.Fatalf(
-			"stmt.Expression is not %T. got=%T",
-			exp,
-			stmt.Expression,
-		)
+			if len(program.Statements) != 1 {
+				t.Logf(
+					"program.Body does not contain %d statements. got=%d\n",
+					1,
+					len(program.Statements),
+				)
+				t.Logf("%s\n", program.Statements)
+				t.FailNow()
+			}
+
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0],
+				)
+			}
+
+			exp, ok := stmt.Expression.(*ast.LoopExpression)
+			if !ok {
+				t.Fatalf(
+					"stmt.Expression is not %T. got=%T",
+					exp,
+					stmt.Expression,
+				)
+			}
+		})
 	}
 }
 
