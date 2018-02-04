@@ -372,9 +372,16 @@ func Eval(node ast.Node, env object.Environment) (object.RubyObject, error) {
 			return nil, errors.WithMessage(err, "eval operator left side")
 		}
 
+		if node.IsControlExpression() && !node.MustEvaluateRight() && isTruthy(left) {
+			return left, nil
+		}
+
 		right, err := Eval(node.Right, env)
 		if err != nil {
 			return nil, errors.WithMessage(err, "eval operator right side")
+		}
+		if node.IsControlExpression() {
+			return right, nil
 		}
 		context := &callContext{object.NewCallContext(env, left)}
 		return object.Send(context, node.Operator, right)

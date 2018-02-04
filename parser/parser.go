@@ -22,8 +22,12 @@ const (
 	precCallArg     // func x
 	precTenary      // ?, :
 	precAssignment  // x = 5
+	precLogicalOr   // ||
+	precLogicalAnd  // &&
 	precEquals      // ==, !=, <=>
 	precLessGreater // >, <, >=, <=
+	precOr          // |
+	precAnd         // &
 	precShift       // <<
 	precSum         // + or -
 	precProduct     // *, /, %
@@ -36,45 +40,49 @@ const (
 )
 
 var precedences = map[token.Type]int{
-	token.IF:        precIfUnless,
-	token.UNLESS:    precIfUnless,
-	token.EQ:        precEquals,
-	token.NOTEQ:     precEquals,
-	token.SPACESHIP: precEquals,
-	token.LSHIFT:    precShift,
-	token.QMARK:     precTenary,
-	token.COLON:     precTenary,
-	token.LT:        precLessGreater,
-	token.GT:        precLessGreater,
-	token.LTE:       precLessGreater,
-	token.GTE:       precLessGreater,
-	token.PLUS:      precSum,
-	token.MINUS:     precSum,
-	token.SLASH:     precProduct,
-	token.ASTERISK:  precProduct,
-	token.MODULO:    precProduct,
-	token.ASSIGN:    precAssignment,
-	token.ADDASSIGN: precAssignment,
-	token.SUBASSIGN: precAssignment,
-	token.MULASSIGN: precAssignment,
-	token.DIVASSIGN: precAssignment,
-	token.MODASSIGN: precAssignment,
-	token.LPAREN:    precCall,
-	token.DOT:       precCall,
-	token.IDENT:     precCallArg,
-	token.CONST:     precCallArg,
-	token.GLOBAL:    precCallArg,
-	token.INT:       precCallArg,
-	token.STRING:    precCallArg,
-	token.SELF:      precCallArg,
-	token.LBRACKET:  precIndex,
-	token.LBRACE:    precBlockBraces,
-	token.DO:        precBlockDo,
-	token.SCOPE:     precScope,
-	token.SYMBEG:    precSymbol,
-	token.COMMA:     precAssignment,
-	token.THEN:      precHighest,
-	token.NEWLINE:   precHighest,
+	token.IF:         precIfUnless,
+	token.UNLESS:     precIfUnless,
+	token.EQ:         precEquals,
+	token.NOTEQ:      precEquals,
+	token.SPACESHIP:  precEquals,
+	token.LSHIFT:     precShift,
+	token.QMARK:      precTenary,
+	token.COLON:      precTenary,
+	token.LT:         precLessGreater,
+	token.GT:         precLessGreater,
+	token.LTE:        precLessGreater,
+	token.GTE:        precLessGreater,
+	token.PLUS:       precSum,
+	token.MINUS:      precSum,
+	token.SLASH:      precProduct,
+	token.ASTERISK:   precProduct,
+	token.MODULO:     precProduct,
+	token.ASSIGN:     precAssignment,
+	token.ADDASSIGN:  precAssignment,
+	token.SUBASSIGN:  precAssignment,
+	token.MULASSIGN:  precAssignment,
+	token.DIVASSIGN:  precAssignment,
+	token.MODASSIGN:  precAssignment,
+	token.LPAREN:     precCall,
+	token.DOT:        precCall,
+	token.IDENT:      precCallArg,
+	token.CONST:      precCallArg,
+	token.GLOBAL:     precCallArg,
+	token.INT:        precCallArg,
+	token.STRING:     precCallArg,
+	token.SELF:       precCallArg,
+	token.LBRACKET:   precIndex,
+	token.LBRACE:     precBlockBraces,
+	token.DO:         precBlockDo,
+	token.SCOPE:      precScope,
+	token.SYMBEG:     precSymbol,
+	token.COMMA:      precAssignment,
+	token.THEN:       precHighest,
+	token.NEWLINE:    precHighest,
+	token.PIPE:       precOr,
+	token.AND:        precAnd,
+	token.LOGICALOR:  precLogicalOr,
+	token.LOGICALAND: precLogicalAnd,
 }
 
 var tokensNotPossibleInCallArgs = []token.Type{
@@ -174,6 +182,8 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LTE, p.parseInfixExpression)
 	p.registerInfix(token.GTE, p.parseInfixExpression)
+	p.registerInfix(token.LOGICALOR, p.parseInfixExpression)
+	p.registerInfix(token.LOGICALAND, p.parseInfixExpression)
 	p.registerInfix(token.ADDASSIGN, p.parseAssignmentOperator)
 	p.registerInfix(token.SUBASSIGN, p.parseAssignmentOperator)
 	p.registerInfix(token.MULASSIGN, p.parseAssignmentOperator)

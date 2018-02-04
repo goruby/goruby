@@ -1026,10 +1026,24 @@ type InfixExpression struct {
 	Right    Expression
 }
 
+// MustEvaluateRight returns true if it is mandatory to evaluate the right side
+// of the operator, false otherwise
+func (oe *InfixExpression) MustEvaluateRight() bool {
+	return oe.Token.Type != token.LOGICALOR
+}
+
+// IsControlExpression returns true if the infix is used for control flow,
+// false otherwise
+func (oe *InfixExpression) IsControlExpression() bool {
+	return oe.Token.Type == token.LOGICALOR || oe.Token.Type == token.LOGICALAND
+}
+
 func (oe *InfixExpression) expressionNode() {}
 
-// Pos returns the position of first character belonging to the node
+// Pos returns the position of first character belonging to the left node
 func (oe *InfixExpression) Pos() int { return oe.Left.Pos() }
+
+// End returns the position of last character belonging to the right node
 func (oe *InfixExpression) End() int { return oe.Right.End() }
 
 // TokenLiteral returns the literal from the infix operator token

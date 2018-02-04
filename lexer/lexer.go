@@ -40,12 +40,13 @@ func New(input string) *Lexer {
 
 // Lexer is the engine to process input and emit Tokens
 type Lexer struct {
-	input  string           // the string being scanned.
-	state  StateFn          // the next lexing function to enter
-	pos    int              // current position in the input.
-	start  int              // start position of this item.
-	width  int              // width of last rune read from input.
-	tokens chan token.Token // channel of scanned tokens.
+	input     string           // the string being scanned.
+	state     StateFn          // the next lexing function to enter
+	pos       int              // current position in the input.
+	start     int              // start position of this item.
+	width     int              // width of last rune read from input.
+	tokens    chan token.Token // channel of scanned tokens.
+	lastToken token.Token      // lastToken stores the last token emitted by the lexer
 }
 
 // NextToken will return the next token processed from the lexer.
@@ -76,7 +77,9 @@ func (l *Lexer) HasNext() bool {
 
 // emit passes a token back to the client.
 func (l *Lexer) emit(t token.Type) {
-	l.tokens <- token.NewToken(t, l.input[l.start:l.pos], l.start)
+	token := token.NewToken(t, l.input[l.start:l.pos], l.start)
+	l.lastToken = token
+	l.tokens <- token
 	l.start = l.pos
 }
 
@@ -222,6 +225,11 @@ func startLexer(l *Lexer) StateFn {
 		l.emit(token.MODULO)
 		return startLexer
 	case '&':
+		if p := l.peek(); p == '&' {
+			l.next()
+			l.emit(token.LOGICALAND)
+			return startLexer
+		}
 		l.emit(token.AND)
 		return startLexer
 	case '<':
@@ -280,6 +288,15 @@ func startLexer(l *Lexer) StateFn {
 	case '#':
 		return commentLexer
 	case '|':
+		if l.lastToken.Type == token.DO || l.lastToken.Type == token.LBRACE {
+			l.emit(token.PIPE)
+			return startLexer
+		}
+		if p := l.peek(); p == '|' {
+			l.next()
+			l.emit(token.LOGICALOR)
+			return startLexer
+		}
 		l.emit(token.PIPE)
 		return startLexer
 	case '@':

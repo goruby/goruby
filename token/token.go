@@ -33,13 +33,16 @@ const (
 	MODASSIGN // %=
 	operator_assign_end
 
-	PLUS     // +
-	MINUS    // -
-	BANG     // !
-	ASTERISK // *
-	SLASH    // /
-	MODULO   // %
-	AND      // &
+	PLUS       // +
+	MINUS      // -
+	BANG       // !
+	ASTERISK   // *
+	SLASH      // /
+	MODULO     // %
+	AND        // &
+	LOGICALAND // &&
+	PIPE       // |
+	LOGICALOR  // ||
 
 	LT        // <
 	LTE       // <=
@@ -68,7 +71,6 @@ const (
 	RBRACE   // }
 	LBRACKET // [
 	RBRACKET // ]
-	PIPE     // |
 
 	SCOPE // ::
 	AT    // @
@@ -117,13 +119,15 @@ var tokens = [...]string{
 	DIVASSIGN: "/=",
 	MODASSIGN: "%=",
 
-	PLUS:     "+",
-	MINUS:    "-",
-	BANG:     "!",
-	ASTERISK: "*",
-	SLASH:    "/",
-	MODULO:   "%",
-	AND:      "&",
+	PLUS:       "+",
+	MINUS:      "-",
+	BANG:       "!",
+	ASTERISK:   "*",
+	SLASH:      "/",
+	MODULO:     "%",
+	AND:        "&",
+	LOGICALAND: "&&",
+	LOGICALOR:  "||",
 
 	LT:        "<",
 	LTE:       "<=",

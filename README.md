@@ -119,8 +119,8 @@ To run the command as one off run `go run main.go`.
 	- [x] unless
 	- [x] unless/else
 	- [ ] case
-	- [ ] `||`
-	- [ ] `&&`
+	- [x] `||`
+	- [x] `&&`
 - [ ] control flow
 	- [ ] for loop
 	- [x] while loop

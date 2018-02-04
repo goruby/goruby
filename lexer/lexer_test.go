@@ -22,6 +22,8 @@ ten = 10
 def add(x, y)
 	x + y
 end
+|
+||
 
 result = add(five, ten)
 !-/*%5;
@@ -54,6 +56,7 @@ end
 :'sym'
 .
 &
+&&
 :dotAfter.
 
 def nil?
@@ -142,6 +145,10 @@ $a`
 		{token.IDENT, "y"},
 		{token.NEWLINE, "\n"},
 		{token.END, "end"},
+		{token.NEWLINE, "\n"},
+		{token.PIPE, "|"},
+		{token.NEWLINE, "\n"},
+		{token.LOGICALOR, "||"},
 		{token.NEWLINE, "\n"},
 		{token.NEWLINE, "\n"},
 		{token.IDENT, "result"},
@@ -243,6 +250,8 @@ $a`
 		{token.DOT, "."},
 		{token.NEWLINE, "\n"},
 		{token.AND, "&"},
+		{token.NEWLINE, "\n"},
+		{token.LOGICALAND, "&&"},
 		{token.NEWLINE, "\n"},
 		{token.SYMBEG, ":"},
 		{token.IDENT, "dotAfter"},
