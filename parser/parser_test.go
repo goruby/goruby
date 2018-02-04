@@ -91,6 +91,84 @@ func TestAssignment(t *testing.T) {
 	}
 }
 
+func TestAssignmentOperator(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         string
+		leftType      reflect.Type
+		rightOperator string
+	}{
+		{
+			name:          "-=",
+			input:         `x -= 3`,
+			leftType:      reflect.TypeOf(&ast.Identifier{}),
+			rightOperator: "-",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			program, err := parseSource(tt.input, Trace)
+			checkParserErrors(t, err)
+
+			if len(program.Statements) != 1 {
+				t.Logf(
+					"program.Statements does not contain 1 statements. got=%d",
+					len(program.Statements),
+				)
+				t.Logf(
+					"program.Statements: %v",
+					program.Statements,
+				)
+				t.FailNow()
+			}
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0],
+				)
+			}
+
+			assign, ok := stmt.Expression.(*ast.Assignment)
+			if !ok {
+				t.Fatalf(
+					"stmt.Expression is not *ast.Assignment. got=%T",
+					stmt.Expression,
+				)
+			}
+
+			{
+				actual := reflect.TypeOf(assign.Left)
+				if tt.leftType != actual {
+					t.Fatalf(
+						"assign.Left is not %v. got=%v",
+						tt.leftType,
+						actual,
+					)
+				}
+			}
+
+			{
+				infix, ok := assign.Right.(*ast.InfixExpression)
+				if !ok {
+					t.Logf("Expected right assign type to be %T, got %T", infix, assign.Right)
+					t.FailNow()
+				}
+
+				if infix.Operator != tt.rightOperator {
+					t.Logf(
+						"Expected right assign infix operator to be %q, got %q",
+						tt.rightOperator,
+						infix.Operator,
+					)
+					t.Fail()
+				}
+			}
+		})
+	}
+}
+
 func TestVariableExpression(t *testing.T) {
 	t.Run("valid variable expressions", func(t *testing.T) {
 		tests := []struct {
@@ -1016,11 +1094,6 @@ func TestParsingInfixExpressions(t *testing.T) {
 			{"true == true", true, "==", true},
 			{"true != false", true, "!=", false},
 			{"false == false", false, "==", false},
-			{"5 += 5", 5, "+=", 5},
-			{"5 -= 5", 5, "-=", 5},
-			{"5 *= 5", 5, "*=", 5},
-			{"5 /= 5", 5, "/=", 5},
-			{"5 %= 5", 5, "%=", 5},
 		}
 
 		for _, tt := range infixTests {

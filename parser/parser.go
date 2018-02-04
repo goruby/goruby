@@ -174,11 +174,11 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LTE, p.parseInfixExpression)
 	p.registerInfix(token.GTE, p.parseInfixExpression)
-	p.registerInfix(token.ADDASSIGN, p.parseInfixExpression)
-	p.registerInfix(token.SUBASSIGN, p.parseInfixExpression)
-	p.registerInfix(token.MULASSIGN, p.parseInfixExpression)
-	p.registerInfix(token.DIVASSIGN, p.parseInfixExpression)
-	p.registerInfix(token.MODASSIGN, p.parseInfixExpression)
+	p.registerInfix(token.ADDASSIGN, p.parseAssignmentOperator)
+	p.registerInfix(token.SUBASSIGN, p.parseAssignmentOperator)
+	p.registerInfix(token.MULASSIGN, p.parseAssignmentOperator)
+	p.registerInfix(token.DIVASSIGN, p.parseAssignmentOperator)
+	p.registerInfix(token.MODASSIGN, p.parseAssignmentOperator)
 	p.registerInfix(token.IF, p.parseModifierConditionalExpression)
 	p.registerInfix(token.UNLESS, p.parseModifierConditionalExpression)
 	p.registerInfix(token.QMARK, p.parseTenaryIfExpression)
@@ -527,6 +527,28 @@ func (p *parser) parseExpressions(left ast.Expression) ast.Expression {
 
 	}
 	return ast.ExpressionList(elements)
+}
+
+func (p *parser) parseAssignmentOperator(left ast.Expression) ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseAssignmentOperator"))
+	}
+	assignIndex := strings.LastIndexByte(p.curToken.Literal, '=')
+	if assignIndex < 0 {
+		return nil
+	}
+	newInf := &ast.InfixExpression{
+		Left:     left,
+		Operator: p.curToken.Literal[:assignIndex],
+	}
+	assign := &ast.Assignment{
+		Token: p.curToken,
+		Left:  left,
+	}
+	p.nextToken()
+	newInf.Right = p.parseExpression(precLowest)
+	assign.Right = newInf
+	return assign
 }
 
 func (p *parser) parseAssignment(left ast.Expression) ast.Expression {
