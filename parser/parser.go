@@ -19,9 +19,8 @@ const (
 	precBlockDo     // do
 	precBlockBraces // { |x| }
 	precIfUnless    // modifier-if, modifier-unless
-	precCallArg     // func x
-	precTenary      // ?, :
 	precAssignment  // x = 5
+	precTenary      // ?, :
 	precLogicalOr   // ||
 	precLogicalAnd  // &&
 	precEquals      // ==, !=, <=>
@@ -32,6 +31,7 @@ const (
 	precSum         // + or -
 	precProduct     // *, /, %
 	precPrefix      // -X or !X
+	precCallArg     // func x
 	precCall        // foo.myFunction(X)
 	precIndex       // array[index]
 	precScope       // A::B
