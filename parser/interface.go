@@ -52,6 +52,12 @@ const (
 	AllErrors                      // report all errors (not just the first 10 on different lines)
 )
 
+var parseModes = map[string]Mode{
+	"ParseComments": ParseComments,
+	"Trace":         Trace,
+	"AllErrors":     AllErrors,
+}
+
 // ParseFile parses the source code of a single Ruby source file and returns
 // the corresponding ast.Program node. The source code may be provided via
 // the filename of the source file, or via the src parameter.

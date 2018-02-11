@@ -184,6 +184,9 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.GTE, p.parseInfixExpression)
 	p.registerInfix(token.LOGICALOR, p.parseInfixExpression)
 	p.registerInfix(token.LOGICALAND, p.parseInfixExpression)
+	p.registerInfix(token.SPACESHIP, p.parseInfixExpression)
+	p.registerInfix(token.LSHIFT, p.parseInfixExpression)
+	p.registerInfix(token.ASSIGN, p.parseAssignment)
 	p.registerInfix(token.ADDASSIGN, p.parseAssignmentOperator)
 	p.registerInfix(token.SUBASSIGN, p.parseAssignmentOperator)
 	p.registerInfix(token.MULASSIGN, p.parseAssignmentOperator)
@@ -192,8 +195,6 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.IF, p.parseModifierConditionalExpression)
 	p.registerInfix(token.UNLESS, p.parseModifierConditionalExpression)
 	p.registerInfix(token.QMARK, p.parseTenaryIfExpression)
-	p.registerInfix(token.SPACESHIP, p.parseInfixExpression)
-	p.registerInfix(token.LSHIFT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpressionWithParens)
 	p.registerInfix(token.IDENT, p.parseCallArgument)
 	p.registerInfix(token.CONST, p.parseCallArgument)
@@ -202,12 +203,11 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.STRING, p.parseCallArgument)
 	p.registerInfix(token.SYMBEG, p.parseCallArgument)
 	p.registerInfix(token.SELF, p.parseCallArgument)
-	p.registerInfix(token.DOT, p.parseMethodCall)
-	p.registerInfix(token.COMMA, p.parseExpressions)
 	p.registerInfix(token.RBRACKET, p.parseCallArgument)
 	p.registerInfix(token.LBRACE, p.parseCallArgument)
 	p.registerInfix(token.DO, p.parseCallArgument)
-	p.registerInfix(token.ASSIGN, p.parseAssignment)
+	p.registerInfix(token.DOT, p.parseMethodCall)
+	p.registerInfix(token.COMMA, p.parseExpressions)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	p.registerInfix(token.SCOPE, p.parseScopedIdentifierExpression)
 
@@ -534,7 +534,6 @@ func (p *parser) parseExpressions(left ast.Expression) ast.Expression {
 		p.consume(token.COMMA)
 		next = p.parseExpression(precAssignment)
 		elements = append(elements, next)
-
 	}
 	return ast.ExpressionList(elements)
 }

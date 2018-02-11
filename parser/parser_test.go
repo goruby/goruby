@@ -1,8 +1,10 @@
 package parser
 
 import (
+	"flag"
 	"fmt"
 	gotoken "go/token"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -11,6 +13,20 @@ import (
 	"github.com/goruby/goruby/token"
 	"github.com/pkg/errors"
 )
+
+var parseMode Mode = ParseComments
+
+func TestMain(m *testing.M) {
+	mode := flag.String("parser.mode", "ParseComments", "parser.mode=ParseComments")
+	flag.Parse()
+	var ok bool
+	parseMode, ok = parseModes[*mode]
+	if !ok {
+		fmt.Printf("Unknown parse mode %q\n", mode)
+		os.Exit(1)
+	}
+	os.Exit(m.Run())
+}
 
 func TestAssignment(t *testing.T) {
 	tests := []struct {
@@ -400,18 +416,12 @@ func TestParseMultiAssignment(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			program, err := parseSource(tt.input)
+			expr, err := parseExpression(tt.input)
 			checkParserErrors(t, err)
 
-			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			assign, ok := expr.(*ast.Assignment)
 			if !ok {
-				t.Logf("Expected first statement to be *ast.ExpressionStatement, got %T\n", stmt)
-				t.FailNow()
-			}
-
-			assign, ok := stmt.Expression.(*ast.Assignment)
-			if !ok {
-				t.Logf("Expected expression to be %T, got %T\n", assign, stmt.Expression)
+				t.Logf("Expected expression to be %T, got %T\n", assign, expr)
 				t.FailNow()
 			}
 
@@ -1455,13 +1465,15 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := parseSource(tt.input)
-		checkParserErrors(t, err)
+		t.Run(tt.input, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		actual := program.String()
-		if actual != tt.expected {
-			t.Errorf("expected=%q, got=%q", tt.expected, actual)
-		}
+			actual := program.String()
+			if actual != tt.expected {
+				t.Errorf("expected=%q, got=%q", tt.expected, actual)
+			}
+		})
 	}
 }
 
@@ -2049,6 +2061,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 		defaultValue interface{}
 	}
 	tests := []struct {
+		desc          string
 		input         string
 		receiver      string
 		name          string
@@ -2056,8 +2069,9 @@ func TestFunctionLiteralParsing(t *testing.T) {
 		bodyStatement string
 	}{
 		{
+			"with parens",
 			`def foo(x, y)
-          x + y
+			  x + y
           end`,
 			"",
 			"foo",
@@ -2068,6 +2082,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"without parens",
 			`def bar x, y
           x + y
           end`,
@@ -2080,6 +2095,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"without arguments",
 			`def qux
           x + y
           end`,
@@ -2089,6 +2105,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"expression separator semicolon no arguments",
 			"def qux; x + y; end",
 			"",
 			"qux",
@@ -2096,6 +2113,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"expression separator semicolon two arguments",
 			"def foo x, y; x + y; end",
 			"",
 			"foo",
@@ -2106,6 +2124,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"expression separator semicolon with parens and two arguments",
 			"def foo(x, y); x + y; end",
 			"",
 			"foo",
@@ -2116,6 +2135,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"upcase function name",
 			`def Qux
           x + y
           end
@@ -2126,16 +2146,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
-			`def qux
-          x + y
-          end
-          `,
-			"",
-			"qux",
-			[]funcParam{},
-			"(x + y)",
-		},
-		{
+			"two arguments with defaults without parens",
 			`def foo x = 2, y = 3
           x + y
           end
@@ -2149,6 +2160,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"operator as function name",
 			`def <=>
           x + y
           end
@@ -2159,6 +2171,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"function on local variable context",
 			`def a.qux
           x + y
           end`,
@@ -2168,6 +2181,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"function on const context",
 			`def A.qux
           x + y
           end`,
@@ -2177,6 +2191,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"upcase function on const context",
 			`def A.Qux
           x + y
           end`,
@@ -2186,6 +2201,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 			"(x + y)",
 		},
 		{
+			"function on self context",
 			`def self.qux
           x + y
           end`,
@@ -2197,85 +2213,87 @@ func TestFunctionLiteralParsing(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		program, err := parseSource(tt.input)
-		checkParserErrors(t, err)
+		t.Run(tt.desc, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		if len(program.Statements) != 1 {
-			t.Fatalf(
-				"program.Body does not contain %d statements. got=%d\n",
-				1,
-				len(program.Statements),
-			)
-		}
+			if len(program.Statements) != 1 {
+				t.Fatalf(
+					"program.Body does not contain %d statements. got=%d\n",
+					1,
+					len(program.Statements),
+				)
+			}
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf(
-				"program.Statements[0] is not ast.ExpressionStatement. got=%T",
-				program.Statements[0],
-			)
-		}
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0],
+				)
+			}
 
-		function, ok := stmt.Expression.(*ast.FunctionLiteral)
-		if !ok {
-			t.Fatalf(
-				"stmt.Expression is not ast.FunctionLiteral. got=%T",
-				stmt.Expression,
-			)
-		}
+			function, ok := stmt.Expression.(*ast.FunctionLiteral)
+			if !ok {
+				t.Fatalf(
+					"stmt.Expression is not ast.FunctionLiteral. got=%T",
+					stmt.Expression,
+				)
+			}
 
-		receiver := ""
-		if function.Receiver != nil {
-			receiver = function.Receiver.Value
-		}
-		if receiver != tt.receiver {
-			t.Logf("function receiver wrong, want %q, got %q", tt.receiver, receiver)
-			t.Fail()
-		}
+			receiver := ""
+			if function.Receiver != nil {
+				receiver = function.Receiver.Value
+			}
+			if receiver != tt.receiver {
+				t.Logf("function receiver wrong, want %q, got %q", tt.receiver, receiver)
+				t.Fail()
+			}
 
-		functionName := function.Name.Value
-		if functionName != tt.name {
-			t.Logf("function name wrong, want %q, got %q", tt.name, functionName)
-			t.Fail()
-		}
+			functionName := function.Name.Value
+			if functionName != tt.name {
+				t.Logf("function name wrong, want %q, got %q", tt.name, functionName)
+				t.Fail()
+			}
 
-		if len(function.Parameters) != len(tt.parameters) {
-			t.Fatalf(
-				"function literal parameters wrong. want %d, got=%d\n",
-				len(tt.parameters),
-				len(function.Parameters),
-			)
-		}
+			if len(function.Parameters) != len(tt.parameters) {
+				t.Fatalf(
+					"function literal parameters wrong. want %d, got=%d\n",
+					len(tt.parameters),
+					len(function.Parameters),
+				)
+			}
 
-		for i, param := range function.Parameters {
-			testLiteralExpression(t, param.Name, tt.parameters[i].name)
-			testLiteralExpression(t, param.Default, tt.parameters[i].defaultValue)
-		}
+			for i, param := range function.Parameters {
+				testLiteralExpression(t, param.Name, tt.parameters[i].name)
+				testLiteralExpression(t, param.Default, tt.parameters[i].defaultValue)
+			}
 
-		if len(function.Body.Statements) != 1 {
-			t.Fatalf(
-				"function.Body.Statements has not 1 statements. got=%d\n",
-				len(function.Body.Statements),
-			)
-		}
+			if len(function.Body.Statements) != 1 {
+				t.Fatalf(
+					"function.Body.Statements has not 1 statements. got=%d\n",
+					len(function.Body.Statements),
+				)
+			}
 
-		bodyStmt, ok := function.Body.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf(
-				"function body stmt is not ast.ExpressionStatement. got=%T",
-				function.Body.Statements[0],
-			)
-		}
+			bodyStmt, ok := function.Body.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf(
+					"function body stmt is not ast.ExpressionStatement. got=%T",
+					function.Body.Statements[0],
+				)
+			}
 
-		statement := bodyStmt.String()
-		if statement != tt.bodyStatement {
-			t.Logf(
-				"Expected body statement to equal\n%q\n\tgot\n%q\n",
-				tt.bodyStatement,
-				statement,
-			)
-			t.Fail()
-		}
+			statement := bodyStmt.String()
+			if statement != tt.bodyStatement {
+				t.Logf(
+					"Expected body statement to equal\n%q\n\tgot\n%q\n",
+					tt.bodyStatement,
+					statement,
+				)
+				t.Fail()
+			}
+		})
 	}
 	t.Run("test function rescue block", func(t *testing.T) {
 		input := `
@@ -2643,275 +2661,151 @@ func TestBlockParameterParsing(t *testing.T) {
 }
 
 func TestCallExpressionParsing(t *testing.T) {
-	t.Run("with parens", func(t *testing.T) {
-		input := "add(1, 2 * 3, 4 + 5);"
+	testCases := []struct {
+		desc        string
+		input       string
+		context     string
+		funcName    string
+		arguments   []interface{}
+		hasBlock    bool
+		blockParams []string
+	}{
+		{
+			desc:     "with parens",
+			input:    "add(1, 2 * 3, 4 + 5);",
+			funcName: "add",
+			arguments: []interface{}{
+				1, infix{2, "*", 3}, infix{4, "+", 5},
+			},
+		},
+		{
+			desc:     "without parens",
+			input:    "add 1, 2 * 3, 4 + 5;",
+			funcName: "add",
+			arguments: []interface{}{
+				1, infix{2, "*", 3}, infix{4, "+", 5},
+			},
+		},
+		{
+			desc:     "with parens and brace block",
+			input:    "add(1, 2 * 3, 4 + 5) { |x| x };",
+			funcName: "add",
+			arguments: []interface{}{
+				1, infix{2, "*", 3}, infix{4, "+", 5},
+			},
+			hasBlock:    true,
+			blockParams: []string{"x"},
+		},
+		{
+			desc:     "with parens and do block",
+			input:    "add(1, 2 * 3, 4 + 5) do |x| x; end;",
+			funcName: "add",
+			arguments: []interface{}{
+				1, infix{2, "*", 3}, infix{4, "+", 5},
+			},
+			hasBlock:    true,
+			blockParams: []string{"x"},
+		},
+		{
+			desc:     "without parens with block",
+			input:    "add 1, 2 * 3, 4 + 5 { |x| x };",
+			funcName: "add",
+			arguments: []interface{}{
+				1, infix{2, "*", 3}, infix{4, "+", 5},
+			},
+			hasBlock:    true,
+			blockParams: []string{"x"},
+		},
+		{
+			desc:        "without parens without args with block",
+			input:       "add { |x| x };",
+			funcName:    "add",
+			hasBlock:    true,
+			blockParams: []string{"x"},
+		},
+	}
 
-		program, err := parseSource(input)
-		checkParserErrors(t, err)
+	for _, tt := range testCases {
+		t.Run(tt.desc, func(t *testing.T) {
+			expr, err := parseExpression(tt.input)
+			checkParserErrors(t, err)
 
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
-		}
+			call, ok := expr.(*ast.ContextCallExpression)
+			if !ok {
+				t.Fatalf(
+					"expression is not %T, got=%T",
+					call,
+					expr,
+				)
+			}
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
-		}
+			if !testIdentifier(t, call.Function, tt.funcName) {
+				return
+			}
 
-		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
-		if !ok {
-			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
-				stmt.Expression)
-		}
+			if tt.context != "" && !testIdentifier(t, call.Context, tt.context) {
+				return
+			}
 
-		if !testIdentifier(t, exp.Function, "add") {
-			return
-		}
+			if len(call.Arguments) != len(tt.arguments) {
+				t.Logf(
+					"wrong length of arguments. want %d, got=%d",
+					len(tt.arguments),
+					len(call.Arguments),
+				)
+				t.Fail()
+				for len(call.Arguments) > len(tt.arguments) {
+					tt.arguments = append(tt.arguments, "<unexpected>")
+				}
+			}
 
-		if len(exp.Arguments) != 3 {
-			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
-		}
+			for i, arg := range call.Arguments {
+				t.Logf("argument %d", i+1)
+				testExpression(t, arg, tt.arguments[i])
+			}
 
-		testLiteralExpression(t, exp.Arguments[0], 1)
-		testInfixExpression(t, exp.Arguments[1], 2, "*", 3)
-		testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
-	})
-	t.Run("with parens and brace block", func(t *testing.T) {
-		input := "add(1, 2 * 3, 4 + 5) { |x| x };"
+			if tt.hasBlock {
+				if call.Block == nil {
+					t.Logf("Expected function block not to be nil")
+					t.FailNow()
+				}
 
-		program, err := parseSource(input)
-		checkParserErrors(t, err)
+				if len(call.Block.Parameters) != len(tt.blockParams) {
+					t.Logf(
+						"wrong length of block parameters. want %d, got=%d",
+						len(tt.blockParams),
+						len(call.Block.Parameters),
+					)
+					t.Fail()
+					for len(call.Block.Parameters) > len(tt.blockParams) {
+						tt.blockParams = append(tt.blockParams, "<unexpected>")
+					}
+				}
 
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
-		}
+				for i, param := range call.Block.Parameters {
+					expected := tt.blockParams[i]
+					actual := param.String()
 
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
-		}
-
-		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
-		if !ok {
-			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
-				stmt.Expression)
-		}
-
-		if !testIdentifier(t, exp.Function, "add") {
-			return
-		}
-
-		if len(exp.Arguments) != 3 {
-			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
-		}
-
-		testLiteralExpression(t, exp.Arguments[0], 1)
-		testInfixExpression(t, exp.Arguments[1], 2, "*", 3)
-		testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
-
-		if exp.Block == nil {
-			t.Logf("Expected function block not to be nil")
-			t.FailNow()
-		}
-
-		if len(exp.Block.Parameters) != 1 {
-			t.Fatalf("wrong length of arguments. got=%d", len(exp.Block.Parameters))
-		}
-
-		testIdentifier(t, exp.Block.Parameters[0].Name, "x")
-
-		if exp.Block.Body.String() != "x" {
-			t.Logf("Expected block body to equal\n%s\n\tgot\n%s\n", "x", exp.Block.Body.String())
-			t.Fail()
-		}
-	})
+					if expected != actual {
+						t.Logf(
+							"Expected block param %d to equal\n%s\n\tgot\n%s\n",
+							i,
+							expected,
+							actual,
+						)
+						t.Fail()
+					}
+				}
+			}
+		})
+	}
 	t.Run("with parens and do block", func(t *testing.T) {
-		input := "add(1, 2 * 3, 4 + 5) do |x| x; end;"
-
-		program, err := parseSource(input)
-		checkParserErrors(t, err)
-
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
-		}
-
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
-		}
-
-		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
-		if !ok {
-			t.Fatalf("stmt.Expression is not ast.ContextCallExpression. got=%T",
-				stmt.Expression)
-		}
-
-		if !testIdentifier(t, exp.Function, "add") {
-			return
-		}
-
-		if len(exp.Arguments) != 3 {
-			t.Fatalf("wrong length of arguments. got=%d", len(exp.Arguments))
-		}
-
-		testLiteralExpression(t, exp.Arguments[0], 1)
-		testInfixExpression(t, exp.Arguments[1], 2, "*", 3)
-		testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
-
-		if exp.Block == nil {
-			t.Logf("Expected function block not to be nil")
-			t.FailNow()
-		}
 	})
 	t.Run("without parens with block", func(t *testing.T) {
-		input := "add 1, 2 * 3, 4 + 5 { |x| x };"
-
-		program, err := parseSource(input)
-		checkParserErrors(t, err)
-
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
-		}
-
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
-		}
-
-		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
-		if !ok {
-			t.Fatalf(
-				"stmt.Expression is not ast.ContextCallExpression. got=%T",
-				stmt.Expression,
-			)
-		}
-
-		if exp.Context != nil {
-			t.Logf("Expected context to be nil, got: %s\n", exp.Context)
-			t.Fail()
-		}
-
-		if !testIdentifier(t, exp.Function, "add") {
-			return
-		}
-
-		if len(exp.Arguments) != 3 {
-			t.Fatalf(
-				"wrong length of arguments. want %d, got=%d",
-				3,
-				len(exp.Arguments),
-			)
-		}
-
-		testLiteralExpression(t, exp.Arguments[0], 1)
-		testInfixExpression(t, exp.Arguments[1], 2, "*", 3)
-		testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
-
-		if exp.Block == nil {
-			t.Logf("Expected function block not to be nil")
-			t.FailNow()
-		}
 	})
 	t.Run("without parens", func(t *testing.T) {
-		input := "add 1, 2 * 3, 4 + 5;"
-
-		program, err := parseSource(input)
-		checkParserErrors(t, err)
-
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
-		}
-
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
-		}
-
-		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
-		if !ok {
-			t.Fatalf(
-				"stmt.Expression is not ast.ContextCallExpression. got=%T",
-				stmt.Expression,
-			)
-		}
-
-		if exp.Context != nil {
-			t.Logf("Expected context to be nil, got: %s\n", exp.Context)
-			t.Fail()
-		}
-
-		if !testIdentifier(t, exp.Function, "add") {
-			return
-		}
-
-		if len(exp.Arguments) != 3 {
-			t.Fatalf(
-				"wrong length of arguments. want %d, got=%d",
-				3,
-				len(exp.Arguments),
-			)
-		}
-
-		testLiteralExpression(t, exp.Arguments[0], 1)
-		testInfixExpression(t, exp.Arguments[1], 2, "*", 3)
-		testInfixExpression(t, exp.Arguments[2], 4, "+", 5)
 	})
 	t.Run("without parens without args with block", func(t *testing.T) {
-		input := "add { |x| x };"
-
-		program, err := parseSource(input)
-		checkParserErrors(t, err)
-
-		if len(program.Statements) != 1 {
-			t.Fatalf("program.Statements does not contain %d statements. got=%d\n",
-				1, len(program.Statements))
-		}
-
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("stmt is not ast.ExpressionStatement. got=%T",
-				program.Statements[0])
-		}
-
-		exp, ok := stmt.Expression.(*ast.ContextCallExpression)
-		if !ok {
-			t.Fatalf(
-				"stmt.Expression is not ast.ContextCallExpression. got=%T",
-				stmt.Expression,
-			)
-		}
-
-		if exp.Context != nil {
-			t.Logf("Expected context to be nil, got: %s\n", exp.Context)
-			t.Fail()
-		}
-
-		if !testIdentifier(t, exp.Function, "add") {
-			return
-		}
-
-		if len(exp.Arguments) != 0 {
-			t.Fatalf(
-				"wrong length of arguments. want %d, got=%d",
-				0,
-				len(exp.Arguments),
-			)
-		}
-
-		if exp.Block == nil {
-			t.Logf("Expected function block not to be nil")
-			t.FailNow()
-		}
 	})
 }
 
@@ -4040,6 +3934,20 @@ func TestParseHash(t *testing.T) {
 	}
 }
 
+func testExpression(t *testing.T, exp ast.Expression, expected interface{}) bool {
+	t.Helper()
+	if inf, ok := expected.(infix); ok {
+		return testInfixExpression(t, exp, inf.left, inf.operator, inf.right)
+	}
+	return testLiteralExpression(t, exp, expected)
+}
+
+type infix struct {
+	left     interface{}
+	operator string
+	right    interface{}
+}
+
 func testInfixExpression(
 	t *testing.T,
 	exp ast.Expression,
@@ -4272,7 +4180,7 @@ func testHashLiteral(t *testing.T, expr ast.Expression, value map[string]string)
 }
 
 func parseSource(src string, modes ...Mode) (*ast.Program, *Errors) {
-	mode := ParseComments
+	mode := parseMode
 	for _, m := range modes {
 		mode = mode | m
 	}
@@ -4284,10 +4192,27 @@ func parseSource(src string, modes ...Mode) (*ast.Program, *Errors) {
 	return prog, parserErrors
 }
 
-func checkParserErrors(t *testing.T, err error) {
+func parseExpression(src string, modes ...Mode) (ast.Expression, *Errors) {
+	mode := parseMode
+	for _, m := range modes {
+		mode = mode | m
+	}
+	expr, err := ParseExprFrom(gotoken.NewFileSet(), "", src, mode)
+	var parserErrors *Errors
+	if err != nil {
+		parserErrors = err.(*Errors)
+	}
+	return expr, parserErrors
+}
+
+func checkParserErrors(t *testing.T, err error, withStack ...bool) {
 	t.Helper()
 	if err == nil {
 		return
+	}
+	printStack := false
+	if len(withStack) != 0 {
+		printStack = withStack[0]
 	}
 	parserErrors, ok := err.(*Errors)
 	if parserErrors == nil {
@@ -4305,7 +4230,7 @@ func checkParserErrors(t *testing.T, err error) {
 	t.Errorf("parser has %d errors", len(parserErrors.errors))
 	for _, e := range parserErrors.errors {
 		t.Errorf("%v", e)
-		if stackErr, ok := e.(stackTracer); ok {
+		if stackErr, ok := e.(stackTracer); ok && printStack {
 			st := stackErr.StackTrace()
 			fmt.Printf("Error stack:%+v\n", st[0:2]) // top two frames
 		}
