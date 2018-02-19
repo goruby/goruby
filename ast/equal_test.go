@@ -138,7 +138,9 @@ func Test_Equal(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
+		tt := tt
 		t.Run(tt.desc, func(t *testing.T) {
+			t.Parallel()
 			ok := Equal(tt.x, tt.y)
 
 			if ok != tt.equal {
