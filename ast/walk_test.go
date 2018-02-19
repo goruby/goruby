@@ -147,7 +147,7 @@ func Test_treeToList(t *testing.T) {
 		},
 	}
 
-	actual := treeToList(root)
+	actual := treeToLinkedList(root)
 
 	expected := list.New()
 	expected.PushBack(root)

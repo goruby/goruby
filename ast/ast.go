@@ -19,6 +19,7 @@ type Node interface {
 	End() int
 	// TokenLiteral returns the literal of the node
 	TokenLiteral() string
+	// String returns a string representation of the node
 	String() string
 }
 
@@ -44,6 +45,12 @@ type literal interface {
 	literalNode()
 }
 
+// IsLiteral returns true if n is a literal node, false otherwise
+func IsLiteral(n Node) bool {
+	_, ok := n.(literal)
+	return ok
+}
+
 // A Program node is the root node within the AST.
 type Program struct {
 	pos        int
@@ -64,7 +71,9 @@ func (p *Program) End() int {
 func (p *Program) String() string {
 	stmts := make([]string, len(p.Statements))
 	for i, s := range p.Statements {
-		stmts[i] = s.String()
+		if s != nil {
+			stmts[i] = s.String()
+		}
 	}
 	return strings.Join(stmts, "\n")
 }
@@ -147,7 +156,9 @@ func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
 func (bs *BlockStatement) String() string {
 	var out bytes.Buffer
 	for _, s := range bs.Statements {
-		out.WriteString(s.String())
+		if s != nil {
+			out.WriteString(s.String())
+		}
 	}
 	return out.String()
 }
@@ -716,8 +727,10 @@ type HashLiteral struct {
 func (hl *HashLiteral) expressionNode() {}
 func (hl *HashLiteral) literalNode()    {}
 
-// Pos returns the position of first character belonging to the node
+// Pos returns the position of the left brace
 func (hl *HashLiteral) Pos() int { return hl.Token.Pos }
+
+// End returns the position of the right brace
 func (hl *HashLiteral) End() int { return hl.Rbrace.Pos }
 
 // TokenLiteral returns the literal of the token token.LBRACE
@@ -748,8 +761,10 @@ type FunctionLiteral struct {
 func (fl *FunctionLiteral) expressionNode() {}
 func (fl *FunctionLiteral) literalNode()    {}
 
-// Pos returns the position of first character belonging to the node
+// Pos returns the position of the `def` keyword
 func (fl *FunctionLiteral) Pos() int { return fl.Token.Pos }
+
+// End returns the position of the `end` keyword
 func (fl *FunctionLiteral) End() int { return fl.EndToken.Pos }
 
 // TokenLiteral returns the literal from token.DEF
@@ -788,6 +803,8 @@ func (f *FunctionParameter) expressionNode() {}
 
 // Pos returns the position of first character belonging to the node
 func (f *FunctionParameter) Pos() int { return f.Name.Pos() }
+
+// End returns the position of the default end if it exists, otherwise the end position of Name
 func (f *FunctionParameter) End() int {
 	if f.Default != nil {
 		return f.Default.End()
@@ -857,6 +874,10 @@ func (ce *ContextCallExpression) Pos() int {
 	}
 	return ce.Function.Pos()
 }
+
+// End returns the end position of the block if it exists. If not, it returns
+// the end position of the last argument if any. Otherwise it returns the end
+// of the function identifier
 func (ce *ContextCallExpression) End() int {
 	if ce.Block != nil {
 		return ce.Block.End()
@@ -902,6 +923,8 @@ func (b *BlockExpression) expressionNode() {}
 
 // Pos returns the position of first character belonging to the node
 func (b *BlockExpression) Pos() int { return b.Token.Pos }
+
+// End returns the position of the end token
 func (b *BlockExpression) End() int { return b.EndToken.Pos }
 
 // TokenLiteral returns the literal from the Token
@@ -943,6 +966,8 @@ func (m *ModuleExpression) expressionNode() {}
 
 // Pos returns the position of first character belonging to the node
 func (m *ModuleExpression) Pos() int { return m.Token.Pos }
+
+// End returns the position of the `end` token
 func (m *ModuleExpression) End() int { return m.EndToken.Pos }
 
 // TokenLiteral returns the literal from token.MODULE
@@ -972,6 +997,8 @@ func (m *ClassExpression) expressionNode() {}
 
 // Pos returns the position of first character belonging to the node
 func (m *ClassExpression) Pos() int { return m.Token.Pos }
+
+// End returns the position of the `end` token
 func (m *ClassExpression) End() int { return m.EndToken.Pos }
 
 // TokenLiteral returns the literal from token.CLASS
@@ -1005,6 +1032,8 @@ func (pe *PrefixExpression) expressionNode() {}
 
 // Pos returns the position of first character belonging to the node
 func (pe *PrefixExpression) Pos() int { return pe.Token.Pos }
+
+// End returns the end of the right expression
 func (pe *PrefixExpression) End() int { return pe.Right.End() }
 
 // TokenLiteral returns the literal from the prefix operator token

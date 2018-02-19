@@ -54,7 +54,7 @@ func Path(root, child Node) (*list.List, bool) {
 		return nil, false
 	}
 	childTree := list.New()
-	l := treeToList(root)
+	l := treeToLinkedList(root)
 	for e := l.Front(); e != nil; e = e.Next() {
 		n, ok := e.Value.(Node)
 		if !ok {
@@ -67,49 +67,44 @@ func Path(root, child Node) (*list.List, bool) {
 	return childTree, true
 }
 
-type listVisitor struct {
-	list *list.List
-}
-
-func (f *listVisitor) Visit(n Node) Visitor {
-	if f.list == nil {
-		f.list = list.New()
-	}
-	f.list.PushBack(n)
-	return nil
-}
-
-func treeToList(node Node) *list.List {
+func treeToLinkedList(node Node) *list.List {
 	list := list.New()
-	var walkFn VisitorFunc
-	walkFn = func(n Node) Visitor {
+	for n := range WalkEmit(node) {
 		if n != nil {
 			list.PushBack(n)
 		}
-		return walkFn
 	}
-	Walk(walkFn, node)
 	return list
 }
 
-type containsVisitor struct {
-	needle Node
-	found  bool
-}
-
-func (c *containsVisitor) Visit(n Node) Visitor {
-	if n == c.needle {
-		c.found = true
-		return nil
-	}
-	return c
-}
-
-// Contains reports whether root contains child or not.
+// Contains reports whether root contains child or not. It matches child via
+// pointer equality.
 func Contains(root Node, child Node) bool {
-	v := &containsVisitor{needle: child}
-	Walk(v, root)
-	return v.found
+	var contains bool
+	filter := func(n Node) bool {
+		if n == child {
+			contains = true
+		}
+		return !contains
+	}
+	Inspect(root, filter)
+	return contains
+}
+
+// WalkEmit traverses node in depth-first order and emits each visited node
+// into the channel
+func WalkEmit(root Node) <-chan Node {
+	out := make(chan Node)
+	var visitor Visitor
+	visitor = VisitorFunc(func(n Node) Visitor {
+		out <- n
+		return visitor
+	})
+	go func() {
+		defer close(out)
+		Walk(visitor, root)
+	}()
+	return out
 }
 
 // Helper functions for common node lists. They may be empty.
