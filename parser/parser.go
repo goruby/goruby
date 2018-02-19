@@ -203,9 +203,8 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.STRING, p.parseCallArgument)
 	p.registerInfix(token.SYMBEG, p.parseCallArgument)
 	p.registerInfix(token.SELF, p.parseCallArgument)
-	p.registerInfix(token.RBRACKET, p.parseCallArgument)
-	p.registerInfix(token.LBRACE, p.parseCallArgument)
-	p.registerInfix(token.DO, p.parseCallArgument)
+	p.registerInfix(token.LBRACE, p.parseCallBlock)
+	p.registerInfix(token.DO, p.parseCallBlock)
 	p.registerInfix(token.DOT, p.parseMethodCall)
 	p.registerInfix(token.COMMA, p.parseExpressions)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
@@ -1308,6 +1307,31 @@ func (p *parser) parseCallArgument(function ast.Expression) ast.Expression {
 		exp.Block = p.parseBlock().(*ast.BlockExpression)
 	}
 	return exp
+}
+
+func (p *parser) parseCallBlock(function ast.Expression) ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseCallBlock"))
+	}
+
+	exp := &ast.ContextCallExpression{Token: p.curToken}
+	exp.Block = p.parseBlock().(*ast.BlockExpression)
+	switch fn := function.(type) {
+	case *ast.Identifier:
+		exp.Function = fn
+		return exp
+	case *ast.InfixExpression:
+		ident, ok := fn.Right.(*ast.Identifier)
+		if !ok {
+			break
+		}
+		exp.Function = ident
+		fn.Right = exp
+		return fn
+	}
+	msg := fmt.Errorf("could not parse call expression: expected identifier, got token '%T'", function)
+	p.errors = append(p.errors, msg)
+	return nil
 }
 
 func (p *parser) parseCallExpressionWithParens(function ast.Expression) ast.Expression {
