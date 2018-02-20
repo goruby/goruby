@@ -35,6 +35,7 @@ const (
 	precCall        // foo.myFunction(X)
 	precIndex       // array[index]
 	precScope       // A::B
+	precCapture     // &block
 	precSymbol      // :Symbol
 	precHighest
 )
@@ -83,6 +84,7 @@ var precedences = map[token.Type]int{
 	token.AND:        precAnd,
 	token.LOGICALOR:  precLogicalOr,
 	token.LOGICALAND: precLogicalAnd,
+	token.CAPTURE:    precCapture,
 }
 
 var tokensNotPossibleInCallArgs = []token.Type{
@@ -169,6 +171,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerPrefix(token.GLOBAL, p.parseGlobal)
 	p.registerPrefix(token.KEYWORD__FILE__, p.parseKeyword__FILE__)
 	p.registerPrefix(token.BEGIN, p.parseExceptionHandlingBlock)
+	p.registerPrefix(token.CAPTURE, p.parseBlockCapture)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -537,6 +540,18 @@ func (p *parser) parseExpressions(left ast.Expression) ast.Expression {
 		elements = append(elements, next)
 	}
 	return ast.ExpressionList(elements)
+}
+
+func (p *parser) parseBlockCapture() ast.Expression {
+	if p.trace {
+		defer un(trace(p, "parseBlockCapture"))
+	}
+	capture := &ast.BlockCapture{Token: p.curToken}
+	if !p.accept(token.IDENT) {
+		return nil
+	}
+	capture.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	return capture
 }
 
 func (p *parser) parseAssignmentOperator(left ast.Expression) ast.Expression {
@@ -1063,6 +1078,17 @@ func (p *parser) parseFunctionLiteral() ast.Expression {
 
 	lit.Parameters = p.parseParameters(token.LPAREN, token.RPAREN)
 
+	if p.currentTokenOneOf(token.CAPTURE, token.AND) {
+		capture := p.parseBlockCapture()
+		if capture == nil {
+			return nil
+		}
+		lit.CapturedBlock = capture.(*ast.BlockCapture)
+		if p.peekTokenIs(token.RPAREN) {
+			p.acceptOneOf(token.RPAREN)
+		}
+	}
+
 	if !p.acceptOneOf(token.NEWLINE, token.SEMICOLON) {
 		return nil
 	}
@@ -1131,8 +1157,9 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 	if p.peekTokenIs(token.ASTERISK) {
 		p.accept(token.ASTERISK)
 	}
-	if p.peekTokenIs(token.AND) {
-		p.accept(token.AND)
+	if p.peekTokenOneOf(token.CAPTURE, token.AND) {
+		p.acceptOneOf(token.CAPTURE, token.AND)
+		return identifiers
 	}
 	p.accept(token.IDENT)
 
@@ -1148,8 +1175,9 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 		if p.peekTokenIs(token.ASTERISK) {
 			p.accept(token.ASTERISK)
 		}
-		if p.peekTokenIs(token.AND) {
-			p.accept(token.AND)
+		if p.peekTokenOneOf(token.CAPTURE, token.AND) {
+			p.acceptOneOf(token.CAPTURE, token.AND)
+			return identifiers
 		}
 		p.accept(token.IDENT)
 		ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}

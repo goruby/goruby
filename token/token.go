@@ -63,6 +63,7 @@ const (
 	SEMICOLON
 	HASH // #
 
+	CAPTURE  // &
 	DOT      // .
 	COLON    // :
 	LPAREN   // (
@@ -126,6 +127,7 @@ var tokens = [...]string{
 	SLASH:      "/",
 	MODULO:     "%",
 	AND:        "&",
+	CAPTURE:    "&",
 	LOGICALAND: "&&",
 	LOGICALOR:  "||",
 

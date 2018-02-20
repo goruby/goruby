@@ -29,6 +29,90 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func TestBlockCapture(t *testing.T) {
+	tests := []struct {
+		desc   string
+		input  string
+		result ast.Expression
+		err    error
+	}{
+		{
+			desc:  "block capture in func params as only argument",
+			input: "def foo &block; end",
+			result: &ast.FunctionLiteral{
+				Name: &ast.Identifier{Value: "foo"},
+				CapturedBlock: &ast.BlockCapture{
+					Name: &ast.Identifier{Value: "block"},
+				},
+			},
+		},
+		{
+			desc:  "block capture in func params as last arguments",
+			input: "def foo x, y, &block; end",
+			result: &ast.FunctionLiteral{
+				Name: &ast.Identifier{Value: "foo"},
+				Parameters: []*ast.FunctionParameter{
+					&ast.FunctionParameter{Name: &ast.Identifier{Value: "x"}},
+					&ast.FunctionParameter{Name: &ast.Identifier{Value: "y"}},
+				},
+				CapturedBlock: &ast.BlockCapture{
+					Name: &ast.Identifier{Value: "block"},
+				},
+			},
+		},
+		{
+			desc:   "block capture in func params not last arguments",
+			input:  "def foo x, &block, y; end",
+			result: nil,
+			err: &unexpectedTokenError{
+				expectedTokens: []token.Type{token.NEWLINE, token.SEMICOLON},
+				actualToken:    token.COMMA,
+			},
+		},
+		{
+			desc:   "block capture in func params on integer",
+			input:  "def foo &2; end",
+			result: nil,
+			err: &unexpectedTokenError{
+				expectedTokens: []token.Type{token.IDENT},
+				actualToken:    token.INT,
+			},
+		},
+		{
+			desc: "block capture only statement in func body",
+			input: `
+			def foo
+				&block
+			end`,
+			result: &ast.FunctionLiteral{
+				Name:       &ast.Identifier{Value: "foo"},
+				Parameters: []*ast.FunctionParameter{},
+				Body: &ast.BlockStatement{
+					Statements: []ast.Statement{
+						&ast.ExpressionStatement{
+							Expression: &ast.BlockCapture{
+								Name: &ast.Identifier{Value: "block"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			expr, err := parseExpression(tt.input)
+			compareFirstParserError(t, tt.err, err)
+
+			if !ast.Equal(expr, tt.result) {
+				t.Logf("Expected AST node to equal %v, got %v", tt.result, expr)
+				t.Fail()
+			}
+		})
+	}
+}
+
 func TestAssignment(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -2505,70 +2589,83 @@ func TestFunctionParameterParsing(t *testing.T) {
 		defaultValue interface{}
 	}
 	tests := []struct {
+		desc           string
 		input          string
 		expectedParams []funcParam
 	}{
 		{
+			desc:           "no params with parens",
 			input:          "def fn(); end",
 			expectedParams: []funcParam{},
 		},
 		{
+			desc:           "one param with parens",
 			input:          "def fn(x); end",
 			expectedParams: []funcParam{{name: "x"}},
 		},
 		{
+			desc:           "multiple params with parens",
 			input:          "def fn(x, y, z); end",
 			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
 		},
 		{
+			desc:           "multiple params first two defaults with parens",
 			input:          "def fn(x = 3, y = 18, z); end",
 			expectedParams: []funcParam{{name: "x", defaultValue: 3}, {name: "y", defaultValue: 18}, {name: "z"}},
 		},
 		{
+			desc:           "multiple params middle default with parens",
 			input:          "def fn(x, y = 18, z); end",
 			expectedParams: []funcParam{{name: "x"}, {name: "y", defaultValue: 18}, {name: "z"}},
 		},
 		{
+			desc:           "multiple params last default with parens",
 			input:          "def fn(x, y, z = 1); end",
 			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z", defaultValue: 1}},
 		},
 		{
+			desc:           "multiple params last array splat with parens",
 			input:          "def fn(x, y, *z); end",
 			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
 		},
 		{
+			desc:           "one param array splat with parens",
 			input:          "def fn(*x); end",
 			expectedParams: []funcParam{{name: "x"}},
 		},
 		{
+			desc:           "multiple params last block capture with parens",
 			input:          "def fn(x, y, &z); end",
-			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
+			expectedParams: []funcParam{{name: "x"}, {name: "y"}},
 		},
 		{
+			desc:           "one param block capture with parens",
 			input:          "def fn(&x); end",
-			expectedParams: []funcParam{{name: "x"}},
+			expectedParams: []funcParam{},
 		},
 	}
 
 	for _, tt := range tests {
-		program, err := parseSource(tt.input)
-		checkParserErrors(t, err)
+		t.Run(tt.desc, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		stmt := program.Statements[0].(*ast.ExpressionStatement)
-		function := stmt.Expression.(*ast.FunctionLiteral)
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			function := stmt.Expression.(*ast.FunctionLiteral)
 
-		if len(function.Parameters) != len(tt.expectedParams) {
-			t.Errorf(
-				"length parameters wrong. want %d, got=%d\n",
-				len(tt.expectedParams),
-				len(function.Parameters),
-			)
-		}
+			if len(function.Parameters) != len(tt.expectedParams) {
+				t.Errorf(
+					"length parameters wrong. want %d, got=%d\n",
+					len(tt.expectedParams),
+					len(function.Parameters),
+				)
+			}
 
-		for i, ident := range tt.expectedParams {
-			testLiteralExpression(t, function.Parameters[i].Name, ident.name)
-			testLiteralExpression(t, function.Parameters[i].Default, ident.defaultValue)
-		}
+			for i, ident := range tt.expectedParams {
+				testLiteralExpression(t, function.Parameters[i].Name, ident.name)
+				testLiteralExpression(t, function.Parameters[i].Default, ident.defaultValue)
+			}
+		})
 	}
 }
 
@@ -2578,100 +2675,117 @@ func TestBlockParameterParsing(t *testing.T) {
 		defaultValue interface{}
 	}
 	tests := []struct {
+		desc           string
 		input          string
 		expectedParams []funcParam
 	}{
 		{
+			desc:           "empty brace block",
 			input:          "method {}",
 			expectedParams: []funcParam{},
 		},
 		{
+			desc:           "empty brace block params",
 			input:          "method { || }",
 			expectedParams: []funcParam{},
 		},
 		{
+			desc:           "one brace block param",
 			input:          "method { |x| }",
 			expectedParams: []funcParam{{name: "x"}},
 		},
 		{
+			desc:           "multiple brace block params",
 			input:          "method { |x, y, z| }",
 			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
 		},
 		{
+			desc:           "empty do block",
 			input:          "method do; end",
 			expectedParams: []funcParam{},
 		},
 		{
+			desc:           "empty do block params",
 			input:          "method do ||; end",
 			expectedParams: []funcParam{},
 		},
 		{
+			desc:           "one do block param",
 			input:          "method do |x|; end",
 			expectedParams: []funcParam{{name: "x"}},
 		},
 		{
+			desc:           "multiple do block params",
 			input:          "method do |x, y, z|; end",
 			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z"}},
 		},
 		{
+			desc:           "multiple brace block params with defaults",
 			input:          "method { |x = 3, y = 2, z| }",
 			expectedParams: []funcParam{{name: "x", defaultValue: 3}, {name: "y", defaultValue: 2}, {name: "z"}},
 		},
 		{
+			desc:           "multiple do block params starting defaults",
 			input:          "method do |x = 1, y = 8, z|; end",
 			expectedParams: []funcParam{{name: "x", defaultValue: 1}, {name: "y", defaultValue: 8}, {name: "z"}},
 		},
 		{
+			desc:           "multiple brace block params with middle default",
 			input:          "method { |x, y = 2, z| }",
 			expectedParams: []funcParam{{name: "x"}, {name: "y", defaultValue: 2}, {name: "z"}},
 		},
 		{
+			desc:           "multiple do block params with middle default",
 			input:          "method do |x, y = 8, z|; end",
 			expectedParams: []funcParam{{name: "x"}, {name: "y", defaultValue: 8}, {name: "z"}},
 		},
 		{
+			desc:           "multiple brace block params last defaults",
 			input:          "method { |x, y, z = 2| }",
 			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z", defaultValue: 2}},
 		},
 		{
+			desc:           "multiple do block params last defaults",
 			input:          "method do |x, y, z = 4|; end",
 			expectedParams: []funcParam{{name: "x"}, {name: "y"}, {name: "z", defaultValue: 4}},
 		},
 	}
 
 	for _, tt := range tests {
-		program, err := parseSource(tt.input)
-		checkParserErrors(t, err)
+		t.Run(tt.desc, func(t *testing.T) {
+			program, err := parseSource(tt.input)
+			checkParserErrors(t, err)
 
-		stmt := program.Statements[0].(*ast.ExpressionStatement)
-		call, ok := stmt.Expression.(*ast.ContextCallExpression)
-		if !ok {
-			t.Logf(
-				"stmt.Expression is not *ast.ContextCallExpression. got=%T",
-				stmt.Expression,
-			)
-			t.Fail()
-		}
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			call, ok := stmt.Expression.(*ast.ContextCallExpression)
+			if !ok {
+				t.Logf(
+					"stmt.Expression is not *ast.ContextCallExpression. got=%T",
+					stmt.Expression,
+				)
+				t.Fail()
+			}
 
-		block := call.Block
+			block := call.Block
 
-		if block == nil {
-			t.Logf("Expected block not to be nil")
-			t.FailNow()
-		}
+			if block == nil {
+				t.Logf("Expected block not to be nil")
+				t.FailNow()
+			}
 
-		if len(block.Parameters) != len(tt.expectedParams) {
-			t.Errorf(
-				"length parameters wrong. want %d, got=%d\n",
-				len(tt.expectedParams),
-				len(block.Parameters),
-			)
-		}
+			if len(block.Parameters) != len(tt.expectedParams) {
+				t.Errorf(
+					"length parameters wrong. want %d, got=%d\n",
+					len(tt.expectedParams),
+					len(block.Parameters),
+				)
+			}
 
-		for i, ident := range tt.expectedParams {
-			testLiteralExpression(t, block.Parameters[i].Name, ident.name)
-			testLiteralExpression(t, block.Parameters[i].Default, ident.defaultValue)
-		}
+			for i, ident := range tt.expectedParams {
+				testLiteralExpression(t, block.Parameters[i].Name, ident.name)
+				testLiteralExpression(t, block.Parameters[i].Default, ident.defaultValue)
+			}
+		})
 	}
 }
 
@@ -4235,6 +4349,33 @@ func parseExpression(src string, modes ...Mode) (ast.Expression, *Errors) {
 		parserErrors = err.(*Errors)
 	}
 	return expr, parserErrors
+}
+
+func compareFirstParserError(t *testing.T, expected, actual error) {
+	t.Helper()
+	if expected == nil && actual == nil {
+		return
+	}
+	parserErrors, ok := actual.(*Errors)
+	if parserErrors == nil && expected == nil {
+		return
+	}
+	if !ok {
+		t.Logf("Unexpected parser error: %T:%v\n", actual, actual)
+		t.FailNow()
+	}
+	if expected == nil && parserErrors != nil {
+		t.Logf("Expected no error, got %T:%v", actual, actual)
+		t.FailNow()
+	}
+	firstErr := parserErrors.errors[0]
+	err := firstErr.Error()
+	firstSpace := strings.Index(err, " ")
+	err = err[firstSpace+1:]
+	if err != expected.Error() {
+		t.Logf("Expected first parser error to equal %v, got %v", expected, firstErr)
+		t.FailNow()
+	}
 }
 
 func checkParserErrors(t *testing.T, err error, withStack ...bool) {

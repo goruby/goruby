@@ -157,6 +157,7 @@ func Walk(v Visitor, node Node) {
 		*Boolean,
 		*Nil,
 		*Self,
+		*BlockCapture,
 		*Keyword__FILE__,
 		*Comment:
 		// nothing to do
@@ -188,6 +189,9 @@ func Walk(v Visitor, node Node) {
 		}
 		Walk(v, n.Name)
 		walkParameterList(v, n.Parameters)
+		if n.CapturedBlock != nil {
+			Walk(v, n.CapturedBlock)
+		}
 		Walk(v, n.Body)
 		for _, r := range n.Rescues {
 			Walk(v, r)

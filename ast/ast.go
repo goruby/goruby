@@ -747,15 +747,37 @@ func (hl *HashLiteral) String() string {
 	return out.String()
 }
 
+// A BlockCapture represents a function scoped variable capturing a block
+type BlockCapture struct {
+	Token token.Token // the `&`
+	Name  *Identifier
+}
+
+func (b *BlockCapture) expressionNode() {}
+func (b *BlockCapture) literalNode()    {}
+
+// Pos returns the position of the ampersand
+func (b *BlockCapture) Pos() int { return b.Token.Pos }
+
+// End returns the position of the last character of Name
+func (b *BlockCapture) End() int { return b.Name.End() }
+func (b *BlockCapture) String() string {
+	return "&" + b.Name.Value
+}
+
+// TokenLiteral returns the literal of the token
+func (b *BlockCapture) TokenLiteral() string { return b.Token.Literal }
+
 // A FunctionLiteral represents a function definition in the AST
 type FunctionLiteral struct {
-	Token      token.Token // The 'def' token
-	EndToken   token.Token // the 'end' token
-	Receiver   *Identifier
-	Name       *Identifier
-	Parameters []*FunctionParameter
-	Body       *BlockStatement
-	Rescues    []*RescueBlock
+	Token         token.Token // The 'def' token
+	EndToken      token.Token // the 'end' token
+	Receiver      *Identifier
+	Name          *Identifier
+	Parameters    []*FunctionParameter
+	CapturedBlock *BlockCapture
+	Body          *BlockStatement
+	Rescues       []*RescueBlock
 }
 
 func (fl *FunctionLiteral) expressionNode() {}
@@ -775,8 +797,10 @@ func (fl *FunctionLiteral) String() string {
 	for _, p := range fl.Parameters {
 		params = append(params, p.String())
 	}
-	out.WriteString(fl.TokenLiteral())
-	out.WriteString(" ")
+	if fl.CapturedBlock != nil {
+		params = append(params, fl.CapturedBlock.String())
+	}
+	out.WriteString("def ")
 	if fl.Receiver != nil {
 		out.WriteString(fl.Receiver.String())
 		out.WriteString(".")
@@ -785,7 +809,9 @@ func (fl *FunctionLiteral) String() string {
 	out.WriteString("(")
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")
-	out.WriteString(fl.Body.String())
+	if fl.Body != nil {
+		out.WriteString(fl.Body.String())
+	}
 	for _, r := range fl.Rescues {
 		out.WriteString(r.String())
 	}

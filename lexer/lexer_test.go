@@ -55,6 +55,7 @@ end
 :"sym"
 :'sym'
 .
+&foo
 &
 &&
 :dotAfter.
@@ -248,6 +249,9 @@ $a`
 		{token.STRING, "sym"},
 		{token.NEWLINE, "\n"},
 		{token.DOT, "."},
+		{token.NEWLINE, "\n"},
+		{token.CAPTURE, "&"},
+		{token.IDENT, "foo"},
 		{token.NEWLINE, "\n"},
 		{token.AND, "&"},
 		{token.NEWLINE, "\n"},
