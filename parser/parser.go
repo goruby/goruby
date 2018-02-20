@@ -176,6 +176,8 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
 	p.registerInfix(token.MODULO, p.parseInfixExpression)
+	p.registerInfix(token.AND, p.parseInfixExpression)
+	p.registerInfix(token.PIPE, p.parseInfixExpression)
 	p.registerInfix(token.EQ, p.parseInfixExpression)
 	p.registerInfix(token.NOTEQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
@@ -1153,7 +1155,7 @@ func (p *parser) parseParameters(startToken, endToken token.Type) []*ast.Functio
 		ident := &ast.FunctionParameter{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
 		if p.peekTokenIs(token.ASSIGN) {
 			p.consume(token.ASSIGN)
-			ident.Default = p.parseExpression(precAssignment)
+			ident.Default = p.parseExpression(precPrefix)
 		}
 		identifiers = append(identifiers, ident)
 	}
