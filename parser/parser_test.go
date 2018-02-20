@@ -98,6 +98,31 @@ func TestBlockCapture(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "block capture as arg on call in func body",
+			input: `
+			def foo
+				each &block
+			end`,
+			result: &ast.FunctionLiteral{
+				Name:       &ast.Identifier{Value: "foo"},
+				Parameters: []*ast.FunctionParameter{},
+				Body: &ast.BlockStatement{
+					Statements: []ast.Statement{
+						&ast.ExpressionStatement{
+							Expression: &ast.ContextCallExpression{
+								Function: &ast.Identifier{Value: "each"},
+								Arguments: []ast.Expression{
+									&ast.BlockCapture{
+										Name: &ast.Identifier{Value: "block"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

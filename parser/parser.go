@@ -207,6 +207,7 @@ func (p *parser) init(fset *gotoken.FileSet, filename string, src []byte, mode M
 	p.registerInfix(token.INT, p.parseCallArgument)
 	p.registerInfix(token.STRING, p.parseCallArgument)
 	p.registerInfix(token.SYMBEG, p.parseCallArgument)
+	p.registerInfix(token.CAPTURE, p.parseCallArgument)
 	p.registerInfix(token.SELF, p.parseCallArgument)
 	p.registerInfix(token.LBRACE, p.parseCallBlock)
 	p.registerInfix(token.DO, p.parseCallBlock)
