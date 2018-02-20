@@ -1076,10 +1076,21 @@ func (p *parser) parseFunctionLiteral() ast.Expression {
 	}
 	lit.EndToken = p.curToken
 	inspect := func(n ast.Node) bool {
-		if x, ok := n.(*ast.Assignment); ok {
-			if ident, ok := x.Left.(*ast.Identifier); ok {
-				if ident.IsConstant() {
-					p.errors = append(p.errors, fmt.Errorf("dynamic constant assignment"))
+		x, ok := n.(*ast.Assignment)
+		if !ok {
+			return true
+		}
+		switch left := x.Left.(type) {
+		case *ast.Identifier:
+			if left.IsConstant() {
+				p.errors = append(p.errors, fmt.Errorf("dynamic constant assignment"))
+			}
+		case ast.ExpressionList:
+			for _, expr := range left {
+				if ident, ok := expr.(*ast.Identifier); ok {
+					if ident.IsConstant() {
+						p.errors = append(p.errors, fmt.Errorf("dynamic constant assignment"))
+					}
 				}
 			}
 		}

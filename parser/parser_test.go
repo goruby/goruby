@@ -6,6 +6,7 @@ import (
 	gotoken "go/token"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -248,30 +249,50 @@ func TestVariableExpression(t *testing.T) {
 		}
 	})
 	t.Run("const assignment within function", func(t *testing.T) {
-		input := `
-		def foo
-			Ten = 10
-		end
-		`
-
-		_, errs := parseSource(input)
-
-		if errs == nil {
-			t.Logf("Expected error, got nil")
-			t.FailNow()
+		tests := []struct {
+			desc  string
+			input string
+			err   error
+		}{
+			{
+				desc: "single const assign",
+				input: `
+				def foo
+					Ten = 10
+				end`,
+				err: fmt.Errorf("dynamic constant assignment"),
+			},
+			{
+				desc: "const assign as multiassign",
+				input: `
+				def foo
+					x, Ten = 10, 20
+				end`,
+				err: fmt.Errorf("dynamic constant assignment"),
+			},
 		}
 
-		expected := fmt.Errorf("dynamic constant assignment")
+		for _, tt := range tests {
+			t.Run(tt.desc, func(t *testing.T) {
 
-		errors := errs.errors
-		if len(errors) != 1 {
-			t.Logf("Exected one error, got %d", len(errors))
-			t.FailNow()
-		}
+				_, errs := parseExpression(tt.input)
 
-		if !reflect.DeepEqual(errors[0], expected) {
-			t.Logf("Expected error to equal\n%v\n\tgot\n%v\n", expected, errors[0])
-			t.Fail()
+				if errs == nil {
+					t.Logf("Expected error, got nil")
+					t.FailNow()
+				}
+
+				errors := errs.errors
+				if len(errors) != 1 {
+					t.Logf("Exected one error, got %d", len(errors))
+					t.FailNow()
+				}
+
+				if !reflect.DeepEqual(errors[0], tt.err) {
+					t.Logf("Expected error to equal\n%v\n\tgot\n%v\n", tt.err, errors[0])
+					t.Fail()
+				}
+			})
 		}
 	})
 }
@@ -4027,6 +4048,23 @@ func testStringLiteral(t *testing.T, sl ast.Expression, value string) bool {
 
 func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	t.Helper()
+	if prefix, ok := il.(*ast.PrefixExpression); ok {
+		if _, ok := prefix.Right.(*ast.IntegerLiteral); !ok {
+			t.Errorf("expression not *ast.IntegerLiteral. got=%T", il)
+			return false
+		}
+		if !strings.ContainsAny(prefix.Operator, "+-") {
+			t.Errorf("unsupported prefix: %q", prefix.Operator)
+			return false
+		}
+		prefixedInt := fmt.Sprintf("%s%s", prefix.Operator, prefix.Right.String())
+		i, err := strconv.ParseInt(prefixedInt, 10, 64)
+		if err != nil {
+			t.Errorf("could not parse prefix: %v", err)
+			return false
+		}
+		il = &ast.IntegerLiteral{Value: i}
+	}
 	integ, ok := il.(*ast.IntegerLiteral)
 	if !ok {
 		t.Errorf("expression not *ast.IntegerLiteral. got=%T", il)
