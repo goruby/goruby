@@ -13,6 +13,9 @@ GoRuby, an implementation of Ruby written in Go
 
 If anyone wants to help to get the project to the real implementation please ping me or fork it and send a pull request.
 
+## Community
+- [#goruby Channel on Gophers Slack](https://gophers.slack.com/messages/goruby/) (invites to Gophers Slack are available [here](http://blog.gopheracademy.com/gophers-slack-community/#how-can-i-be-invited-to-join:2facdc921b2310f18cb851c36fa92369))
+
 ## REPL
 There is a basic REPL within `cmd/girb`. It supports multiline expressions and all syntax elements the language supports yet.
 
