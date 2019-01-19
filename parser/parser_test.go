@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 	var ok bool
 	parseMode, ok = parseModes[*mode]
 	if !ok {
-		fmt.Printf("Unknown parse mode %q\n", mode)
+		fmt.Printf("Unknown parse mode %s\n", *mode)
 		os.Exit(1)
 	}
 	os.Exit(m.Run())
