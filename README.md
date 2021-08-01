@@ -16,6 +16,10 @@ If anyone wants to help to get the project to the real implementation please pin
 ## Community
 - [#goruby Channel on Gophers Slack](https://gophers.slack.com/messages/goruby/) (invites to Gophers Slack are available [here](http://blog.gopheracademy.com/gophers-slack-community/#how-can-i-be-invited-to-join:2facdc921b2310f18cb851c36fa92369))
 
+## Licence
+
+Currently, there is no licence in this repo which causes problems on use/reuse. There is a [PR](https://github.com/goruby/goruby/pull/59) proposing a new licence. Please consider reviewing or commenting on it to gather opinions.
+
 ## REPL
 There is a basic REPL within `cmd/girb`. It supports multiline expressions and all syntax elements the language supports yet.
 
