@@ -1,0 +1,17 @@
+# github.com/chzyer/logex v1.1.10
+## explicit
+# github.com/chzyer/test v0.0.0-20210722231415-061457976a23
+## explicit
+# github.com/goruby/readline v0.0.0-20171103131923-a4d5111b6178
+## explicit
+github.com/goruby/readline
+# github.com/pkg/errors v0.9.1
+## explicit
+github.com/pkg/errors
+# golang.org/x/exp v0.0.0-20210729172720-737cce5152fc
+## explicit
+golang.org/x/exp/ebnf
+# golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+## explicit
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/unix
