@@ -7,14 +7,13 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/goruby/goruby/ast"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/ast"
 )
 
 // If src != nil, readSource converts src to a []byte if possible;
 // otherwise it returns an error. If src == nil, readSource returns
 // the result of reading the file specified by filename.
-//
 func readSource(filename string, src interface{}) ([]byte, error) {
 	if src != nil {
 		switch s := src.(type) {
@@ -42,7 +41,6 @@ func readSource(filename string, src interface{}) ([]byte, error) {
 // A Mode value is a set of flags (or 0).
 // They control the amount of source code parsed and other optional
 // parser functionality.
-//
 type Mode uint
 
 // parser modes
@@ -74,7 +72,6 @@ var parseModes = map[string]Mode{
 // If the source couldn't be read or the source was read but syntax
 // errors were found, the returned AST is nil and the error
 // indicates the specific failure.
-//
 func ParseFile(fset *gotoken.FileSet, filename string, src interface{}, mode Mode) (*ast.Program, error) {
 	if fset == nil {
 		panic("parser.ParseFile: no token.FileSet provided (fset == nil)")
@@ -96,7 +93,6 @@ func ParseFile(fset *gotoken.FileSet, filename string, src interface{}, mode Mod
 // The arguments have the same meaning as for ParseFile, but the source must
 // be a valid Go (type or value) expression. Specifically, fset must not
 // be nil.
-//
 func ParseExprFrom(fset *gotoken.FileSet, filename string, src interface{}, mode Mode) (ast.Expression, error) {
 	if fset == nil {
 		panic("parser.ParseExprFrom: no token.FileSet provided (fset == nil)")
@@ -132,7 +128,6 @@ func ParseExprFrom(fset *gotoken.FileSet, filename string, src interface{}, mode
 // ParseExpr is a convenience function for obtaining the AST of an expression x.
 // The position information recorded in the AST is undefined. The filename used
 // in error messages is the empty string.
-//
 func ParseExpr(x string) (ast.Expression, error) {
 	return ParseExprFrom(gotoken.NewFileSet(), "", []byte(x), 0)
 }

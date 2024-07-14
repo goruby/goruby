@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/goruby/goruby/ast"
+	"github.com/tjgurwara99/goruby/ast"
 )
 
 func TestExtractBlockFromArgs(t *testing.T) {
@@ -107,9 +107,9 @@ func TestExtractBlockFromArgs(t *testing.T) {
 func TestProcCall(t *testing.T) {
 	t.Run("argument count not mandatory", func(t *testing.T) {
 		proc := &Proc{
-			Parameters: []*ast.FunctionParameter{&ast.FunctionParameter{Name: &ast.Identifier{Value: "a"}}},
-			Body:       &ast.BlockStatement{Statements: []ast.Statement{}},
-			Env:        NewEnvironment(),
+			Parameters:             []*ast.FunctionParameter{&ast.FunctionParameter{Name: &ast.Identifier{Value: "a"}}},
+			Body:                   &ast.BlockStatement{Statements: []ast.Statement{}},
+			Env:                    NewEnvironment(),
 			ArgumentCountMandatory: false,
 		}
 		eval := func(node ast.Node, env Environment) (RubyObject, error) {
@@ -127,9 +127,9 @@ func TestProcCall(t *testing.T) {
 	})
 	t.Run("argument count mandatory", func(t *testing.T) {
 		proc := &Proc{
-			Parameters: []*ast.FunctionParameter{&ast.FunctionParameter{Name: &ast.Identifier{Value: "a"}}},
-			Body:       &ast.BlockStatement{Statements: []ast.Statement{}},
-			Env:        NewEnvironment(),
+			Parameters:             []*ast.FunctionParameter{&ast.FunctionParameter{Name: &ast.Identifier{Value: "a"}}},
+			Body:                   &ast.BlockStatement{Statements: []ast.Statement{}},
+			Env:                    NewEnvironment(),
 			ArgumentCountMandatory: true,
 		}
 		eval := func(node ast.Node, env Environment) (RubyObject, error) {

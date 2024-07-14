@@ -3,7 +3,7 @@ package ast
 import (
 	"testing"
 
-	"github.com/goruby/goruby/token"
+	"github.com/tjgurwara99/goruby/token"
 )
 
 func Test_Equal(t *testing.T) {

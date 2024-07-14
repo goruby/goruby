@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/goruby/goruby/ast"
+	"github.com/tjgurwara99/goruby/ast"
 )
 
 func mustCall(obj RubyObject, err error) RubyObject {

@@ -3,8 +3,8 @@ package parser
 import (
 	"testing"
 
-	"github.com/goruby/goruby/token"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/token"
 )
 
 func TestIsEOF(t *testing.T) {

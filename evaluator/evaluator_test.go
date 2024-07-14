@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goruby/goruby/object"
-	"github.com/goruby/goruby/parser"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/object"
+	"github.com/tjgurwara99/goruby/parser"
 )
 
 func TestEvalComment(t *testing.T) {

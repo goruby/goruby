@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/goruby/goruby/interpreter"
-	"github.com/goruby/goruby/object"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/interpreter"
+	"github.com/tjgurwara99/goruby/object"
 )
 
 func TestLoadPath(t *testing.T) {

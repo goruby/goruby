@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/goruby/goruby/interpreter"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/interpreter"
 )
 
 type multiString []string

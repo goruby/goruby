@@ -7,7 +7,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/goruby/goruby/token"
+	"github.com/tjgurwara99/goruby/token"
 )
 
 const (

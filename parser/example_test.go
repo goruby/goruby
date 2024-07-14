@@ -5,8 +5,8 @@ import (
 
 	"go/token"
 
-	"github.com/goruby/goruby/ast"
-	"github.com/goruby/goruby/parser"
+	"github.com/tjgurwara99/goruby/ast"
+	"github.com/tjgurwara99/goruby/parser"
 )
 
 func ExampleParseFile() {

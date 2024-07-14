@@ -5,8 +5,8 @@ import (
 	"fmt"
 	gotoken "go/token"
 
-	"github.com/goruby/goruby/token"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/token"
 )
 
 // Make sure unexpectedTokenError implements error interface

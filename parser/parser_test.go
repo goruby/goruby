@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goruby/goruby/ast"
-	"github.com/goruby/goruby/token"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/ast"
+	"github.com/tjgurwara99/goruby/token"
 )
 
 var parseMode Mode = ParseComments

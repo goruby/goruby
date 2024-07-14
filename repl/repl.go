@@ -5,10 +5,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/goruby/goruby/interpreter"
-	"github.com/goruby/goruby/object"
-	"github.com/goruby/goruby/parser"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/interpreter"
+	"github.com/tjgurwara99/goruby/object"
+	"github.com/tjgurwara99/goruby/parser"
 )
 
 // Input defines the input interface for the repl

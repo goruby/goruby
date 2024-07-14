@@ -3,8 +3,8 @@ package interpreter
 import (
 	"testing"
 
-	"github.com/goruby/goruby/object"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/object"
 )
 
 func TestInterpreterInterpret(t *testing.T) {

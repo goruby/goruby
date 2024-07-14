@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/goruby/goruby/ast"
-	"github.com/goruby/goruby/object"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/ast"
+	"github.com/tjgurwara99/goruby/object"
 )
 
 type callContext struct {

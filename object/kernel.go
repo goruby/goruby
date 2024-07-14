@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/goruby/goruby/parser"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/parser"
 )
 
 var kernelModule = newModule("Kernel", kernelMethodSet, nil)

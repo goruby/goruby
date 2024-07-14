@@ -6,7 +6,7 @@ import (
 	gotoken "go/token"
 	"strings"
 
-	"github.com/goruby/goruby/token"
+	"github.com/tjgurwara99/goruby/token"
 )
 
 // Node represents a node within the AST

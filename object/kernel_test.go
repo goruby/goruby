@@ -7,9 +7,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/goruby/goruby/ast"
-	"github.com/goruby/goruby/parser"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/ast"
+	"github.com/tjgurwara99/goruby/parser"
 )
 
 func TestKernelMethods(t *testing.T) {

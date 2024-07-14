@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/goruby/goruby/ast"
-	"github.com/goruby/goruby/lexer"
-	"github.com/goruby/goruby/token"
 	"github.com/pkg/errors"
+	"github.com/tjgurwara99/goruby/ast"
+	"github.com/tjgurwara99/goruby/lexer"
+	"github.com/tjgurwara99/goruby/token"
 )
 
 // Possible precendece values

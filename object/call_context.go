@@ -3,7 +3,7 @@ package object
 import (
 	"fmt"
 
-	"github.com/goruby/goruby/ast"
+	"github.com/tjgurwara99/goruby/ast"
 )
 
 // CallContext represents the context information when sending a message to an

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/goruby/goruby/ast"
+	"github.com/tjgurwara99/goruby/ast"
 )
 
 var procClass RubyClassObject = newClass(
